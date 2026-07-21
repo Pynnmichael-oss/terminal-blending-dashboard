@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Partners · Fort Worth Lab Procedures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--bronze:#C0882E;--ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;--bg:#F6F9FA;--card:#fff;--amber:#E0A23C;--red:#D9655B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+.wrap{display:flex;min-height:100vh}
+/* sidebar nav */
+.nav{width:250px;flex-shrink:0;background:var(--slate);color:#fff;padding:22px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow:auto}
+.nav .brand{font-size:16px;font-weight:800;letter-spacing:.3px;padding:0 20px 4px}
+.nav .brand b{color:var(--teal)}
+.nav .bsub{font-size:10px;font-weight:600;color:#9fc4d4;padding:0 20px 16px;letter-spacing:.3px}
+.nav a{display:block;padding:11px 20px;color:#cfe3ec;text-decoration:none;font-size:12.5px;font-weight:600;border-left:3px solid transparent;cursor:pointer}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.active{background:rgba(0,179,152,.16);border-left-color:var(--teal);color:#fff;font-weight:700}
+.nav a .tg{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.5px;background:rgba(255,255,255,.14);border-radius:4px;padding:1px 6px;margin-right:7px;vertical-align:middle}
+.nav a .ins{display:block;font-size:10px;color:#8fb6c8;font-weight:500;margin-top:2px}
+/* main */
+.main{flex:1;padding:26px 34px 70px;max-width:1000px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--slate);padding-bottom:14px;margin-bottom:18px}
+.phead h1{font-size:22px;font-weight:800;color:var(--slate);letter-spacing:.2px}
+.phead .meta{font-size:11.5px;font-weight:700;color:var(--ink-dim);margin-top:5px}
+.phead .meta .astm{color:var(--bronze)}
+.phead .pill{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.6px;background:rgba(0,179,152,.14);color:#0a7e62;border-radius:5px;padding:3px 9px;margin-bottom:6px}
+.btn{font-family:inherit;font-size:11.5px;font-weight:700;border-radius:8px;border:1.5px solid #c8d6de;background:#fff;color:var(--slate);padding:7px 13px;cursor:pointer}
+.btn:hover{border-color:var(--teal);color:var(--teal)}
+.over{background:#fff;border-left:5px solid var(--teal);border-radius:11px;box-shadow:0 2px 9px rgba(0,60,90,.06);padding:13px 17px;font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.6;margin-bottom:14px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ppe{font-size:10.5px;font-weight:700;letter-spacing:.3px;background:rgba(0,79,113,.08);border:1px solid rgba(0,79,113,.2);color:var(--slate);border-radius:999px;padding:4px 12px}
+.ppe::before{content:'\25C6';color:var(--teal);margin-right:6px;font-size:9px}
+.caution{background:rgba(217,101,91,.08);border:1.5px solid rgba(217,101,91,.4);border-left:6px solid var(--red);border-radius:10px;padding:11px 15px;font-size:12px;font-weight:600;color:#8a3229;line-height:1.55;margin-bottom:14px}
+.caution::before{content:'\26A0';margin-right:8px;font-weight:800}
+.sec{margin:22px 0 10px}
+.sec .sh{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--bronze);display:flex;align-items:center;gap:10px}
+.sec .sh::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(192,136,46,.35),transparent)}
+.step{display:flex;gap:14px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,60,90,.06);padding:14px 16px;margin-bottom:10px}
+.step.crit{border:1.5px solid rgba(224,162,60,.5);background:rgba(224,162,60,.04)}
+.step .num{flex-shrink:0;width:38px;height:38px;border-radius:10px;background:var(--slate);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.step.crit .num{background:var(--bronze)}
+.step .body{flex:1}
+.step .st{font-size:13px;font-weight:800;color:var(--slate);margin-bottom:5px}
+.step ul{list-style:none;padding:0}
+.step li{position:relative;padding:3px 0 3px 16px;font-size:12.5px;font-weight:500;color:var(--ink);line-height:1.55}
+.step li::before{content:'';position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.step .imgph{flex-shrink:0;width:104px;height:78px;border:1.5px dashed #c8d6de;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.4px;color:var(--ink-faint);text-align:center;background:#fbfdfe}
+.footnote{font-size:10.5px;font-weight:600;color:var(--ink-faint);margin-top:22px;border-top:1px solid #e4edf1;padding-top:12px;line-height:1.6}
+@media print{
+ .nav,.btn{display:none}.wrap{display:block}.main{max-width:none;padding:0}
+ .step,.over{box-shadow:none;border:1px solid #e0e8ec}body{background:#fff}
+ .proc{display:none}.proc.active{display:block}
+}
+.proc{display:none}.proc.active{display:block}
+@media(max-width:720px){.nav{width:64px}.nav .brand,.nav .bsub,.nav a .ins,.nav a span.lbl{display:none}.main{padding:18px}}
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 28px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:60}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:#dbe6ec}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)} .appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.3px;padding:7px 13px;border-radius:9px;border:1px solid #dbe6ec;background:#fff;text-decoration:none}
+.back-link:hover{border-color:var(--teal);color:var(--slate)}
+</style></head><body>
+<header class="appbar">
+<div class="wm">GLOBAL<b>PARTNERS</b></div>
+<div class="divider"></div><div class="appname">Lab Procedures <span>/ Fort Worth J117</span></div>
+<div class="spacer"></div>
+<a href="index.html" class="back-link">&#8592; Dashboard</a>
+</header>
+<div class="wrap">
+  <nav class="nav">
+    <div class="brand">GLOBAL<b>PARTNERS</b></div>
+    <div class="bsub">Fort Worth J117 · Lab Procedures</div>
+    <div id="navlist"></div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+<script>
+// Fort Worth lab procedures — transcribed verbatim from the five SOP documents.
+// Operational specifics (windows, template names, sample-naming, test modes) preserved exactly.
+const PROCEDURES = [
+{
+  id:'rvp-verify', title:'Pentane Instrument Verification Standard', instrument:'Grabner VP Vision', astm:'ASTM D5191', tag:'RVP',
+  overview:'The Pentane Instrument Verification Standard sample should be completed on the first sample of the day and again after every 10th sample run on the GRABNER VP VISION in a single testing day.',
+  ppe:['Nitrile Gloves','Safety Glasses'], cautions:[],
+  sections:[
+   {name:'Preparation', steps:[
+    {n:'1', title:'Verify discharge is connected to the waste container', items:['Verify that the discharge tube is connected to the waste disposal container.','If the waste container is full, empty, and reconnect. <b>NOTE:</b> Ensure the outlet tube never touches the surface of the waste inside the container.'], img:true},
+    {n:'2', title:'Remove cooled pentane from refrigerator', items:['Remove Pentane Verification Sample from refrigerator.','Check that the sample bottle is 70–80% full (liquid level should be between the width of the label).','Add more chilled pentane if needed.'], img:true},
+    {n:'3', title:'Air saturate the pentane sample', items:['Remove pentane cap, replace, and shake vigorously for 10 seconds.','Return to the refrigerator for 2 minutes.','Repeat two more times for a total of 3 air saturations.'], img:true},
+    {n:'4', title:'Attach dedicated sample tube line/cap to the sample bottle', items:['Insert the dedicated Verification Standard tube with hose attached into the Leur bore with a 90-degree clockwise turn.','Remove pentane sample cap.','Insert sample tube into the Pentane Sample bottle. Place Verification Sample Cork (marked with Pentane/Toluene sticker) snugly on top of sample bottle.','Ensure the end of the tube line is at least 1 inch from the bottom of the Sample Bottle.'], img:true},
+   ]},
+   {name:'Measurement', steps:[
+    {n:'5', title:'Select measurement screen', items:['SELECT the hamburger menu in the top left corner.','SELECT &ldquo;MEASUREMENT&rdquo;'], img:true},
+    {n:'6', title:'Select sample options', items:['Touch the screen and SELECT the following options:','Template: <b>PENTANE STANDARD</b>','Sample Name: <b>PENTANE STANDARD</b>','Defaults: Committee <b>ASTM</b> &middot; Standard <b>D5191</b> &middot; Type <b>SINGLEPOINT</b> &middot; Measuring Cycle <b>1</b>'], img:true},
+    {n:'7', title:'Start measurement', items:['SELECT &ldquo;START&rdquo; to begin the measurement.'], img:true},
+    {n:'8', title:'Remove product sample', items:['Remove testing line/cork from pentane sample and recap it.','Return pentane sample to refrigerator.'], img:false},
+   ]},
+   {name:'Review / record results', steps:[
+    {n:'9', title:'Locate Ptot', items:['When the measurement is complete, an alarm will sound and results screen will be displayed.','Locate Ptot on results screen.','<b>Ptot result must fall between 16.19 and 16.53 psi.</b>','If the result is outside of these results, repeat the procedure one time. If still outside of limits, contact PQ.'], img:true, crit:true},
+    {n:'10', title:'Record result', items:['Record testing date and Ptot result in sample log/database.'], img:false},
+   ]},
+  ]
+},
+{
+  id:'rvp-sample', title:'RVP Sample', instrument:'Grabner VP Vision', astm:'ASTM D5191', tag:'RVP',
+  overview:'This procedure provides a reference guide for testing and reporting the RVP of a gasoline sample after daily verification.',
+  ppe:['Nitrile Gloves','Safety Glasses'], cautions:[],
+  sections:[
+   {name:'Preparation', steps:[
+    {n:'1', title:'Verify standard test completion', items:['Has the Instrument Verification Standard been completed today?','If yes, proceed to Step 2.','If no, complete the Instrument Standard Verification Test (see procedure).'], img:false},
+    {n:'2', title:'Verify discharge is connected to the waste container', items:['Verify that the discharge tube is connected to the waste disposal container.','If the waste container is full, empty it, and reconnect. <b>NOTE:</b> Ensure the outlet tube never touches the surface of the waste inside the container.'], img:true},
+    {n:'3', title:'Chill product sample in ice bath', items:['Place product sample in an ice bath for 15 minutes.'], img:true},
+    {n:'4', title:'Air saturate the sample', items:['Remove sample cap, replace, and shake vigorously for 10 seconds.','Return to the ice bath for 2 minutes.','Repeat two more times for a total of 3 air saturations.'], img:true},
+    {n:'5', title:'Attach dedicated sample tube line/cap to the sample bottle', items:['Remove Product Sample Cap.','Replace cap with Dedicated Sample Tube Line/Cap (marked with GAS sticker).','Ensure the end of the tube line is at least 1 inch from the bottom of the Sample Bottle.'], img:true},
+   ]},
+   {name:'Measurement', steps:[
+    {n:'6', title:'Select measurement screen', items:['SELECT the hamburger menu in the top left corner.','SELECT &ldquo;MEASUREMENT&rdquo;'], img:true},
+    {n:'7', title:'Select sample options', items:['Touch the screen and SELECT the following options:','Template: <b>RVP SAMPLE</b>','Sample Name: <b>BLENDID_BLENDNUMBER</b> &nbsp; Ex: <b>FTW55030226_21856</b>','Defaults: Committee <b>ASTM</b> &middot; Standard <b>D5191</b> &middot; Type <b>SINGLEPOINT</b> &middot; Measuring Cycle <b>1</b>'], img:true},
+    {n:'8', title:'Start measurement', items:['PRESS &ldquo;START&rdquo; to begin measurement.'], img:true},
+    {n:'9', title:'Remove product sample', items:['When HEATING screen appears, remove testing line/cork from product sample and recap it.'], img:true},
+   ]},
+   {name:'Review / record results', steps:[
+    {n:'10', title:'Locate DVPE &amp; Ptot', items:['When the measurement is complete, an alarm will sound and results screen will be displayed.','Locate <b>DVPE EPA 5191</b> on results screen (large number displayed on top of screen).','Locate Ptot.','Take a photo of this screen for reference in Step 11.'], img:true},
+    {n:'11', title:'Record result', items:['Record testing date, Ptot, and DVPE EPA results in sample log/database.'], img:false},
+   ]},
+  ]
+},
+{
+  id:'ethanol-blend', title:'10% Ethanol Hand Blend', instrument:'Bench / glassware', astm:'Sample prep', tag:'PREP',
+  overview:'This procedure provides a reference guide for preparing a 10% Ethanol Blend.',
+  ppe:['Gloves','Safety Glasses'], cautions:[],
+  sections:[
+   {name:'Preparation', steps:[
+    {n:'1', title:'Chill samples in ice bath', items:['Chill the ethanol in an ice bath for 15 minutes.','Chill the gasoline sample in an ice bath for 15 minutes.'], img:false},
+   ]},
+   {name:'100 mL 10% Ethanol Blend', steps:[
+    {n:'1', title:'Measure ethanol', items:['Using a glass funnel, carefully add approximately 10 mL of the ethanol sample to a 100 mL graduated mixing cylinder.','Using a pipette, adjust the ethanol volume until the bottom of the meniscus is exactly at the <b>10 mL</b> mark.'], img:false},
+    {n:'2', title:'Measure gasoline', items:['Using a glass funnel, carefully add gasoline to the graduated mixing cylinder containing the ethanol until the total liquid volume approaches 100 mL.','Using a pipette, adjust the gasoline volume until the bottom of the meniscus is exactly at the <b>100 mL</b> mark, resulting in a 10% ethanol / 90% gasoline mixture by volume.'], img:false},
+    {n:'3', title:'Mix', items:['Insert the glass stopper securely and invert the cylinder to mix the contents.','Repeat the inversion two additional times to ensure the mixture is thoroughly blended.'], img:false},
+   ]},
+   {name:'250 mL 10% Ethanol Blend', steps:[
+    {n:'1', title:'Measure ethanol', items:['Using a glass funnel, carefully add approximately 25 mL of the ethanol sample to a 50 mL graduated cylinder.','Using a pipette, adjust the ethanol volume until the bottom of the meniscus is exactly at the <b>25 mL</b> mark.','Carefully transfer the 25 mL ethanol from the 50 mL graduated cylinder into a 250 mL graduated mixing cylinder using a glass funnel if necessary.'], img:false},
+    {n:'2', title:'Measure gasoline', items:['Using a glass funnel, carefully add gasoline to the graduated mixing cylinder containing the ethanol until the total liquid volume approaches 250 mL.','Using a pipette, adjust the gasoline volume until the bottom of the meniscus is exactly at the <b>250 mL</b> mark, resulting in a 10% ethanol / 90% gasoline mixture by volume.'], img:false},
+    {n:'3', title:'Mix', items:['Insert the glass stopper securely and invert the cylinder to mix the contents.','Repeat the inversion two additional times to ensure the mixture is thoroughly blended.'], img:false},
+   ]},
+  ]
+},
+{
+  id:'distillation', title:'Distillation', instrument:'Tanaka AD-7', astm:'ASTM D86', tag:'DIST',
+  overview:'The purpose of this procedure is to provide distillation characteristics of gasoline.',
+  ppe:['Gloves','Safety Glasses'],
+  cautions:['<b>Fire precautions:</b> Prior to operation, locate the fire extinguisher in the lab. Do not leave the instrument unattended at any time while the distillation is running.'],
+  sections:[
+   {name:'Prior to startup', steps:[
+    {n:'1.1', title:'Check water level', items:['Check the water level by viewing the container inside the window located on the left side facing the unit.','Add water if needed. <b>Note:</b> Only add 100% distilled water.'], img:true},
+    {n:'1.2', title:'Turn on instrument', items:['Turn on the Tanaka AD-7 for about 20 minutes before running the distillation.'], img:false},
+   ]},
+   {name:'Preparation', steps:[
+    {n:'2.1', title:'Collect &amp; chill sample to be tested', items:['Collect and prepare the sample (for Ethanol hand blends, follow the 10% Ethanol Hand Blend Procedure).','Seal the sample container to be airtight immediately after collection.','Ensure the container is not exposed to direct sunlight or heat sources.','Chill the sample in an ice bath for 15 minutes.'], img:false},
+    {n:'2.2', title:'Chill distillation flask &amp; receiving cylinder', items:['Chill the distillation flask and the receiving cylinder in an ice bath prior to testing. <b>Note:</b> No chilling of flask or cylinder is required if ONLY checking contamination by endpoint.'], img:false},
+    {n:'2.3', title:'Inspect flask for cracking', items:['Inspect the flask to ensure there are no fine scratches, fissures, or cracks. Replace it if needed. <b>Note:</b> If flask becomes too coked on the bottom, or shows signs of cracking or flattening, replace with a new flask. Cracked or flattening flasks can cause unexpected breakage and a fire hazard.'], img:true, crit:true},
+    {n:'2.5', title:'Swab condenser tube', items:['Swab the condenser tube from the receiver chamber through the distillation oven using the provided &ldquo;pull-through&rdquo; swab. <b>NOTE:</b> Repeat swabbing until the diagram of the condenser tube on the screen displays a white border.'], img:true},
+   ]},
+   {name:'Analysis — setup', steps:[
+    {n:'3.1', title:'Transfer sample to receiving cylinder', items:['Fill the receiving cylinder with 100 mL of product sample.'], img:true},
+    {n:'3.2', title:'Adjust volume', items:['Use a disposable pipette to make any adjustments to volume.'], img:true},
+    {n:'3.3', title:'Check volume', items:['Verify the volume by checking that the meniscus is at the 100 mL mark.'], img:true},
+    {n:'3.4', title:'Add glass boiling beads', items:['Add two or three boiling beads into the distillation flask. This will ensure even boiling and help prevent bumping (especially with new flasks).'], img:true},
+    {n:'3.5', title:'Transfer sample from cylinder to flask', items:['Transfer the 100 mL sample from the cylinder into the distillation flask. The vapor tube sidearm should be pointing upward to avoid any spillage and loss of sample.'], img:true},
+    {n:'3.6', title:'Attach temperature probe/stopper to flask', items:['Remove the temperature probe/stopper assembly from its holder and attach it to the flask neck.'], img:true},
+    {n:'3.7', title:'Attach green clip', items:['Attach the green clip to the top of the flask assembly.'], img:true},
+    {n:'3.8', title:'Insert sidearm', items:['Holding the flask vertically, insert the flask vapor tube sidearm into the apparatus condenser tube, ensuring the attached white stopper fits snugly into the tube.'], img:true},
+    {n:'3.9', title:'Raise platform', items:['Raise the heating block platform (platform knob at the bottom) to provide a snug fit to the bottom of the flask. <b>Note:</b> Do not overtighten the heating platform onto the flask; this will cause stress on the flask sidearm tube that can break off during heating and cause fire.'], img:true, crit:true},
+    {n:'3.10', title:'Close door', items:['Close heating compartment door.'], img:true},
+    {n:'3.11', title:'Wipe cylinder', items:['Wipe down the outside of the receiving cylinder with a clean paper towel. This will help prevent any interference with optical readers due to smudges or fingerprints.'], img:true},
+    {n:'3.12', title:'Insert drip guide', items:['Insert the metal drip guide into the graduated cylinder with drip guide facing forward opposite the notch at the base of the receiving cylinder.'], img:true},
+    {n:'3.13', title:'Insert receiving cylinder', items:['Insert the receiving cylinder into the receiving chamber by aligning the notch at the base.'], img:true},
+    {n:'3.14', title:'Cover receiving cylinder', items:['Push down the rubber cover on the condenser tube so it covers the top of the receiving cylinder.'], img:true},
+    {n:'3.15', title:'Close receiving cylinder door', items:['Close the receiving chamber door.'], img:true},
+   ]},
+   {name:'Analysis — testing', steps:[
+    {n:'4.1', title:'Enter sample name and test mode', items:['Enter Sample ID &mdash; Name: <b>BLENDNUMBER</b> &nbsp; Ex: <b>FTW55030226</b>','Enter Operator Initials.','Enter Test Mode: <b>001 GASOLINE</b>'], img:true},
+    {n:'4.2', title:'Press start', items:['SELECT the START button. <b>Note:</b> At any time, a test can be stopped by pressing the &ldquo;Cool&rdquo; button twice located on the displayed menu.','Sample will begin distilling from the flask and will be collected in the receiving cylinder.'], img:true},
+    {n:'4.3', title:'Collect residue', items:['When distillation is complete and flask is cool, pour remaining contents from flask into a 5 mL graduated cylinder. Observe the amount collected.'], img:false},
+    {n:'4.4', title:'Record residue', items:['Select REPORT from the tabs at the top of the screen (NOT the report button at the bottom of the screen).','SELECT RESIDUE.','Record the residue amount collected in the graduated cylinder by adjusting the default amount with the arrows.'], img:true},
+    {n:'4.5', title:'Print results', items:['SELECT PRINT to print test results. Label print with <b>BATCH NUMBER</b> Ex: <b>21856</b>.'], img:false},
+   ]},
+   {name:'Cleaning and maintenance', steps:[
+    {n:'5.1', title:'Add condenser stopper', items:['Place the blue condenser stopper into the condenser tube.'], img:false},
+    {n:'5.2', title:'Clean glassware', items:['Clean the distilling flask, receiving cylinder, and residue cylinder after each test by rinsing with gasoline from the receiving flask and a light rinse of toluene. Discard boiling stones.'], img:false},
+    {n:'5.3', title:'Dry &amp; store glassware', items:['Dry the glassware with compressed air if available or air-dry them upside down until they are completely dry.','Store in designated area.'], img:false},
+    {n:'5.4', title:'Clean thermocouple', items:['Clean the thermocouple by gently wiping down any residue after each test with clean tissue paper. If the temperature sensor is building up residue, gently wipe down with toluene.'], img:false},
+    {n:'5.5', title:'Inspect O-ring', items:['Inspect the O-ring inside the white plastic sidearm fitting. Make sure it creates a good seal with the brass condenser tube.'], img:false},
+    {n:'5.6', title:'Inspect sidearm', items:['Inspect the flask sidearm for a secure fit into the white plastic sidearm fitting.'], img:false},
+    {n:'5.7', title:'Inspect stopper seal', items:['Inspect the stopper seal located on the flask stopper attachment. The seal should be semi-soft and crack-free. A light coat of vacuum grease can be applied to the seal to help prevent cracking and easier application onto the flask neck. Replace it if needed.'], img:false},
+   ]},
+  ]
+},
+{
+  id:'rack-release', title:'Rack Release Testing', instrument:'Full sample suite', astm:'D4052 · D5191 · D86', tag:'RELEASE',
+  overview:'This process outlines the samples and tests to complete rack release testing.',
+  ppe:['Gloves','Safety Glasses'],
+  cautions:['<b>Fire safety:</b> Locate the fire extinguisher in the lab. <b>NOTE:</b> During distillation operation, the distillation instrument must be attended at all times.'],
+  sections:[
+   {name:'Procedure', steps:[
+    {n:'1', title:'Collect &amp; chill samples', items:['After the blend is complete, collect the following gasoline samples:','1 Upper Sample','1 Middle Sample','1 Lower Sample','2 All-Level Samples','Place all samples in an ice bath.'], img:false},
+    {n:'2', title:'Prepare ethanol blend', items:['Locate the 250 mL mixing cylinder.','Prepare a 250 mL 10% Ethanol Blend from one of the All-Level samples according to the procedure.'], img:false},
+    {n:'3', title:'Test the RVP of the ethanol blend', items:['Place the prepared sample on ice while running the RVP.','Perform an RVP test according to the procedure. (Use the iced mixing cylinder; do not transfer to another container.)','Print results.'], img:false},
+    {n:'4', title:'Perform a distillation of the ethanol blend', items:['Remove the mixing cylinder from the RVP unit and carefully transfer 100 mL of the sample to the receiving flask.','Perform the distillation of the sample immediately according to the procedure.'], img:false},
+    {n:'5', title:'Test &amp; record gravity', items:['Test and record the Gravity of all remaining samples: 1 Upper, 1 Middle, 1 Lower, 1 All-Level.'], img:false},
+    {n:'6', title:'Test RVP', items:['Test the RVP of all remaining samples: 1 Upper, 1 Middle, 1 Lower, 1 All-Level.','Print results after each test.'], img:false},
+    {n:'7', title:'Compile results', items:['Compile and distribute results according to site instructions.'], img:false},
+   ]},
+  ]
+},
+];
+
+function render(){
+  const nav=document.getElementById('navlist'), main=document.getElementById('main');
+  nav.innerHTML=PROCEDURES.map((p,i)=>`<a data-i="${i}" onclick="show(${i})"><span class="tg">${p.tag}</span><span class="lbl">${p.title}</span><span class="ins">${p.instrument}</span></a>`).join('');
+  main.innerHTML=PROCEDURES.map((p,i)=>procHTML(p,i)).join('');
+  show(0);
+}
+function procHTML(p,i){
+  const ppe=p.ppe.map(x=>`<span class="ppe">${x}</span>`).join('');
+  const cautions=(p.cautions||[]).map(c=>`<div class="caution">${c}</div>`).join('');
+  const secs=p.sections.map(sec=>`
+    <div class="sec"><div class="sh">${sec.name}</div></div>
+    ${sec.steps.map(st=>`
+      <div class="step ${st.crit?'crit':''}">
+        <div class="num">${st.n}</div>
+        <div class="body">
+          <div class="st">${st.title}</div>
+          <ul>${st.items.map(it=>`<li>${it}</li>`).join('')}</ul>
+        </div>
+        ${st.img?'<div class="imgph">REFERENCE<br>IMAGE</div>':''}
+      </div>`).join('')}`).join('');
+  return `<section class="proc" id="proc-${i}">
+    <div class="phead">
+      <div><div class="pill">${p.tag}</div><h1>${p.title}</h1>
+        <div class="meta">${p.instrument} &middot; <span class="astm">${p.astm}</span></div></div>
+      <button class="btn" onclick="printProc(${i})">&#128424; Print this procedure</button>
+    </div>
+    <div class="over">${p.overview}</div>
+    <div class="badges">${ppe}</div>
+    ${cautions}
+    ${secs}
+    <div class="footnote">Global Partners LP &middot; Fort Worth Terminal J117 &middot; Reformatted for the terminal quality system. Reference images to be inserted from the source SOP where marked. Controlled document &mdash; verify current revision before use.</div>
+  </section>`;
+}
+function show(i){
+  document.querySelectorAll('.proc').forEach((el,j)=>el.classList.toggle('active',i===j));
+  document.querySelectorAll('.nav a').forEach((a)=>a.classList.toggle('active',+a.dataset.i===i));
+  window.scrollTo(0,0);
+}
+function printProc(i){ show(i); window.print(); }
+render();
+</script>
+</body></html>

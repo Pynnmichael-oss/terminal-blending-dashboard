@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Partners · Operator Proficiency Testing — Fort Worth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--bronze:#C0882E;--ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;--bg:#F6F9FA;--card:#fff;--amber:#E0A23C;--red:#D9655B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;padding:24px 28px 70px}
+h1{font-size:19px;font-weight:800;letter-spacing:.4px;color:var(--slate)}h1 b{color:var(--teal)}
+.sub{font-size:11.5px;font-weight:600;color:var(--ink-dim);margin:4px 0 14px}
+.prov{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.prov span{font-size:10.5px;font-weight:700;letter-spacing:.3px;background:#fff;border:1px solid #dbe6ec;color:var(--ink-dim);border-radius:999px;padding:4px 11px}
+.prov .warn{border-color:rgba(224,162,60,.6);color:#8a5e12;background:rgba(224,162,60,.08)}
+.card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(0,60,90,.07);padding:16px 19px;margin-bottom:15px}
+.card h2{font-size:12.5px;font-weight:800;letter-spacing:.5px;color:var(--slate);text-transform:uppercase;margin-bottom:11px}
+.card h2 .step{display:inline-block;background:var(--teal);color:#fff;border-radius:6px;font-size:10px;padding:2px 8px;margin-right:8px;letter-spacing:1px}
+.frow{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld label{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ink-dim)}
+input,select{font-family:inherit;font-size:12.5px;border:1.5px solid #dbe6ec;border-radius:8px;padding:6px 9px;color:var(--ink);background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--teal)}
+input[type=number]{width:92px}
+.btn{font-family:inherit;font-size:12px;font-weight:700;border-radius:9px;border:1.5px solid #c8d6de;background:#fff;color:var(--slate);padding:8px 15px;cursor:pointer;margin:8px 7px 0 0}
+.btn:hover{border-color:var(--teal);color:var(--teal)}
+.btn.pri{background:var(--teal);border-color:var(--teal);color:#fff}.btn.pri:hover{background:#009d86}
+.pentane{border-radius:11px;padding:11px 15px;font-size:12px;font-weight:700;margin-top:8px}
+.pentane.ok{background:rgba(0,179,152,.1);border:1.5px solid rgba(0,179,152,.5);color:#0a5c4e}
+.pentane.bad{background:rgba(217,101,91,.1);border:1.5px solid rgba(217,101,91,.55);color:#a4362c}
+.pentane.none{background:rgba(224,162,60,.1);border:1.5px solid rgba(224,162,60,.55);color:#7a5410}
+table.g{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.g th{text-align:left;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-dim);border-bottom:1.5px solid #dbe6ec;padding:6px 7px;white-space:nowrap}
+table.g td{padding:4px 7px;border-bottom:1px solid #eef3f6}
+table.g input{width:74px;padding:4px 6px;font-size:11.5px}
+.pill{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.3px;border-radius:999px;padding:2px 8px}
+.pill.pass{color:#0a7e62;background:rgba(0,179,152,.16)}
+.pill.fail{color:#a4362c;background:rgba(217,101,91,.16)}
+.pill.na{color:var(--ink-faint);background:#eef3f6}
+.verdict{font-size:13px;font-weight:800;letter-spacing:.4px;padding:13px 17px;border-radius:12px;margin:10px 0}
+.verdict.pass{background:rgba(169,238,138,.28);border:1.5px solid var(--teal);color:#0a5c4e}
+.verdict.fail{background:rgba(217,101,91,.1);border:1.5px solid rgba(217,101,91,.5);color:#a4362c}
+.opcard{border:1px solid #e4edf1;border-radius:12px;padding:13px 15px;margin-bottom:12px}
+.opcard .oph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.opcard .opn{font-size:14px;font-weight:800;color:var(--slate)}
+.mtitle{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--bronze);text-transform:uppercase;margin:10px 0 3px}
+.note{font-size:11px;font-weight:600;color:var(--ink-dim);line-height:1.65;background:#fff;border-radius:13px;box-shadow:0 2px 9px rgba(0,60,90,.06);padding:15px 18px;margin-top:16px}
+.set{font-size:11px}
+.set table{width:100%;border-collapse:collapse}
+.set td,.set th{padding:4px 8px;border-bottom:1px solid #eef3f6;text-align:left;font-size:11px}
+.set input{width:80px}
+details summary{cursor:pointer;font-weight:800;color:var(--slate);font-size:12px;letter-spacing:.3px}
+.docpaper{background:#fff;border:1px solid #e0e8ec;border-radius:8px;padding:22px 26px;margin-top:12px}
+.dlh{display:flex;justify-content:space-between;border-bottom:2px solid var(--slate);padding-bottom:7px;margin-bottom:12px;font-size:11px;font-weight:700;color:var(--ink-dim)}
+.dwm{font-size:15px;font-weight:800;color:var(--slate)}.dwm b{color:var(--teal)}
+.dtt{font-size:16px;font-weight:800;color:var(--slate);margin-bottom:12px}
+.dprow{display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px dashed #eef3f6}
+.dprow span{color:var(--ink-dim);font-weight:600}.dprow b{color:var(--ink);text-align:right}
+.mockstamp{position:fixed;bottom:12px;right:16px;font-size:9.5px;font-weight:800;letter-spacing:.8px;color:#c3d2da}
+@media print{body{background:#fff;padding:6px}.card,.prov,.mockstamp,.btn,.note{display:none}#reportout,#reportout *{visibility:visible}.docpaper{box-shadow:none;border:none}}
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 28px;border-bottom:1px solid #dbe6ec;background:#fff;position:sticky;top:0;z-index:60;margin:-24px -28px 20px}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:#dbe6ec}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)} .appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.3px;padding:7px 13px;border-radius:9px;border:1px solid #dbe6ec;background:#fff;text-decoration:none}
+.back-link:hover{border-color:var(--teal);color:var(--slate)}
+</style></head><body>
+
+<header class="appbar">
+<div class="wm">GLOBAL<b>PARTNERS</b></div>
+<div class="divider"></div><div class="appname">Operator Proficiency <span>/ Fort Worth J117</span></div>
+<div class="spacer"></div>
+<a href="index.html" class="back-link">&#8592; Dashboard</a>
+</header>
+<h1>GLOBAL<b>PARTNERS</b> · Operator Proficiency Testing — Fort Worth J117</h1>
+<div class="sub">Self-certification qualification · Grabner VP Vision (D5191) · Tanaka AD-7 (D86) · density meter (D4052) · pass = agreement within ASTM test-method precision</div>
+<div class="prov">
+  <span>Pass criterion · <b>within ASTM precision</b>: repeatability r (operator duplicate) AND reproducibility R (vs reference)</span>
+  <span>Reference · Rod Lawrence results (3rd-party/SPL comparison optional)</span>
+  <span class="warn">Precision coefficients — published values, PENDING confirmation against current method editions (editable below)</span>
+</div>
+
+<div class="card">
+  <h2><span class="step">1</span> Session &amp; instruments</h2>
+  <div class="frow">
+    <div class="fld"><label>Date</label><input id="s-date" type="date"></div>
+    <div class="fld"><label>Trainer / reference analyst</label><input id="s-trainer" value="Rod Lawrence" style="width:150px"></div>
+    <div class="fld"><label>QC sign-off authority</label><input id="s-qc" value="K. Stocksen" style="width:130px"></div>
+  </div>
+  <div class="frow">
+    <div class="fld"><label>Grabner VP Vision S/N</label><input id="s-grabner" placeholder="serial" style="width:130px"></div>
+    <div class="fld"><label>Tanaka AD-7 S/N</label><input id="s-tanaka" placeholder="serial" style="width:130px"></div>
+    <div class="fld"><label>Density meter S/N</label><input id="s-dens" placeholder="serial" style="width:130px"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="step">2</span> Daily instrument verifications (each gates its own method)</h2>
+  <div style="font-size:11px;font-weight:600;color:var(--ink-dim);margin-bottom:10px">Each instrument's verification gates <b>only its own method</b>. The Grabner pentane check does not affect D86 or D4052 scoring, and vice-versa.</div>
+
+  <div class="mtitle">Grabner VP Vision — D5191 · pentane standard</div>
+  <div class="frow">
+    <div class="fld"><label>Pentane P<sub>tot</sub> (psi)</label><input id="p-ptot" type="number" step="0.01" oninput="renderPentane()"></div>
+    <div class="fld" style="justify-content:center"><span style="font-size:11px;font-weight:700;color:var(--ink-dim)">Acceptance window 16.19 – 16.53 psi (per SOP)</span></div>
+  </div>
+  <div id="pentane-stat" class="pentane none" style="margin-bottom:14px">Enter today's pentane P<sub>tot</sub> — RVP (D5191) results cannot be scored until this passes.</div>
+
+  <div class="mtitle">Tanaka AD-7 — D86 · distillation verification</div>
+  <div class="frow">
+    <div class="fld"><label>Verification status</label>
+      <select id="v-tanaka" onchange="renderInstr()"><option value="na">— to be defined —</option><option value="pass">Verified / passed</option><option value="fail">Not passing</option></select></div>
+    <div class="fld"><label>Basis / note (optional)</label><input id="v-tanaka-note" placeholder="e.g. cond. temp / toluene RV check" style="width:230px"></div>
+  </div>
+  <div id="tanaka-stat" class="pentane none" style="margin-bottom:14px">D86 verification method still to be confirmed — select a status to gate distillation scoring, or leave as “to be defined” (distillation will score but the record notes verification is undefined).</div>
+
+  <div class="mtitle">Density meter — D4052 · gravity verification</div>
+  <div class="frow">
+    <div class="fld"><label>Verification status</label>
+      <select id="v-dens" onchange="renderInstr()"><option value="na">— to be defined —</option><option value="pass">Verified / passed</option><option value="fail">Not passing</option></select></div>
+    <div class="fld"><label>Basis / note (optional)</label><input id="v-dens-note" placeholder="e.g. water/air density check" style="width:230px"></div>
+  </div>
+  <div id="dens-stat" class="pentane none">D4052 verification method still to be confirmed — select a status to gate gravity scoring, or leave as “to be defined.”</div>
+</div>
+
+<div class="card">
+  <h2><span class="step">3</span> Reference samples (Rod's results, + optional 3rd-party)</h2>
+  <div style="font-size:11px;font-weight:600;color:var(--ink-dim);margin-bottom:8px">Rod prepares gasoline samples at different volatility levels and records the reference result for each. Enter Rod's values; the optional 3rd-party column (e.g. SPL CoA on a retained sample) strengthens the case to management but is not required to qualify.</div>
+  <div id="samples"></div>
+  <button class="btn" onclick="addSample()">+ Add reference sample</button>
+</div>
+
+<div class="card">
+  <h2><span class="step">4</span> Operators &amp; their measured results</h2>
+  <div style="font-size:11px;font-weight:600;color:var(--ink-dim);margin-bottom:8px">Each operator runs each sample in <b>duplicate</b> (readings A &amp; B). r-test = |A − B| within repeatability; R-test = |mean(A,B) − reference| within reproducibility. Leave B blank to evaluate R only.</div>
+  <div class="frow">
+    <div class="fld"><label>Add operator</label><input id="op-name" placeholder="name" style="width:150px" onkeydown="if(event.key==='Enter')addOperator()"></div>
+    <button class="btn pri" onclick="addOperator()" style="margin:0">+ Add operator</button>
+  </div>
+  <div id="operators" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+  <button class="btn pri" onclick="evaluateAll()">Evaluate proficiency</button>
+  <button class="btn" onclick="exportJSON()">&#8595; Export session (JSON)</button>
+  <button class="btn" onclick="window.print()">&#128424; Print report</button>
+</div>
+
+<div id="reportout"></div>
+
+<div class="card set">
+  <details><summary>Precision coefficients (published — PENDING confirmation, editable)</summary>
+  <div style="font-size:10.5px;color:var(--ink-dim);margin:8px 0">All values map back to R = 2.77&sigma; (D6300/E177). r = repeatability (same operator), R = reproducibility (operator vs reference). Distillation r/R are slope-based per point: value = a + b &times; S, where S is the local curve slope (&deg;F per % evaporated); IBP/FBP use fixed values (b = 0). T50 R (4.649 + 1.196&middot;S) is confirmed from Test_Method_Precisions.xlsx; other coefficients are published placeholders pending confirmation.</div>
+  <table>
+    <tr><th>Parameter</th><th>Method</th><th>r</th><th>R</th><th>Unit</th></tr>
+    <tr><td>API gravity</td><td>D4052</td><td><input id="pc-grav-r" type="number" step="0.01" value="0.03"></td><td><input id="pc-grav-R" type="number" step="0.01" value="0.14"></td><td>°API (fixed)</td></tr>
+    <tr><td>DVPE (RVP)</td><td>D5191</td><td>0.00778 &times; (X+18.0)</td><td>0.0161 &times; (X+18.0)</td><td>psi (level)</td></tr>
+  </table>
+  <table style="margin-top:8px">
+    <tr><th>D86 point</th><th>r = a<sub>r</sub></th><th>+ b<sub>r</sub>·S</th><th>R = a<sub>R</sub></th><th>+ b<sub>R</sub>·S</th></tr>
+    <tr><td>IBP (fixed)</td><td><input id="d-IBP-ar" type="number" step="0.1" value="3.9"></td><td><input id="d-IBP-br" type="number" step="0.01" value="0"></td><td><input id="d-IBP-aR" type="number" step="0.1" value="7.2"></td><td><input id="d-IBP-bR" type="number" step="0.01" value="0"></td></tr>
+    <tr><td>T10</td><td><input id="d-T10-ar" type="number" step="0.1" value="2.0"></td><td><input id="d-T10-br" type="number" step="0.01" value="0.60"></td><td><input id="d-T10-aR" type="number" step="0.1" value="3.0"></td><td><input id="d-T10-bR" type="number" step="0.01" value="1.20"></td></tr>
+    <tr><td>T50</td><td><input id="d-T50-ar" type="number" step="0.1" value="2.0"></td><td><input id="d-T50-br" type="number" step="0.01" value="0.60"></td><td><input id="d-T50-aR" type="number" step="0.1" value="4.649"></td><td><input id="d-T50-bR" type="number" step="0.01" value="1.196"></td></tr>
+    <tr><td>T90</td><td><input id="d-T90-ar" type="number" step="0.1" value="2.0"></td><td><input id="d-T90-br" type="number" step="0.01" value="0.60"></td><td><input id="d-T90-aR" type="number" step="0.1" value="3.0"></td><td><input id="d-T90-bR" type="number" step="0.01" value="1.20"></td></tr>
+    <tr><td>T95</td><td><input id="d-T95-ar" type="number" step="0.1" value="2.5"></td><td><input id="d-T95-br" type="number" step="0.01" value="0.70"></td><td><input id="d-T95-aR" type="number" step="0.1" value="3.5"></td><td><input id="d-T95-bR" type="number" step="0.01" value="1.30"></td></tr>
+    <tr><td>FBP (fixed)</td><td><input id="d-FBP-ar" type="number" step="0.1" value="3.9"></td><td><input id="d-FBP-br" type="number" step="0.01" value="0"></td><td><input id="d-FBP-aR" type="number" step="0.1" value="7.2"></td><td><input id="d-FBP-bR" type="number" step="0.01" value="0"></td></tr>
+  </table>
+  </details>
+</div>
+
+<div class="note">
+  <b>How proficiency is judged.</b> An operator qualifies on a method when every reference sample they test passes <b>both</b> ASTM precision checks for that method's parameters: <b>repeatability r</b> (their duplicate readings A and B agree within the method's repeatability) and <b>reproducibility R</b> (the mean of their readings agrees with the reference value within the method's reproducibility). Repeatability proves the operator is consistent; reproducibility proves they are accurate against an independent result — together they demonstrate the in-house measurement reproduces the third-party lab. Qualification is <b>per method</b> (D4052 gravity, D5191 RVP, D86 distillation) so an operator can be signed off on the instruments they've demonstrated. Each instrument’s daily verification gates <b>only its own method</b>: the Grabner pentane P<sub>tot</sub> (16.19–16.53 psi) gates D5191 RVP; the Tanaka AD-7 and density-meter verifications gate D86 and D4052 respectively. A method whose verification is not passing is <b>BLOCKED</b> even if the numbers agree; a method whose verification is left “to be defined” still scores but is annotated on the record. (The D86 and D4052 verification procedures are still to be confirmed.) DVPE precision is level-dependent (larger allowance at higher vapor pressure); distillation precision is slope-dependent (steeper curve → larger allowance), computed per point from the recorded curve. All coefficients are editable and flagged pending confirmation against the current D4052 / D5191 / D86 editions; the D4052 SOP is still to be written. Records are the evidence package for replacing third-party rack-release testing at Fort Worth.
+</div>
+<div class="mockstamp">OPERATOR PROFICIENCY · SELF-CERTIFICATION</div>
+
+<script>
+const DPTS=['IBP','T10','T50','T90','T95','FBP'];
+const DPCT={IBP:0,T10:10,T50:50,T90:90,T95:95,FBP:100};
+let SAMPLES=[], OPS=[], RESULTS={}; // RESULTS[op][sampleId][param]={a,b}
+let sid=0;
+
+const val=id=>{const e=document.getElementById(id);return e?parseFloat(e.value):NaN;};
+const f2=(x,d=2)=>x==null||isNaN(x)?'—':Number(x).toFixed(d);
+
+// precision engines
+function rGrav(){return val('pc-grav-r');} function RGrav(){return val('pc-grav-R');}
+function rDvpe(x){return 0.00778*(x+18.0);} function RDvpe(x){return 0.0161*(x+18.0);}
+function distCoef(pt){return {ar:val('d-'+pt+'-ar'),br:val('d-'+pt+'-br'),aR:val('d-'+pt+'-aR'),bR:val('d-'+pt+'-bR')};}
+// local slope °F/% at a distillation point from bracketing recorded reference points
+function slopeAt(pt, ref){
+ const order=DPTS.filter(p=>ref[p]!=null&&!isNaN(ref[p]));
+ const i=order.indexOf(pt); if(i<0) return 0;
+ const lo=order[i-1], hi=order[i+1];
+ if(lo!=null&&hi!=null){const dv=DPCT[hi]-DPCT[lo];return dv>0?Math.abs(ref[hi]-ref[lo])/dv:0;}
+ if(hi!=null){const dv=DPCT[hi]-DPCT[pt];return dv>0?Math.abs(ref[hi]-ref[pt])/dv:0;}
+ if(lo!=null){const dv=DPCT[pt]-DPCT[lo];return dv>0?Math.abs(ref[pt]-ref[lo])/dv:0;}
+ return 0;
+}
+function distLimit(pt, slope){const c=distCoef(pt);return {r:c.ar+c.br*slope, R:c.aR+c.bR*slope, slope};}
+
+function addSample(pre){
+ const id='S'+(++sid);
+ SAMPLES.push(Object.assign({id, name:'Sample '+sid, cls:'C',
+   grav:null, dvpe:null, IBP:null,T10:null,T50:null,T90:null,T95:null,FBP:null,
+   tpGrav:null, tpDvpe:null}, pre||{}));
+ renderSamples(); renderOperators();
+}
+function renderSamples(){
+ document.getElementById('samples').innerHTML=SAMPLES.map(s=>`
+  <div class="opcard">
+   <div class="frow">
+     <div class="fld"><label>Sample name</label><input value="${s.name}" oninput="setS('${s.id}','name',this.value)" style="width:150px"></div>
+     <div class="fld"><label>Target class</label><input value="${s.cls}" oninput="setS('${s.id}','cls',this.value)" style="width:60px"></div>
+     <button class="btn" style="margin:0" onclick="delSample('${s.id}')">Remove</button>
+   </div>
+   <table class="g"><thead><tr><th>Reference (Rod)</th><th>Gravity °API</th><th>DVPE psi</th><th>IBP °F</th><th>T10 °F</th><th>T50 °F</th><th>T90 °F</th><th>T95 °F</th><th>FBP °F</th></tr></thead>
+   <tbody>
+    <tr><td><b>Rod value</b></td>
+     <td><input type="number" step="0.1" value="${s.grav??''}" oninput="setSn('${s.id}','grav',this.value)"></td>
+     <td><input type="number" step="0.01" value="${s.dvpe??''}" oninput="setSn('${s.id}','dvpe',this.value)"></td>
+     ${DPTS.map(p=>`<td><input type="number" step="0.1" value="${s[p]??''}" oninput="setSn('${s.id}','${p}',this.value)"></td>`).join('')}
+    </tr>
+    <tr><td>3rd-party (opt.)</td>
+     <td><input type="number" step="0.1" value="${s.tpGrav??''}" oninput="setSn('${s.id}','tpGrav',this.value)"></td>
+     <td><input type="number" step="0.01" value="${s.tpDvpe??''}" oninput="setSn('${s.id}','tpDvpe',this.value)"></td>
+     <td colspan="6" style="color:var(--ink-faint);font-size:10.5px">3rd-party gravity/DVPE for the management comparison (distillation optional, not shown)</td>
+    </tr>
+   </tbody></table>
+  </div>`).join('');
+}
+function setS(id,k,v){const s=SAMPLES.find(x=>x.id===id);s[k]=v;}
+function setSn(id,k,v){const s=SAMPLES.find(x=>x.id===id);s[k]=v===''?null:parseFloat(v);renderOperators();}
+function delSample(id){SAMPLES=SAMPLES.filter(x=>x.id!==id);renderSamples();renderOperators();}
+
+function addOperator(nm){
+ const name=nm||document.getElementById('op-name').value.trim();
+ if(!name)return; if(OPS.includes(name))return;
+ OPS.push(name); RESULTS[name]={};
+ if(!nm)document.getElementById('op-name').value='';
+ renderOperators();
+}
+function renderOperators(){
+ document.getElementById('operators').innerHTML=OPS.map(op=>`
+  <div class="opcard">
+   <div class="oph"><span class="opn">${op}</span><button class="btn" style="margin:0" onclick="delOp('${op}')">Remove</button></div>
+   ${SAMPLES.length?SAMPLES.map(s=>opSampleGrid(op,s)).join(''):'<div style="font-size:11px;color:var(--ink-faint)">Add reference samples first.</div>'}
+  </div>`).join('');
+}
+function opSampleGrid(op,s){
+ const R=RESULTS[op][s.id]||(RESULTS[op][s.id]={});
+ const cell=(param)=>{const c=R[param]||{a:null,b:null};
+  return `<td><input type="number" step="0.01" placeholder="A" value="${c.a??''}" oninput="setR('${op}','${s.id}','${param}','a',this.value)" style="width:64px">
+             <input type="number" step="0.01" placeholder="B" value="${c.b??''}" oninput="setR('${op}','${s.id}','${param}','b',this.value)" style="width:64px"></td>`;};
+ return `<div class="mtitle">${s.name} (Class ${s.cls})</div>
+  <table class="g"><thead><tr><th>A / B</th><th>Gravity</th><th>DVPE</th>${DPTS.map(p=>`<th>${p}</th>`).join('')}</tr></thead>
+  <tbody><tr><td style="color:var(--ink-dim);font-weight:700">readings</td>${cell('grav')}${cell('dvpe')}${DPTS.map(p=>cell(p)).join('')}</tr></tbody></table>`;
+}
+function setR(op,sid2,param,ab,v){const R=RESULTS[op][sid2]||(RESULTS[op][sid2]={});R[param]=R[param]||{a:null,b:null};R[param][ab]=v===''?null:parseFloat(v);}
+function delOp(op){OPS=OPS.filter(x=>x!==op);delete RESULTS[op];renderOperators();}
+
+function renderInstr(){
+ const map=[['v-tanaka','tanaka-stat','D86 distillation'],['v-dens','dens-stat','D4052 gravity']];
+ map.forEach(([sel,box,label])=>{
+  const v=document.getElementById(sel).value, el=document.getElementById(box);
+  if(v==='pass'){el.className='pentane ok';el.innerHTML='\u2713 '+label+' verification PASS \u2014 method verified for today.';}
+  else if(v==='fail'){el.className='pentane bad';el.innerHTML='\u2717 '+label+' verification NOT PASSING \u2014 this method cannot be scored today.';}
+  else{el.className='pentane none';el.innerHTML=label+' verification method still to be confirmed \u2014 scoring proceeds but the record notes verification is undefined.';}
+ });
+}
+function instrOK(method){
+ if(method==='D5191 RVP') return renderPentane();
+ const sel=method==='D86 Distillation'?'v-tanaka':(method==='D4052 Gravity'?'v-dens':null);
+ if(!sel) return true;
+ const v=document.getElementById(sel).value;
+ return v==='pass'?true:(v==='fail'?false:null);
+}
+function renderPentane(){
+ const p=val('p-ptot'), el=document.getElementById('pentane-stat');
+ if(isNaN(p)){el.className='pentane none';el.innerHTML='Enter today\u2019s pentane P<sub>tot</sub> — no proficiency day can be scored until the instrument verification passes.';return false;}
+ if(p>=16.19&&p<=16.53){el.className='pentane ok';el.innerHTML=`&#10003; Pentane verification PASS — P<sub>tot</sub> ${f2(p)} psi within 16.19–16.53. Instrument verified for today.`;return true;}
+ el.className='pentane bad';el.innerHTML=`&#10007; Pentane verification FAIL — P<sub>tot</sub> ${f2(p)} psi outside 16.19–16.53. Per SOP, repeat once; if still out, contact PQ. Proficiency cannot be scored.`;return false;
+}
+
+function evalParam(param, res, ref, s){
+ // returns {a,b,mean, rLim, RLim, rPass, RPass, slope}
+ if(!res||res.a==null||isNaN(res.a)) return null;
+ const a=res.a, b=(res.b==null||isNaN(res.b))?null:res.b;
+ const mean=b==null?a:(a+b)/2;
+ let rLim, RLim, slope=null;
+ if(param==='grav'){rLim=rGrav();RLim=RGrav();}
+ else if(param==='dvpe'){rLim=rDvpe(mean);RLim=RDvpe(mean);}
+ else {slope=slopeAt(param, s);const L=distLimit(param, slope);rLim=L.r;RLim=L.R;}
+ const rPass=b==null?null:(Math.abs(a-b)<=rLim+1e-9);
+ const RPass=ref==null||isNaN(ref)?null:(Math.abs(mean-ref)<=RLim+1e-9);
+ return {a,b,mean,rLim,RLim,rPass,RPass,slope,ref,rDiff:b==null?null:Math.abs(a-b),RDiff:ref==null?null:Math.abs(mean-ref)};
+}
+
+function evaluateAll(){
+ renderPentane(); renderInstr();
+ const methodParams={ 'D4052 Gravity':['grav'], 'D5191 RVP':['dvpe'], 'D86 Distillation':DPTS };
+ const methodGate={}; Object.keys(methodParams).forEach(m=>methodGate[m]=instrOK(m));
+ let html=`<div class="card"><h2><span class="step">5</span> Proficiency results</h2>`;
+ const gateMsgs=Object.entries(methodGate).filter(([m,g])=>g===false).map(([m])=>m);
+ if(gateMsgs.length) html+=`<div class="verdict fail">Instrument verification not passing for: ${gateMsgs.join(', ')} — these methods cannot be qualified today. Other methods are unaffected.</div>`;
+ OPS.forEach(op=>{
+  html+=`<div class="opcard"><div class="oph"><span class="opn">${op}</span></div>`;
+  const methodVerdict={};
+  Object.entries(methodParams).forEach(([method,params])=>{
+   let allPass=true, anyEvaluated=false, rows='';
+   SAMPLES.forEach(s=>{
+    params.forEach(param=>{
+     const res=(RESULTS[op][s.id]||{})[param];
+     const ref=param==='grav'?s.grav:(param==='dvpe'?s.dvpe:s[param]);
+     const e=evalParam(param,res,ref,s);
+     if(!e)return; anyEvaluated=true;
+     const rP=e.rPass, RP=e.RPass;
+     if(rP===false||RP===false)allPass=false;
+     const label=param==='grav'?'Gravity':(param==='dvpe'?'DVPE':param);
+     rows+=`<tr><td>${s.name}</td><td><b>${label}</b></td>
+       <td>${f2(e.a)}${e.b!=null?' / '+f2(e.b):''}</td>
+       <td>${f2(e.mean)}</td>
+       <td>${e.ref!=null&&!isNaN(e.ref)?f2(e.ref):'—'}</td>
+       <td>${e.rDiff!=null?f2(e.rDiff):'—'} / ${f2(e.rLim)}</td>
+       <td>${pill(rP)}</td>
+       <td>${e.RDiff!=null?f2(e.RDiff):'—'} / ${f2(e.RLim)}</td>
+       <td>${pill(RP)}</td></tr>`;
+    });
+   });
+   let verdict=!anyEvaluated?'na':(allPass?'pass':'fail');
+   const gate=methodGate[method];
+   if(gate===false && verdict==='pass') verdict='blocked';
+   methodVerdict[method]=verdict;
+   const badge=verdict==='na'?'<span class="pill na">NO DATA</span>'
+     :verdict==='pass'?'<span class="pill pass">QUALIFIED</span>'
+     :verdict==='blocked'?'<span class="pill fail">BLOCKED — instrument not verified</span>'
+     :'<span class="pill fail">NOT YET</span>';
+   const gnote=gate===null&&anyEvaluated?' <span style="font-size:9.5px;color:var(--amber);font-weight:700">(verification undefined)</span>':'';
+   html+=`<div class="mtitle">${method} — ${badge}${gnote}</div>`;
+   if(anyEvaluated) html+=`<table class="g"><thead><tr><th>Sample</th><th>Param</th><th>A / B</th><th>Mean</th><th>Ref</th><th>|A−B| / r</th><th>r</th><th>|mean−ref| / R</th><th>R</th></tr></thead><tbody>${rows}</tbody></table>`;
+  });
+  RESULTS[op]._verdict=methodVerdict;
+  html+=`</div>`;
+ });
+ html+=`</div>`;
+ // printable per-operator report record
+ html+=buildReport(null, methodParams);
+ document.getElementById('reportout').innerHTML=html;
+ document.getElementById('reportout').scrollIntoView({behavior:'smooth'});
+}
+function pill(v){return v===true?'<span class="pill pass">PASS</span>':(v===false?'<span class="pill fail">FAIL</span>':'<span class="pill na">—</span>');}
+
+function buildReport(_ignored, methodParams){
+ const vTan=document.getElementById('v-tanaka').value, vDen=document.getElementById('v-dens').value;
+ const vlabel=v=>v==='pass'?'PASS':(v==='fail'?'NOT PASSING':'to be defined');
+ const pentaneOK=renderPentane();
+ const date=document.getElementById('s-date').value||'—';
+ const trainer=document.getElementById('s-trainer').value, qc=document.getElementById('s-qc').value;
+ const grab=document.getElementById('s-grabner').value||'—', tan=document.getElementById('s-tanaka').value||'—', den=document.getElementById('s-dens').value||'—';
+ const recert=(()=>{if(!document.getElementById('s-date').value)return '—';const d=new Date(document.getElementById('s-date').value);d.setFullYear(d.getFullYear()+1);return d.toISOString().slice(0,10);})();
+ let out=`<div class="card"><h2><span class="step">6</span> Proficiency report record</h2>`;
+ OPS.forEach(op=>{
+  const mv=RESULTS[op]._verdict||{};
+  const methods=Object.keys(methodParams);
+  const qualified=methods.filter(m=>mv[m]==='pass');
+  out+=`<div id="rep-${op.replace(/\W/g,'')}" class="docpaper">
+   <div class="dlh"><span class="dwm">GLOBAL<b>PARTNERS</b></span><span>Operator Proficiency Record · Quality — Self-Certification</span></div>
+   <div class="dtt">Operator Proficiency Demonstration — ${op}</div>
+   <div class="dprow"><span>Terminal · date</span><b>Fort Worth J117 · ${date}</b></div>
+   <div class="dprow"><span>Trainer / reference analyst</span><b>${trainer}</b></div>
+   <div class="dprow"><span>Instruments</span><b>Grabner VP Vision ${grab} · Tanaka AD-7 ${tan} · density ${den}</b></div>
+   <div class="dprow"><span>Grabner pentane verification (D5191)</span><b>${pentaneOK?'PASS ('+f2(val('p-ptot'))+' psi, 16.19–16.53)':'NOT PASSING'}</b></div>
+   <div class="dprow"><span>Tanaka AD-7 verification (D86)</span><b>${vlabel(vTan)}</b></div>
+   <div class="dprow"><span>Density meter verification (D4052)</span><b>${vlabel(vDen)}</b></div>
+   <div class="dprow"><span>Pass criterion</span><b>Within ASTM precision — repeatability r (duplicate) &amp; reproducibility R (vs ${trainer})</b></div>
+   ${Object.keys(methodParams).map(m=>`<div class="dprow"><span>${m}</span><b>${mv[m]==='pass'?'QUALIFIED':(mv[m]==='blocked'?'BLOCKED — instrument not verified':(mv[m]==='fail'?'NOT YET QUALIFIED':'no data'))}</b></div>`).join('')}
+   <div class="dprow"><span>Methods qualified</span><b>${qualified.length?qualified.join(' · '):'none'}</b></div>
+   <div class="dprow"><span>Recert due</span><b>${qualified.length?recert:'—'}</b></div>
+   <div class="dprow"><span>QC sign-off</span><b>${qc} __________________  Date ______</b></div>
+   <div style="font-size:10px;color:var(--ink-dim);margin-top:10px;line-height:1.5">Qualification is per method and effective only for methods marked QUALIFIED, contingent on QC sign-off above. Precision coefficients pending confirmation against current ASTM editions. This record is evidence toward replacing third-party rack-release testing at Fort Worth.</div>
+  </div>`;
+ });
+ out+=`</div>`;
+ return out;
+}
+
+function exportJSON(){
+ const payload={type:'operator-proficiency', terminalId:'FTW-J117',
+  date:document.getElementById('s-date').value, trainer:document.getElementById('s-trainer').value,
+  verifications:{grabnerPentanePtot:val('p-ptot'), tanaka:document.getElementById('v-tanaka').value, densityMeter:document.getElementById('v-dens').value},
+  samples:SAMPLES, operators:OPS, results:RESULTS, exported:new Date().toISOString()};
+ const blob=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='ftw-proficiency-'+(document.getElementById('s-date').value||'session')+'.json';
+ document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},400);
+}
+
+// seed
+document.getElementById('s-date').value=new Date().toISOString().slice(0,10);
+addSample({name:'Low RVP',cls:'C'}); addSample({name:'Mid RVP',cls:'C'}); addSample({name:'High RVP',cls:'C'});
+</script>
+</body></html>

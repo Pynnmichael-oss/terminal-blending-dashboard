@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Partners · Rack Demand Forecast — Fort Worth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--ulsd:#C0882E;--ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;
+--line:rgba(0,79,113,.13);--white:#FFFFFF;--gray:#EEF3F6;--gray2:#E5ECF0;--amber:#E0A23C;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+background:radial-gradient(1000px 520px at 92% -14%,rgba(0,179,152,.07),transparent 60%),radial-gradient(760px 440px at -3% 114%,rgba(169,238,138,.11),transparent 60%),var(--white)}
+a{text-decoration:none;color:inherit}
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:50}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:var(--line)}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)} .appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--white);font-size:12px;font-weight:600;color:var(--ink-dim)} .pill b{color:var(--ink);font-weight:700}
+.crumb{font-size:12px;font-weight:600;color:var(--ink-faint)} .crumb b{color:var(--slate);font-weight:700}
+.main{max-width:1320px;margin:0 auto;padding:22px 30px 64px}
+.ptitle{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.ptitle h1{font-size:26px;font-weight:800;letter-spacing:.3px;color:var(--slate)}
+.ptitle .sub{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-top:3px}
+.ptitle .when{text-align:right;font-size:12px;font-weight:600;color:var(--ink-dim)} .ptitle .when b{color:var(--slate);font-weight:700}
+.prov{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.prov span{font-size:10px;font-weight:600;color:var(--ink-dim);background:var(--gray);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+.prov span b{color:var(--slate);font-weight:700}
+.prov span.warn{background:rgba(224,162,60,.12);border-color:rgba(224,162,60,.4);color:#8a5e12}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 26px -22px rgba(0,79,113,.5)}
+.kpi .l{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-dim)}
+.kpi .v{font-size:27px;font-weight:800;color:var(--slate);line-height:1.05} .kpi .v small{font-size:13px;font-weight:700;color:var(--ink-faint);margin-left:3px}
+.kpi.reg{border-top:3px solid var(--teal)} .kpi.prem{border-top:3px solid var(--slate)} .kpi.ulsd{border-top:3px solid var(--ulsd)} .kpi.tot{background:linear-gradient(160deg,rgba(0,79,113,.05),rgba(0,179,152,.08))}
+.kpi .gl{font-size:9px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:5px;align-self:flex-start}
+.kpi.reg .gl{color:#0a7e62;background:rgba(0,179,152,.14)} .kpi.prem .gl{color:var(--slate);background:rgba(0,79,113,.10)} .kpi.ulsd .gl{color:#8a5e12;background:rgba(192,136,46,.18)}
+.toolbar{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.seglabel{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint)}
+.segs{display:inline-flex;background:var(--gray);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg{border:none;background:transparent;font-family:inherit;font-weight:700;font-size:12.5px;color:var(--ink-dim);padding:8px 18px;border-radius:8px;cursor:pointer;transition:.15s;letter-spacing:.2px}
+.seg:hover{color:var(--slate)}
+.seg.on{background:var(--white);color:var(--slate);box-shadow:0 4px 12px -6px rgba(0,79,113,.5)}
+.seg .sb{font-size:9.5px;font-weight:600;color:var(--ink-faint);margin-left:5px}
+.seg.on .sb{color:var(--teal)}
+#statline{flex:1;text-align:right;font-size:12.5px;font-weight:600;color:var(--ink-dim);min-width:240px} #statline b{color:var(--slate);font-weight:800}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px -26px rgba(0,79,113,.55);padding:16px 18px 14px}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.panel-h h2{font-size:12px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--slate)}
+.panel-h .hsub{font-size:10px;font-weight:600;color:var(--ink-faint)}
+.hero{margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.cv{width:100%;height:auto;display:block;font-family:'Montserrat',sans-serif}
+.vlab{font-size:12px;font-weight:700;fill:var(--slate)} .vlab.sm{font-size:9.5px;font-weight:700}
+.xlab{font-size:10.5px;font-weight:600;fill:var(--ink-dim)}
+.ylab{font-size:9px;font-weight:600;fill:var(--ink-faint)}
+.note{background:var(--white);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:12px;padding:14px 18px;font-size:12px;font-weight:500;color:var(--ink-dim);line-height:1.6}
+.note b{color:var(--slate);font-weight:700} .note code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:var(--gray);padding:1px 6px;border-radius:5px;color:var(--slate)}
+.mockstamp{position:fixed;bottom:12px;right:14px;font-size:9px;font-weight:700;letter-spacing:1.4px;color:var(--ink-faint);background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:6px;padding:5px 10px;z-index:60}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}#statline{text-align:left}}
+</style></head>
+<body>
+<header class="appbar">
+  <div class="wm">GLOBAL<b>PARTNERS</b></div>
+  <div class="divider"></div>
+  <div class="appname">Terminal Operations <span>/ Rack Demand</span></div>
+  <div class="spacer"></div>
+  <div class="pill">&#128205; <b>Fort Worth</b></div>
+  <a href="index.html" style="font-size:12px;font-weight:700;color:var(--teal);text-decoration:none;margin-left:8px">← Dashboard</a>
+</header>
+
+<div class="main">
+  <div class="ptitle">
+    <div>
+      <h1>Rack Demand Forecast</h1>
+      <div class="sub">Average liftings by product &middot; year, weekday, month and week &mdash; the curve that drives depletion</div>
+    </div>
+    <div class="when">Mon &middot; Jun 22 2026<br><span style="color:var(--ink-faint)">Report last load 06/22 16:26</span></div>
+  </div>
+  <div class="prov">
+    <span>Source &middot; <b>Fort Worth Terminal Lifting Averages</b> report</span>
+    <span>Supplier group &middot; <b>All</b></span>
+    <span class="warn">Placeholder &middot; <b>values static</b> &mdash; captured 06/22, pending live feed</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi reg"><span class="gl">REGULAR</span><span class="l">Recent daily avg</span><span class="v">14,211<small>bbl/day</small></span></div>
+    <div class="kpi prem"><span class="gl">PREMIUM</span><span class="l">Recent daily avg</span><span class="v">1,910<small>bbl/day</small></span></div>
+    <div class="kpi ulsd"><span class="gl">ULSD</span><span class="l">Recent daily avg</span><span class="v">11,835<small>bbl/day</small></span></div>
+    <div class="kpi tot"><span class="l">Total terminal demand</span><span class="v">27,956<small>bbl/day</small></span><span class="l" style="text-transform:none;letter-spacing:.2px;color:var(--ink-faint)">3-product average lifting rate</span></div>
+  </div>
+
+  <div class="toolbar">
+    <span class="seglabel">Product sub category</span>
+    <div class="segs">
+      <button class="seg on" data-k="reg">Regular<span class="sb">RBOB 87</span></button>
+      <button class="seg" data-k="prem">Premium<span class="sb">RBOB 93</span></button>
+      <button class="seg" data-k="ulsd">ULSD<span class="sb">diesel</span></button>
+    </div>
+    <div id="statline"></div>
+  </div>
+
+  <div class="panel hero">
+    <div class="panel-h"><h2>Average Liftings by Weekday</h2><span class="hsub">the forecast curve &middot; avg over 12/21/23&ndash;06/22/26 &middot; bbl/day</span></div>
+    <div id="weekday"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-h"><h2>Average by Year</h2><span class="hsub">2023&ndash;2026 &middot; bbl/day</span></div>
+      <div id="yearly"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Average Monthly</h2><span class="hsub">06/2024&ndash;05/2026 &middot; bbl/day</span></div>
+      <div id="monthly"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:18px">
+    <div class="panel-h"><h2>Average Weekly &middot; with diff to prior week</h2><span class="hsub">last 10 weeks &middot; WO 04/19&ndash;06/21 &middot; bbl/day</span></div>
+    <div id="weekly"></div>
+  </div>
+
+  <div class="note">
+    <b>Placeholder &mdash; how this becomes live.</b> Every value here is transcribed from the Fort Worth Terminal Lifting Averages report snapshot (last load 06/22/26 16:26) and held static in a single <code>G</code> data object at the top of this file, keyed by product. The yearly and weekday bars and the daily-average tiles are read straight off the report; the monthly and weekly series are transcribed from the same snapshot and worth a quick verify against the source. When the live dataset is connected, the only change is replacing that one object with a query result in the same shape (per product: <code>daily</code>, <code>yearly[4]</code>, <code>weekday[7]</code>, <code>monthly[23]</code>, <code>wkv[10]</code> + <code>wkd[9]</code>) &mdash; every chart and the toggle redraw unchanged. The weekday curve is the operational heart: Thursday peaks all three grades, and ULSD falls ~47% into Sunday, so weekend diesel depletes far slower than the flat daily average implies.
+  </div>
+</div>
+<div class="mockstamp">RACK DEMAND &middot; SNAPSHOT PLACEHOLDER &middot; PENDING LIVE FEED</div>
+
+<script>
+const G = {
+ reg:{label:'Regular', sub:'RBOB (87)', c:'#00B398', c2:'#33c4b1', daily:14211, hi:19914, lo:8912, ytd:13600,
+   yearly:[11188,13363,13882,13600], weekday:[12692,13651,13306,14735,14535,14105,12089],
+   wkv:[15388,15914,15076,13641,13781,13502,13715,14050,13857,13376], wkd:[1,-3,-10,1,-2,2,2,-1,-3],
+   mon:[13511,13281,14265,13058,13919,13310,12876,13403,12295,13471,13713,13765,14518,14309,14714,14415,13910,11911,13637,13896,14375,14010,13894]},
+ prem:{label:'Premium', sub:'RBOB (93)', c:'#004F71', c2:'#2f7b9a', daily:1910, hi:2619, lo:1210, ytd:1943,
+   yearly:[1422,1856,2015,1943], weekday:[1799,1944,1948,2088,2014,1964,1757],
+   wkv:[2009,1997,1912,1839,1829,1902,1800,1896,2095,1590], wkd:[-1,-4,-4,-1,4,-5,5,10,-24],
+   mon:[1777,1825,1965,1767,2056,1925,2012,1936,1798,1997,2012,1974,2143,1928,2124,2040,2135,2090,1996,1849,2097,1952,1948]},
+ ulsd:{label:'ULSD', sub:'diesel', c:'#C0882E', c2:'#d8a857', daily:11835, hi:null, lo:5448, ytd:11519,
+   yearly:[4334,7610,10361,11519], weekday:[9715,10669,10323,11226,10361,7622,5937],
+   wkv:[12326,11496,12739,12767,10581,10494,11651,12581,12647,7911], wkd:[-7,11,0,-17,-1,11,8,1,-37],
+   mon:[8056,7708,8668,8391,9169,6890,7659,7837,9347,8823,8664,9732,10729,11638,11499,11174,12108,10841,11361,10179,13144,11410,12386]}
+};
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const YR=['2023','2024','2025','2026'];
+const WK=['4/19','4/26','5/3','5/10','5/17','5/24','5/31','6/7','6/14','6/21'];
+const MON=(()=>{const a=[],nm=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let m=6,y=2024;for(let i=0;i<23;i++){a.push(nm[m]+" '"+String(y).slice(2));m++;if(m>11){m=0;y++;}}return a;})();
+const fmt=n=>n.toLocaleString('en-US');
+
+function barChart(vals,labs,c,c2,idk){
+  const W=620,H=250,pl=14,pr=14,pt=34,pb=30,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max(...vals)*1.16,n=vals.length,slot=pw/n,bw=Math.min(slot*0.56,66);
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="cv" preserveAspectRatio="xMidYMid meet">`;
+  s+=`<defs><linearGradient id="g_${idk}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c2}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs>`;
+  s+=`<line x1="${pl}" y1="${pt+ph}" x2="${W-pr}" y2="${pt+ph}" stroke="rgba(0,79,113,.18)"/>`;
+  vals.forEach((v,i)=>{const x=pl+slot*(i+0.5),h=v/max*ph,y=pt+ph-h;
+    s+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#g_${idk})"/>`;
+    s+=`<text x="${x}" y="${y-7}" text-anchor="middle" class="vlab">${fmt(v)}</text>`;
+    s+=`<text x="${x}" y="${pt+ph+18}" text-anchor="middle" class="xlab">${labs[i]}</text>`;});
+  return s+`</svg>`;
+}
+function lineChart(vals,labs,c,opt){
+  opt=opt||{};const W=620,H=250,pl=42,pr=18,pt=24,pb=30,pw=W-pl-pr,ph=H-pt-pb;
+  const mx=Math.max(...vals),mn=Math.min(...vals),pad=(mx-mn)*0.25||mx*0.1,hi=mx+pad,lo=Math.max(0,mn-pad);
+  const X=i=>pl+pw*(i/(vals.length-1)),Y=v=>pt+ph*(1-(v-lo)/(hi-lo));
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="cv" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const gv=lo+(hi-lo)*g/2,gy=Y(gv);s+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="rgba(0,79,113,.08)"/><text x="${pl-6}" y="${gy+3}" text-anchor="end" class="ylab">${fmt(Math.round(gv))}</text>`;}
+  const pts=vals.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+  if(opt.fillArea)s+=`<polygon points="${pl},${pt+ph} ${pts} ${W-pr},${pt+ph}" fill="${c}" opacity="0.07"/>`;
+  s+=`<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  vals.forEach((v,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#fff" stroke="${c}" stroke-width="1.6"/>`;});
+  const every=opt.labelEvery||1;
+  labs.forEach((l,i)=>{if(i%every===0||i===labs.length-1)s+=`<text x="${X(i)}" y="${pt+ph+18}" text-anchor="middle" class="xlab">${l}</text>`;});
+  if(opt.showVals){[0,vals.length-1,vals.indexOf(mx),vals.indexOf(mn)].forEach(i=>{const v=vals[i],yy=Y(v)-9;s+=`<text x="${X(i)}" y="${yy<pt+4?Y(v)+15:yy}" text-anchor="middle" class="vlab sm">${fmt(v)}</text>`;});}
+  return s+`</svg>`;
+}
+function weeklyChart(vals,wow,labs,c){
+  const W=620,H=300,pl=42,pr=18,pt=22,lh=148,pw=W-pl-pr;
+  const mx=Math.max(...vals),mn=Math.min(...vals),pad=(mx-mn)*0.32||mx*0.1,hi=mx+pad,lo=Math.max(0,mn-pad);
+  const X=i=>pl+pw*(i/(vals.length-1)),Y=v=>pt+lh*(1-(v-lo)/(hi-lo));
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="cv" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const gv=lo+(hi-lo)*g/2,gy=Y(gv);s+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="rgba(0,79,113,.08)"/><text x="${pl-6}" y="${gy+3}" text-anchor="end" class="ylab">${fmt(Math.round(gv))}</text>`;}
+  const pts=vals.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+  s+=`<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  vals.forEach((v,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#fff" stroke="${c}" stroke-width="1.6"/><text x="${X(i)}" y="${Y(v)-9}" text-anchor="middle" class="vlab sm">${fmt(v)}</text>`;});
+  const dz=pt+lh+62,dmax=Math.max(...wow.map(Math.abs))*1.18,dh=44;
+  s+=`<line x1="${pl}" y1="${dz}" x2="${W-pr}" y2="${dz}" stroke="rgba(0,79,113,.2)"/><text x="${pl-6}" y="${dz+3}" text-anchor="end" class="ylab">0%</text>`;
+  wow.forEach((d,i)=>{const x=X(i+1),bw=Math.min(pw/vals.length*0.5,28),hh=Math.abs(d)/dmax*dh,neg=d<0;
+    const col=d<=-10?'#B23A48':(neg?'#D9655B':'#4FB286'),y=neg?dz:dz-hh;
+    s+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${hh}" rx="2" fill="${col}"/>`;
+    const ly=neg?dz+hh+12:dz-hh-5;s+=`<text x="${x}" y="${ly}" text-anchor="middle" class="vlab sm" fill="${col}">${d>0?'+':''}${d}%</text>`;});
+  labs.forEach((l,i)=>{s+=`<text x="${X(i)}" y="${H-6}" text-anchor="middle" class="xlab">${l}</text>`;});
+  return s+`</svg>`;
+}
+function render(k){
+  const d=G[k];
+  document.querySelectorAll('.seg').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  const range=d.hi?`range ${fmt(d.lo)}&ndash;${fmt(d.hi)}`:`recent low ${fmt(d.lo)}`;
+  document.getElementById('statline').innerHTML=`<b>${d.label}</b> &middot; ${d.sub} &mdash; daily avg <b>${fmt(d.daily)}</b> bbl &middot; ${range} &middot; 2026 YTD ${fmt(d.ytd)}`;
+  document.getElementById('weekday').innerHTML=barChart(d.weekday,WD,d.c,d.c2,'wd');
+  document.getElementById('yearly').innerHTML=barChart(d.yearly,YR,d.c,d.c2,'yr');
+  document.getElementById('monthly').innerHTML=lineChart(d.mon,MON,d.c,{labelEvery:3,fillArea:true,showVals:true});
+  document.getElementById('weekly').innerHTML=weeklyChart(d.wkv,d.wkd,WK,d.c);
+}
+document.querySelectorAll('.seg').forEach(b=>b.addEventListener('click',()=>render(b.dataset.k)));
+render('reg');
+</script>
+</body></html>

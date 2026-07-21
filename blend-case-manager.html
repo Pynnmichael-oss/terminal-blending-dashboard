@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Partners · Blend Case Manager — Fort Worth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--ulsd:#C0882E;--ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;
+--line:rgba(0,79,113,.13);--white:#FFFFFF;--gray:#EEF3F6;--gray2:#E5ECF0;--amber:#E0A23C;--red:#D9655B;--green:#4FB286;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+background:radial-gradient(1000px 520px at 92% -14%,rgba(0,179,152,.07),transparent 60%),radial-gradient(760px 440px at -3% 114%,rgba(169,238,138,.11),transparent 60%),var(--white)}
+a{text-decoration:none;color:inherit}
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:50}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:var(--line)}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)} .appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--white);font-size:12px;font-weight:600;color:var(--ink-dim)} .pill b{color:var(--ink);font-weight:700}
+.crumb{font-size:12px;font-weight:600;color:var(--ink-faint)} .crumb b{color:var(--slate);font-weight:700}
+.main{max-width:1360px;margin:0 auto;padding:22px 30px 64px}
+.ptitle{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.ptitle h1{font-size:26px;font-weight:800;letter-spacing:.3px;color:var(--slate)}
+.ptitle .sub{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-top:3px}
+.prov{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.prov span{font-size:10px;font-weight:600;color:var(--ink-dim);background:var(--gray);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+.prov span b{color:var(--slate);font-weight:700}
+.prov span.warn{background:rgba(224,162,60,.12);border-color:rgba(224,162,60,.4);color:#8a5e12}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:13px 16px;display:flex;flex-direction:column;gap:3px;box-shadow:0 10px 26px -22px rgba(0,79,113,.5)}
+.kpi .l{font-size:9.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink-dim)}
+.kpi .v{font-size:24px;font-weight:800;color:var(--slate);line-height:1.1} .kpi .v small{font-size:12px;font-weight:700;color:var(--ink-faint)}
+.kpi .x{font-size:10.5px;font-weight:600;color:var(--ink-faint)}
+.kpi.act{border-top:3px solid var(--amber)} .kpi.act .v{color:#8a5e12}
+.kpi .cap{color:var(--green)} .kpi .mis{color:var(--red)}
+.secttl{font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-faint);margin:4px 2px 12px;display:flex;align-items:center;gap:10px}
+.secttl .add{margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:.4px;color:var(--teal);text-transform:uppercase;border:1px solid rgba(0,179,152,.4);border-radius:8px;padding:6px 12px;cursor:pointer}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;margin-bottom:26px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:15px 17px;cursor:pointer;transition:.16s;box-shadow:0 10px 26px -24px rgba(0,79,113,.55);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.card.reg::before{background:var(--teal)} .card.prem::before{background:var(--slate)}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 34px -22px rgba(0,79,113,.5)}
+.card.sel{border-color:rgba(0,79,113,.45);box-shadow:0 0 0 2px rgba(0,179,152,.3),0 14px 30px -20px rgba(0,79,113,.5)}
+.card .ch{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.card .gid{font-size:11px;font-weight:700;color:var(--ink-faint);letter-spacing:.3px}
+.gchip{font-size:8.5px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:5px}
+.gchip.reg{color:#0a7e62;background:rgba(0,179,152,.16)} .gchip.prem{color:var(--slate);background:rgba(0,79,113,.12)}
+.card .stg{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:6px}
+.stg.review{color:#8a5e12;background:rgba(224,162,60,.16)} .stg.go{color:#0a7e62;background:rgba(0,179,152,.14)} .stg.hold{color:var(--ink-dim);background:rgba(0,79,113,.08)}
+.card .tk{font-size:19px;font-weight:800;color:var(--slate);margin-bottom:2px} .card .tk small{font-size:11px;font-weight:600;color:var(--ink-faint)}
+.card .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;font-weight:600;color:var(--ink-dim);margin:7px 0 10px}
+.card .meta b{color:var(--slate);font-weight:700}
+.card .meta .arr{color:var(--teal)}
+.dots{display:flex;gap:3px;margin-bottom:9px}
+.dots i{flex:1;height:4px;border-radius:2px;background:var(--gray2)}
+.dots i.done{background:var(--teal)} .dots i.act{background:var(--amber)}
+.card .next{font-size:11.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px}
+.card .next .ni{color:var(--teal)}
+.detail{background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 36px -28px rgba(0,79,113,.6);overflow:hidden;margin-bottom:18px}
+.dhead{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line);background:linear-gradient(160deg,rgba(0,79,113,.03),rgba(0,179,152,.04))}
+.dhead .t{font-size:16px;font-weight:800;color:var(--slate)} .dhead .t small{font-size:12px;font-weight:600;color:var(--ink-faint);margin-left:8px}
+.dhead .who{margin-left:auto;font-size:11px;font-weight:600;color:var(--ink-dim)} .dhead .who b{color:var(--slate)}
+.stepper{display:flex;padding:18px 22px 6px;gap:0;overflow-x:auto}
+.step{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;position:relative}
+.step .ln{position:absolute;top:13px;left:-50%;width:100%;height:2px;background:var(--gray2);z-index:0}
+.step.done .ln,.step.act .ln{background:var(--teal)}
+.step:first-child .ln{display:none}
+.step .nd{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;z-index:1;border:2px solid var(--gray2);background:var(--white);color:var(--ink-faint);transition:.15s}
+.step.done .nd{background:var(--teal);border-color:var(--teal);color:#fff}
+.step.act .nd{border-color:var(--amber);color:#8a5e12;background:#fff;box-shadow:0 0 0 4px rgba(224,162,60,.18)}
+.step.view .nd{outline:2px solid var(--slate);outline-offset:2px}
+.step .sl{font-size:9px;font-weight:700;letter-spacing:.2px;color:var(--ink-dim);text-align:center;line-height:1.2}
+.step.act .sl{color:#8a5e12}
+.dbody{display:grid;grid-template-columns:1fr 300px;gap:0}
+.stage{padding:18px 22px 24px;border-right:1px solid var(--line);min-height:280px}
+.stage h3{font-size:13px;font-weight:800;letter-spacing:.4px;color:var(--slate);margin-bottom:3px;display:flex;align-items:center;gap:9px}
+.stage h3 .tag{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:5px;text-transform:uppercase}
+.stage .lead{font-size:12px;font-weight:500;color:var(--ink-dim);line-height:1.55;margin-bottom:14px}
+.lineage{display:flex;gap:10px;align-items:stretch;margin-bottom:16px;flex-wrap:wrap}
+.lcard{flex:1;min-width:150px;border:1px solid var(--line);border-radius:11px;padding:11px 14px;background:var(--gray)}
+.lcard.act{background:rgba(0,179,152,.06);border-color:rgba(0,179,152,.35)}
+.lcard .h{font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.lrow{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--ink-dim);padding:3px 0} .lrow b{color:var(--slate);font-weight:700}
+.larrow{display:grid;place-items:center;color:var(--teal);font-size:20px;font-weight:800}
+table.scn{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:12px}
+table.scn th{text-align:left;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);padding:6px 8px;border-bottom:1px solid var(--line)}
+table.scn td{padding:9px 8px;border-bottom:1px solid var(--line);font-weight:600;color:var(--ink)}
+table.scn tr.rec{background:rgba(0,179,152,.07)} table.scn tr.rec td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+table.scn .opt{font-weight:800;color:var(--slate)} table.scn .opt small{display:block;font-weight:600;font-size:9.5px;color:var(--ink-faint)}
+.rvpb{font-weight:800;padding:2px 8px;border-radius:5px}
+.rvpb.under{color:#8a5e12;background:rgba(224,162,60,.14)} .rvpb.on{color:#0a7e62;background:rgba(0,179,152,.16)} .rvpb.over{color:var(--slate);background:rgba(0,79,113,.10)}
+.commbox{background:var(--gray);border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:14px}
+.commbox .h{font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.commbox p{font-size:12px;font-weight:600;color:var(--ink);line-height:1.6;margin:3px 0}
+.commbox .b4{color:var(--slate);font-weight:800}
+.acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.btn{font-family:inherit;font-weight:700;font-size:12px;border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--white);color:var(--slate);transition:.14s}
+.btn:hover{border-color:rgba(0,79,113,.4)}
+.btn.pri{background:var(--teal);border-color:var(--teal);color:#fff} .btn.pri:hover{background:#009d86}
+.btn.warn{background:#fff;border-color:rgba(224,162,60,.5);color:#8a5e12}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kvc{border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+.kvc .k{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.kvc .v{font-size:16px;font-weight:800;color:var(--slate)} .kvc .v small{font-size:10px;font-weight:600;color:var(--ink-faint)}
+.trucks{display:flex;gap:5px;margin:4px 0 12px}
+.truck{width:30px;height:22px;border-radius:4px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:9px;font-weight:800;color:var(--ink-faint)}
+.truck.in{background:var(--teal);border-color:var(--teal);color:#fff} .truck.due{border-style:dashed}
+.gate{font-size:11px;font-weight:600;color:var(--ink-dim);background:var(--gray);border-radius:9px;padding:10px 13px;line-height:1.5}
+.gate b{color:var(--slate)}
+.folder{padding:16px 18px}
+.folder .fh{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--slate);margin-bottom:3px}
+.folder .fp{font-size:10px;font-weight:600;color:var(--ink-faint);margin-bottom:12px;word-break:break-all}
+.doc{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:600}
+.doc:last-child{border-bottom:none}
+.doc .ic{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;flex-shrink:0}
+.doc.done .ic{background:var(--teal);color:#fff} .doc.done{color:var(--ink)}
+.doc.prog .ic{background:rgba(224,162,60,.18);color:#8a5e12;border:1.5px solid var(--amber)} .doc.prog{color:#8a5e12}
+.doc.wait .ic{background:var(--gray2);color:var(--ink-faint)} .doc.wait{color:var(--ink-faint)}
+.ledger{background:var(--white);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px -26px rgba(0,79,113,.55);padding:16px 20px;margin-bottom:18px}
+.ledger h2{font-size:12px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--slate);margin-bottom:4px}
+.ledger .ls{font-size:11px;font-weight:600;color:var(--ink-faint);margin-bottom:12px}
+table.led{width:100%;border-collapse:collapse;font-size:12px}
+table.led th{text-align:left;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);padding:6px 8px;border-bottom:1px solid var(--line)}
+table.led td{padding:9px 8px;border-bottom:1px solid var(--line);font-weight:600;color:var(--ink)} table.led tr:last-child td{border-bottom:none}
+table.led .pos{color:var(--green);font-weight:800} table.led .neg{color:var(--red);font-weight:800} table.led .pend{color:#8a5e12;font-weight:800}
+.note{background:var(--white);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:12px;padding:14px 18px;font-size:12px;font-weight:500;color:var(--ink-dim);line-height:1.6}
+.note b{color:var(--slate);font-weight:700} .note code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:var(--gray);padding:1px 6px;border-radius:5px;color:var(--slate)}
+.mockstamp{position:fixed;bottom:12px;right:14px;font-size:9px;font-weight:700;letter-spacing:1.4px;color:var(--ink-faint);background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:6px;padding:5px 10px;z-index:60}
+.connbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:12px}
+.connbar .cl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-dim)}
+.connbar input{font-family:inherit;font-size:12px;border:1.5px solid var(--line);border-radius:7px;padding:6px 9px;color:var(--ink)}
+.connbar input:focus{outline:none;border-color:var(--teal)}
+.cbtn{font-family:inherit;font-size:11.5px;font-weight:700;border-radius:7px;border:1.5px solid var(--teal);background:var(--teal);color:#fff;padding:6px 13px;cursor:pointer}
+.cbtn:hover{background:#009d86}
+#connchip.on{color:#0a7e62;background:rgba(0,179,152,.14);cursor:pointer}
+#connchip.off{color:#8a5e12;background:rgba(224,162,60,.16);cursor:pointer}
+.cobadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.4px;border-radius:999px;padding:2px 8px;margin-left:6px}
+.cobadge.mine{color:#0a7e62;background:rgba(0,179,152,.16)}
+.cobadge.other{color:#a4362c;background:rgba(217,101,91,.16)}
+.cobadge.open{color:var(--ink-dim);background:rgba(0,79,113,.08)}
+.coactions{margin:10px 0;display:flex;gap:8px;flex-wrap:wrap}
+.coactions button{font-family:inherit;font-size:11.5px;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--slate);padding:7px 13px;cursor:pointer}
+.coactions button:hover{border-color:var(--teal);color:var(--teal)}
+.coactions button.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.coactions button:disabled{opacity:.4;cursor:not-allowed}
+.robanner{background:rgba(217,101,91,.08);border:1.5px solid rgba(217,101,91,.4);border-radius:9px;padding:9px 13px;font-size:11.5px;font-weight:700;color:#8a3229;margin-bottom:10px}
+.modal{position:fixed;inset:0;background:rgba(6,58,82,.42);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow:auto;padding:40px 16px}
+.modal.on{display:flex}
+.sheet{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,60,90,.28);width:100%;max-width:640px;padding:22px 24px}
+.sheet h2{font-size:15px;font-weight:800;color:var(--slate);letter-spacing:.3px;margin-bottom:3px}
+.sheet .sh{font-size:11.5px;font-weight:600;color:var(--ink-dim);margin-bottom:16px}
+.sheet .grp{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--bronze);margin:14px 0 7px}
+.frow{display:flex;gap:12px;flex-wrap:wrap}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.fld label{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ink-dim)}
+.fld input,.fld select{font-family:inherit;font-size:12.5px;border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink);background:#fff}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--teal)}
+.fld.w1{width:120px}.fld.w2{flex:1;min-width:150px}
+.reczone{background:rgba(0,79,113,.04);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:6px 0}
+.recon{font-size:11px;font-weight:700;margin-top:6px}
+.recon.ok{color:#0a7e62}.recon.bad{color:#a4362c}
+.mactions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+.mbtn{font-family:inherit;font-size:12px;font-weight:700;border-radius:9px;padding:8px 16px;cursor:pointer;border:1.5px solid var(--line);background:#fff;color:var(--slate)}
+.mbtn.pri{background:var(--teal);border-color:var(--teal);color:#fff}.mbtn.pri:hover{background:#009d86}
+.mbtn:disabled{opacity:.4;cursor:not-allowed}
+.pqflag{font-size:11px;font-weight:800;border-radius:7px;padding:5px 10px;margin-top:6px;display:inline-block}
+.pqflag.review{color:#8a5e12;background:rgba(224,162,60,.16)}
+.pqflag.clear{color:#0a7e62;background:rgba(0,179,152,.14)}
+.iterpanel{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:12px 0}
+.iterpanel .ih{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--bronze);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.iterrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.iterrow:last-child{border-bottom:none}
+.iterrow .seq{width:26px;height:26px;flex-shrink:0;border-radius:8px;background:var(--slate);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+.iterrow.released .seq{background:var(--teal)}
+.iterrow .ireason{font-weight:700;color:var(--ink)}
+.iterrow .imeta{color:var(--ink-dim);font-weight:600}
+.iterrow .iout{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.4px;border-radius:999px;padding:2px 9px}
+.iout.continued{color:#0a5c7e;background:rgba(0,79,113,.1)}
+.iout.corrected{color:#8a5e12;background:rgba(224,162,60,.16)}
+.iout.released{color:#0a7e62;background:rgba(0,179,152,.16)}
+.iout.open{color:var(--ink-dim);background:var(--gray)}
+.testbox{border:1.5px solid var(--teal);border-radius:11px;padding:13px 15px;margin:12px 0;background:rgba(0,179,152,.04)}
+.testbox .th{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--slate);text-transform:uppercase;margin-bottom:9px}
+.testbox .frow{gap:10px}
+.testbox .fld{margin-bottom:8px}
+.testeval{font-size:12px;font-weight:700;padding:9px 12px;border-radius:9px;margin:8px 0}
+.testeval.pass{color:#0a5c4e;background:rgba(169,238,138,.28)}
+.testeval.high{color:#a4362c;background:rgba(217,101,91,.1)}
+.testeval.low{color:#8a5e12;background:rgba(224,162,60,.14)}
+.branchbtns{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+.branchbtns button{font-family:inherit;font-size:11.5px;font-weight:700;border-radius:9px;padding:9px 14px;cursor:pointer;border:1.5px solid var(--line);background:#fff;color:var(--slate)}
+.branchbtns button:hover:not(:disabled){border-color:var(--teal)}
+.branchbtns button.rel{background:var(--teal);border-color:var(--teal);color:#fff}
+.branchbtns button.rel:hover{background:#009d86}
+.branchbtns button.corr{border-color:var(--bronze);color:var(--bronze)}
+.branchbtns button:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.dbody{grid-template-columns:1fr}.stage{border-right:none;border-bottom:1px solid var(--line)}}
+</style></head>
+<body>
+<header class="appbar">
+  <div class="wm">GLOBAL<b>PARTNERS</b></div>
+  <div class="divider"></div>
+  <div class="appname">Terminal Operations <span>/ Blend Case Manager</span></div>
+  <div class="spacer"></div>
+  <div class="crumb">Dashboard&nbsp;&rsaquo;&nbsp;<b>Blend Case Manager</b></div>
+  <div class="pill">&#128205; <b>Fort Worth</b></div>
+</header>
+
+<div class="main">
+  <div class="ptitle">
+    <div>
+      <h1>Blend Case Manager</h1>
+      <div class="sub">Start-to-finish butane blends &middot; promote from planner &rarr; calculate &rarr; order &rarr; receive &rarr; certify &rarr; file</div>
+    </div>
+  </div>
+  <div class="prov">
+    <span>Basis &middot; <b>full receipt (TOV)</b> &middot; coeff 0.02 &middot; 190 bbl/truck</span>
+    <span>Spec &middot; <b>RVP target 8.75</b> &middot; ceiling 9.0</span>
+    <span id="connchip" class="warn">Connecting to terminal server&hellip;</span>
+  </div>
+  <div class="connbar" id="connbar" style="display:none">
+    <span class="cl">Terminal server</span>
+    <input id="srvurl" placeholder="http://192.168.x.x:8090" style="flex:1;min-width:180px">
+    <input id="deviceid" placeholder="this device (e.g. pc-controlroom / ipad-1)" style="flex:1;min-width:160px">
+    <input id="opname" placeholder="your name" style="width:130px">
+    <button class="cbtn" onclick="connectServer()">Connect</button>
+    <button class="cbtn" onclick="toggleConn()">Hide</button>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="l">Open blends</span><span class="v">2</span><span class="x">REG 1 &middot; PREM 1 &middot; concurrent</span></div>
+    <div class="kpi"><span class="l">Trucks in flight</span><span class="v">1 <small>confirmed</small></span><span class="x">+ 4 pending PQ review</span></div>
+    <div class="kpi"><span class="l">Margin &middot; captured &rsaquo; missed</span><span class="v"><span class="cap">+190</span> &rsaquo; <span class="mis">&minus;190</span> <small>bbl</small></span><span class="x">this week &middot; 190 bbl at stake</span></div>
+    <div class="kpi act"><span class="l">Awaiting action</span><span class="v">1 PQ review</span><span class="x">Blend 1 &middot; TK 55 &middot; 4th-truck call</span></div>
+  </div>
+
+  <div class="secttl">Active Blends <span class="add" onclick="openOriginate()">+ New blend</span></div>
+  <div class="board" id="board"></div>
+
+  <div class="detail" id="detail"></div>
+
+  <div class="ledger">
+    <h2>Margin Ledger</h2>
+    <div class="ls">Captured and missed barrels per blend &mdash; the tracking the current process doesn't keep. Feeds the dashboard margin view.</div>
+    <table class="led"><thead><tr><th>Blend</th><th>Tank</th><th>Event</th><th style="text-align:right">Margin (bbl)</th><th>Status</th></tr></thead><tbody>
+      <tr><td>BL-2026-0313</td><td>TK 04 &middot; Premium</td><td>4th-truck call &mdash; round-up approved, captured vs. no blend</td><td style="text-align:right" class="pos">+190</td><td>Captured</td></tr>
+      <tr><td>BL-2026-0310</td><td>TK 56 &middot; Regular</td><td>1 truck refused past 18:00 arrival cutoff (rack supply)</td><td style="text-align:right" class="neg">&minus;190</td><td>Missed &middot; logged</td></tr>
+      <tr><td>BL-2026-0312</td><td>TK 55 &middot; Regular</td><td>4th-truck call &mdash; 3 trucks (8.55) vs 4 trucks (8.79)</td><td style="text-align:right" class="pend">+190</td><td>Pending PQ</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="secttl">Closed Cases <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-faint)" id="closedCount"></span></div>
+  <div class="ledger">
+    <div class="ls">Every case that's been released and closed &mdash; click a row to reopen it read-only.</div>
+    <table class="led"><thead><tr><th>Case</th><th>Grade</th><th>Tank</th><th style="text-align:right">Trucks</th><th style="text-align:right">Final RVP</th><th>Closed</th><th>Decision</th></tr></thead>
+    <tbody id="closedTable"></tbody></table>
+  </div>
+
+  <div class="note">
+    <b>What this prototype proves &mdash; and what's deferred.</b> Two blends run at once (your Regular and Premium cases) and each is a tracked record, not a screenshot. Every value is <b>retrieved, not typed</b>: a case is promoted from a planner row, and the operator only swaps estimates for actuals (TOV after the receipt, the three sample RVPs). The <b>Validate</b> stage is the scenario tool &mdash; when the truck fraction clears 0.8 it routes to PQ with every option priced against resultant RVP and uncaptured margin, exactly as you'd work it by hand. Margin is recorded both ways (round-up captured, late-truck refused). The folder builds itself stage by stage into <code>SharePoint &rsaquo; Quality &rsaquo; Blends &rsaquo; {Blend ID}</code>. The two-tank rule is enforced: the board blocks a second Premium blend while one is open. <b>Now wired:</b> cases load from and persist to the terminal server (append-only), with device check-out/check-in for control-room&harr;iPad handoff and QC force-release of a stranded checkout. <b>Still deferred to IT:</b> the automated order email on "Book trucks" and the SharePoint folder writes. Auto-order hard rules are placeholders pending your team's review &mdash; today only the 0.8-fraction &rarr; PQ rule is wired.
+  </div>
+</div>
+<div class="modal" id="originate">
+  <div class="sheet">
+    <h2>New blend case</h2>
+    <div class="sh" id="o-mode">Creates a persistent case on the terminal server &mdash; receipt (BOL), tank, estimates, and the three-point sample.</div>
+
+    <div class="grp">Receipt / BOL</div>
+    <div class="frow">
+      <div class="fld w2"><label>Existing receipt</label><select id="o-receipt" onchange="onReceiptPick()"><option value="">&mdash; new receipt &mdash;</option></select></div>
+    </div>
+    <div id="newreceipt">
+      <div class="frow">
+        <div class="fld w2"><label>BOL number</label><input id="o-bol" placeholder="88213"></div>
+        <div class="fld w2"><label>Carrier / supplier</label><input id="o-carrier" placeholder="carrier"></div>
+        <div class="fld w1"><label>Delivered (bbl)</label><input id="o-delivered" type="number" placeholder="8000"></div>
+      </div>
+    </div>
+
+    <div class="grp">Blend case</div>
+    <div class="frow">
+      <div class="fld w1"><label>Case code</label><input id="o-code" placeholder="BL-2026-0312"></div>
+      <div class="fld w1"><label>Grade</label><select id="o-grade"><option value="REGULAR">REGULAR</option><option value="PREMIUM">PREMIUM</option></select></div>
+      <div class="fld w1"><label>Tank</label><input id="o-tank" placeholder="TK 55"></div>
+      <div class="fld w1"><label>Tank #</label><input id="o-tankno" placeholder="23155"></div>
+    </div>
+    <div class="frow">
+      <div class="fld w2"><label>Operator</label><input id="o-op" placeholder="D. Bass"></div>
+      <div class="fld w2"><label>PQ</label><input id="o-pq" placeholder="S. Anderson"></div>
+    </div>
+
+    <div class="grp">Estimates &amp; three-point sample</div>
+    <div class="frow">
+      <div class="fld w1"><label>Est. volume / TOV</label><input id="o-tov" type="number" placeholder="40000" oninput="onOrigCalc()"></div>
+      <div class="fld w1"><label>Sample 1 RVP</label><input id="o-s1" type="number" step="0.01" placeholder="7.81" oninput="onOrigCalc()"></div>
+      <div class="fld w1"><label>Sample 2 RVP</label><input id="o-s2" type="number" step="0.01" placeholder="7.86" oninput="onOrigCalc()"></div>
+      <div class="fld w1"><label>Sample 3 RVP</label><input id="o-s3" type="number" step="0.01" placeholder="7.85" oninput="onOrigCalc()"></div>
+    </div>
+    <div class="frow">
+      <div class="fld w1"><label>Drawn volume (bbl)</label><input id="o-drawn" type="number" placeholder="4800" oninput="onOrigRecon()"></div>
+    </div>
+
+    <div class="reczone" id="o-calc"></div>
+
+    <div class="mactions">
+      <button class="mbtn" onclick="closeOriginate()">Cancel</button>
+      <button class="mbtn pri" id="o-create" onclick="submitOriginate()">Create case</button>
+    </div>
+  </div>
+</div>
+<div class="mockstamp">BLEND CASE MANAGER &middot; SERVER-WIRED &middot; SAMPLE DATA WHEN OFFLINE</div>
+
+<script>
+const STAGES=['Originate','Lock & Sample','Window','Validate','Book','Receive','Blend','Settle','Self-Certify','Close'];
+const TARGET=8.75, CEIL=9.0, COEFF=0.02, TRUCK=190;
+
+/* ============================================================
+   PERSISTENCE LAYER — wires the Case Manager to the terminal server
+   (ftw_terminal_server.py). Degrades to sample data when offline.
+   ============================================================ */
+const SERVER={ url:null, device:null, op:null, online:false };
+function loadConnPrefs(){
+ try{ const s=JSON.parse(sessionStorage.getItem('ftw_conn')||'{}');
+  if(s.url)document.getElementById('srvurl').value=s.url;
+  if(s.device)document.getElementById('deviceid').value=s.device;
+  if(s.op)document.getElementById('opname').value=s.op;
+  return s; }catch(e){return {};}
+}
+function saveConnPrefs(){ try{ sessionStorage.setItem('ftw_conn',JSON.stringify({url:SERVER.url,device:SERVER.device,op:SERVER.op})); }catch(e){} }
+async function api(path, method, body){
+ const opt={method:method||'GET',headers:{'Content-Type':'application/json'}};
+ if(body){ body._by=SERVER.op||'unknown'; opt.body=JSON.stringify(body); }
+ const r=await fetch(SERVER.url+path, opt);
+ if(!r.ok){ const e=await r.json().catch(()=>({error:r.status})); throw new Error(e.error||('HTTP '+r.status)); }
+ return r.json();
+}
+function setConn(online){
+ SERVER.online=online;
+ const chip=document.getElementById('connchip');
+ if(online){ chip.className='on'; chip.innerHTML='&#9679; Connected &middot; '+SERVER.device+' &middot; <b>'+(SERVER.op||'?')+'</b> &mdash; click to change'; }
+ else{ chip.className='off'; chip.innerHTML='&#9679; Offline &mdash; sample data (no persistence) &middot; click to connect'; }
+ chip.onclick=toggleConn;
+}
+function toggleConn(){ const b=document.getElementById('connbar'); b.style.display=b.style.display==='none'?'flex':'none'; }
+async function connectServer(){
+ SERVER.url=(document.getElementById('srvurl').value||'').trim().replace(/\/$/,'');
+ SERVER.device=(document.getElementById('deviceid').value||'').trim()||'unknown-device';
+ SERVER.op=(document.getElementById('opname').value||'').trim()||'unknown';
+ if(!SERVER.url){ alert('Enter the terminal server URL (shown when you start the server).'); return; }
+ try{
+  const h=await api('/health');
+  if(!h.ok) throw new Error('server not healthy');
+  saveConnPrefs(); setConn(true);
+  document.getElementById('connbar').style.display='none';
+  await loadCases();
+ }catch(e){ setConn(false); alert('Could not reach the server at '+SERVER.url+'\n'+e.message+'\n\nCheck the URL and that the device is on the same WiFi (see the server README for the firewall note).'); }
+}
+
+/* map a server case-tree into the BCM's blend view model */
+function caseToBlend(tree){
+ const iters=tree._iterations||[];
+ const last=iters[iters.length-1]||{};
+ const meas=(last._measurements||[]).filter(m=>m.parameter==='dvpe').map(m=>+m.value);
+ const b={
+  _server:true, _caseId:tree.id, _receiptId:tree.receiptId, _status:tree.status,
+  _checkout:tree.checkout||null,
+  _closedAt:tree._closedAt||null,
+  _iterations:iters,
+  id:tree.caseCode||tree.id.replace(/^FTW-J117-/,''),
+  grade:(tree.grade||'reg').toLowerCase().startsWith('prem')?'prem':'reg',
+  gl:(tree.grade||'REGULAR').toUpperCase(), row:tree.row||'Blend', tank:tree.tank||'—', tankNo:tree.tankNo||tree.tank||'',
+  op:tree.operator||'—', pq:tree.pq||'—',
+  est:{vol:+tree.estVol||0, rvp:+tree.estRvp||0},
+  act:{tov:+tree.tov||+tree.estVol||0, s:(tree.samples&&tree.samples.length===3)?tree.samples.map(Number):(meas.length===3?meas:[0,0,0])},
+  stage:typeof tree.stage==='number'?tree.stage:0,
+  window:tree.window||{lastTruck:'—',settle:3,cover:'—'},
+  ordered:+tree.ordered||0, arrived:+tree.arrived||0, decision:tree.decision||null
+ };
+ return b;
+}
+async function loadCases(){
+ try{
+  const {records}=await api('/list?kind=case');
+  const openRecs=records.filter(c=>c.status!=='closed');
+  const closedRecs=records.filter(c=>c.status==='closed');
+  const openTrees=await Promise.all(openRecs.map(c=>api('/case?id='+encodeURIComponent(c.id))));
+  const closedTrees=await Promise.all(closedRecs.map(c=>api('/case?id='+encodeURIComponent(c.id))));
+  BLENDS.length=0;
+  openTrees.map(caseToBlend).forEach(b=>BLENDS.push(b));
+  if(SEL>=BLENDS.length)SEL=0;
+  if(BLENDS.length)VIEW=BLENDS[SEL].stage;
+  CLOSED.length=0;
+  closedTrees.map(caseToBlend).sort((a,b)=>new Date(b._closedAt||0)-new Date(a._closedAt||0)).forEach(b=>CLOSED.push(b));
+  renderBoard(); renderDetail(); renderClosed();
+ }catch(e){ console.warn('loadCases failed',e); }
+}
+/* persist a case field change (append-only supersede on the server) */
+async function persistCase(b, patch){
+ if(!b._server||!SERVER.online) return;
+ try{ await api('/update','POST',Object.assign({id:b._caseId},patch)); }
+ catch(e){ alert('Save failed: '+e.message); throw e; }
+}
+/* device handoff */
+async function checkoutCase(){
+ const b=BLENDS[SEL]; if(!b._server||!SERVER.online) return;
+ try{ const r=await api('/checkout','POST',{id:b._caseId,device:SERVER.device});
+  b._checkout=r.checkout; b._status=r.status; renderBoard(); renderDetail(); }
+ catch(e){ alert('Check-out failed: '+e.message); }
+}
+async function checkinCase(){
+ const b=BLENDS[SEL]; if(!b._server||!SERVER.online) return;
+ try{ const r=await api('/checkin','POST',{id:b._caseId,device:SERVER.device,patch:{stage:b.stage}});
+  b._checkout=null; b._status=r.status; renderBoard(); renderDetail(); }
+ catch(e){ alert('Check-in failed: '+e.message); }
+}
+async function forceRelease(){
+ const b=BLENDS[SEL]; if(!b._server||!SERVER.online) return;
+ if(!confirm('Force-release the stranded checkout on '+b.id+'? This is logged and requires QC authority.')) return;
+ try{ const r=await api('/force-release','POST',{id:b._caseId});
+  b._checkout=null; b._status=r.status; renderBoard(); renderDetail(); }
+ catch(e){ alert('Force-release failed: '+e.message); }
+}
+/* is this case editable on THIS device right now? */
+function editable(b){
+ if(!b._server||!SERVER.online) return true;         // offline sample mode: freely editable
+ if(b._status==='closed') return false;
+ const co=b._checkout;
+ if(!co) return false;                                // must check out first
+ return co.device===SERVER.device;                    // only the holding device
+}
+function heldByOther(b){ return b._server&&b._checkout&&b._checkout.device!==SERVER.device; }
+const BLENDS=[
+ {id:'BL-2026-0312', grade:'reg', gl:'REGULAR', row:'Blend 1', tank:'TK 55', tankNo:'23155', op:'D. Bass', pq:'S. Anderson',
+  est:{vol:40000, rvp:7.85}, act:{tov:40120, s:[7.81,7.86,7.85]}, stage:3,
+  window:{lastTruck:'06/22 18:00', settle:3, cover:'TK 56 covers rack ~16 h'}, ordered:0, arrived:0, decision:null},
+ {id:'BL-2026-0313', grade:'prem', gl:'PREMIUM', row:'Blend 2', tank:'TK 04', tankNo:'27404', op:'G. Sanchez', pq:'S. Anderson',
+  est:{vol:16000, rvp:8.25}, act:{tov:16400, s:[8.19,8.21,8.20]}, stage:5,
+  window:{lastTruck:'06/23 04:00', settle:3, cover:'TK 05 covers rack ~22 h'}, ordered:1, arrived:1, decision:'round-up'}
+];
+let SEL=0, VIEW=BLENDS[0].stage;
+const CLOSED=[];
+let CLOSED_SEL=null;
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toFixed(2);
+function calc(b){
+ const base=(b.act.s[0]+b.act.s[1]+b.act.s[2])/3, tov=b.act.tov;
+ const bt=COEFF*tov*(TARGET-base), ex=bt/TRUCK, fl=Math.floor(ex), ce=Math.ceil(ex);
+ const rvp=t=>base+(t*TRUCK)/(COEFF*tov);
+ return {base,tov,bt,ex,fl,ce,frac:ex-fl,rvpFl:rvp(fl),rvpCe:rvp(ce),review:(ex-fl)>0.8};
+}
+function renderClosed(){
+ const el=document.getElementById('closedTable');
+ if(!el) return;
+ if(!CLOSED.length){ el.innerHTML='<tr><td colspan="7" style="color:var(--ink-faint)">No closed cases yet</td></tr>'; return; }
+ el.innerHTML=CLOSED.map((b,i)=>{
+  const c=calc(b);
+  const closedDate=b._closedAt?new Date(b._closedAt).toLocaleString():'—';
+  const finalRvp=(b.act&&b.act.s&&b.act.s.length===3)?f2((b.act.s[0]+b.act.s[1]+b.act.s[2])/3):'—';
+  const trucks=b.ordered||c.fl;
+  return `<tr class="logrow" onclick="viewClosed(${i})" style="cursor:pointer">
+    <td>${b.id}</td><td>${b.gl}</td><td>${b.tank}</td>
+    <td style="text-align:right">${trucks}</td>
+    <td style="text-align:right">${finalRvp}</td>
+    <td>${closedDate}</td>
+    <td>${b.decision||'—'}</td>
+  </tr>`;
+ }).join('');
+}
+function viewClosed(i){
+ CLOSED_SEL=i; SEL=-1;
+ const b=CLOSED[i];
+ VIEW=b.stage;
+ renderDetailForClosed(b);
+}
+function renderDetailForClosed(b){
+ const c=calc(b);
+ let steps='';for(let s=0;s<10;s++){const cls=s<b.stage?'done':(s===b.stage?'act':'');
+  steps+=`<div class="step ${cls}"><div class="ln"></div><div class="nd">${s<b.stage?'&check;':s}</div><div class="sl">${STAGES[s]}</div></div>`;}
+ document.getElementById('detail').innerHTML=`
+  <div class="dhead"><span class="t">${b.tank} <small>${b.id} &middot; ${b.gl} &middot; ${b.row}</small><span class="cobadge open">CLOSED &middot; read-only</span></span>
+   <span class="who">Operator <b>${b.op}</b> &middot; PQ <b>${b.pq}</b></span></div>
+  <div class="stepper">${steps}</div>
+  <div class="dbody"><div class="stage">${stageContent(b,c,VIEW)}</div><div class="folder">${folder(b)}</div></div>`;
+}
+function renderBoard(){
+ document.getElementById('board').innerHTML=BLENDS.map((b,i)=>{
+  const c=calc(b); const trucks=b.decision==='round-up'?c.ce:(b.ordered||c.fl);
+  const stgClass=b.stage===3?'review':(b.stage>=4&&b.stage<=7?'go':'hold');
+  const stgTxt=b.stage===3?'PQ review':STAGES[b.stage];
+  let dots='';for(let s=0;s<10;s++){dots+=`<i class="${s<b.stage?'done':(s===b.stage?'act':'')}"></i>`;}
+  const next=b.stage===3?'Awaiting PQ decision on 4th truck':(b.stage===5?`Receiving &middot; ${b.arrived}/${trucks} trucks in`:`Next: ${STAGES[b.stage]}`);
+  return `<div class="card ${b.grade} ${i===SEL?'sel':''}" onclick="selectBlend(${i})">
+   <div class="ch"><span class="gchip ${b.grade}">${b.gl}</span><span class="gid">${b.id}</span><span class="stg ${stgClass}">${stgTxt}</span></div>
+   <div class="tk">${b.tank} <small>&middot; ${b.row}</small></div>
+   <div class="meta"><span>TOV <b>${fmt(c.tov)}</b></span><span>RVP <b>${f2(c.base)}</b> <span class="arr">&rarr;</span> <b>${TARGET}</b></span><span>Butane <b>${fmt(c.bt)}</b> bbl</span><span><b>${b.decision==='round-up'?c.ce:c.ex.toFixed(2)}</b> trucks</span></div>
+   <div class="dots">${dots}</div>
+   <div class="next"><span class="ni">&#9656;</span> ${next}</div>
+  </div>`;
+ }).join('');
+}
+function selectBlend(i){SEL=i;CLOSED_SEL=null;VIEW=BLENDS[i].stage;renderDetail();renderBoard();}
+function viewStage(s){VIEW=s;renderDetail();}
+async function approve(kind){
+ const b=BLENDS[SEL];
+ if(!editable(b)){ alert('This case must be checked out to this device before you can act on it.'); return; }
+ b.decision=kind;const c=calc(b);b.ordered=kind==='round-up'?c.ce:c.fl;b.stage=4;VIEW=4;
+ await persistCase(b,{decision:kind,ordered:b.ordered,stage:4});
+ renderBoard();renderDetail();
+}
+async function advanceStage(){
+ const b=BLENDS[SEL];
+ if(!editable(b)){ alert('This case must be checked out to this device before you can advance it.'); return; }
+ if(b.stage>=9){ return closeCase(); }
+ b.stage++;VIEW=b.stage;
+ await persistCase(b,{stage:b.stage});
+ renderBoard();renderDetail();
+}
+async function closeCase(){
+ const b=BLENDS[SEL];
+ if(!editable(b)){ alert('Check out the case to this device first.'); return; }
+ if(!confirm('Close and freeze '+b.id+'? A closed case cannot be edited.')) return;
+ if(b._server&&SERVER.online){
+  const last=(b._iterations&&b._iterations.length)?b._iterations[b._iterations.length-1].id:null;
+  try{ await api('/close','POST',{id:b._caseId,finalIterationId:last}); }
+  catch(e){ alert('Close failed: '+e.message); return; }
+ }
+ b._status='closed'; b.stage=10;
+ await loadCases();
+}
+function renderDetail(){
+ const b=BLENDS[SEL], c=calc(b);
+ let steps='';for(let s=0;s<10;s++){const cls=s<b.stage?'done':(s===b.stage?'act':'');const vw=s===VIEW?'view':'';
+  steps+=`<div class="step ${cls} ${vw}" onclick="viewStage(${s})"><div class="ln"></div><div class="nd">${s<b.stage?'&check;':s}</div><div class="sl">${STAGES[s]}</div></div>`;}
+ document.getElementById('detail').innerHTML=`
+  <div class="dhead"><span class="t">${b.tank} <small>${b.id} &middot; ${b.gl} &middot; ${b.row}</small>${checkoutBadge(b)}</span>
+   <span class="who">Operator <b>${b.op}</b> &middot; PQ <b>${b.pq}</b></span></div>
+  ${handoffControls(b)}
+  <div class="stepper">${steps}</div>
+  <div class="dbody"><div class="stage">${stageContent(b,c,VIEW)}</div><div class="folder">${folder(b)}</div></div>`;
+}
+function checkoutBadge(b){
+ if(!b._server||!SERVER.online) return '';
+ if(b._status==='closed') return '<span class="cobadge open">CLOSED &middot; frozen</span>';
+ const co=b._checkout;
+ if(!co) return '<span class="cobadge open">available</span>';
+ if(co.device===SERVER.device) return '<span class="cobadge mine">checked out to you</span>';
+ return `<span class="cobadge other">held by ${co.device}</span>`;
+}
+function handoffControls(b){
+ if(!b._server||!SERVER.online) return '';
+ if(b._status==='closed') return '';
+ const co=b._checkout;
+ const mine=co&&co.device===SERVER.device;
+ const other=co&&co.device!==SERVER.device;
+ let banner='';
+ if(other) banner=`<div class="robanner">Read-only &mdash; this case is checked out to <b>${co.device}</b> (by ${co.by||'?'} at ${(co.at||'').slice(11,16)}). Complete the handoff on that device, or force-release if it is stranded.</div>`;
+ return `${banner}<div class="coactions">
+   <button class="pri" onclick="checkoutCase()" ${co?'disabled':''}>Check out to ${SERVER.device}</button>
+   <button onclick="checkinCase()" ${mine?'':'disabled'}>Check in (hand off)</button>
+   <button onclick="advanceStage()" ${mine?'':'disabled'}>Advance stage &rarr;</button>
+   <button onclick="forceRelease()" ${other?'':'disabled'} title="QC authority — logged">Force-release</button>
+ </div>`;
+}
+function stageContent(b,c,s){
+ if(s===0) return `<h3>Originate <span class="tag" style="color:#0a7e62;background:rgba(0,179,152,.14)">DONE</span></h3>
+   <p class="lead">Case promoted from the blend planner. The planner row's estimates seed the case; nothing is re-typed.</p>
+   <div class="lineage"><div class="lcard"><div class="h">Planner row (estimate)</div>
+     <div class="lrow"><span>Blend</span><b>${b.row}</b></div><div class="lrow"><span>Tank</span><b>${b.tank}</b></div>
+     <div class="lrow"><span>Volume</span><b>${fmt(b.est.vol)} bbl</b></div><div class="lrow"><span>RVP</span><b>${f2(b.est.rvp)}</b></div></div></div>
+   <div class="gate"><b>Document gate:</b> planner snapshot saved to the case folder as the origin record.</div>`;
+ if(s===1) return `<h3>Lock & Sample <span class="tag" style="color:#0a7e62;background:rgba(0,179,152,.14)">ACTUALS RETRIEVED</span></h3>
+   <p class="lead">After the receipt completes, the tank is isolated &mdash; no product in or out. The operator records TOV and pulls three samples (upper / middle / lower). Estimates become actuals; values are retrieved, not typed.</p>
+   <div class="lineage">
+     <div class="lcard"><div class="h">Estimate</div><div class="lrow"><span>Volume</span><b>${fmt(b.est.vol)}</b></div><div class="lrow"><span>RVP</span><b>${f2(b.est.rvp)}</b></div></div>
+     <div class="larrow">&rarr;</div>
+     <div class="lcard act"><div class="h">Actual (this case)</div><div class="lrow"><span>TOV</span><b>${fmt(c.tov)}</b></div><div class="lrow"><span>Upper / Mid / Lower</span><b>${b.act.s.map(f2).join(' / ')}</b></div><div class="lrow"><span>Avg base RVP</span><b>${f2(c.base)}</b></div></div></div>
+   <div class="kv"><div class="kvc"><div class="k">Butane to target</div><div class="v">${fmt(c.bt)}<small> bbl</small></div></div>
+     <div class="kvc"><div class="k">Exact trucks</div><div class="v">${c.ex.toFixed(2)}</div></div>
+     <div class="kvc"><div class="k">Truncated</div><div class="v">${c.fl}<small> trucks</small></div></div></div>
+   <div class="gate"><b>Document gate:</b> TOV lock record, 3-point sample RVP sheet, and the blend calculation sheet.</div>`;
+ if(s===2) return `<h3>Window <span class="tag" style="color:#0a7e62;background:rgba(0,179,152,.14)">SET</span></h3>
+   <p class="lead">The planner forecast isn't exact, but it shows the wiggle room: how long the other rack tank covers demand while this one is offline. Allowing ~${b.window.settle} h to settle and sample, the operator sets the last-truck arrival cutoff. Trucks after the cutoff are refused to keep the rack supplied &mdash; and the refused barrels are logged as missed margin.</p>
+   <div class="kv"><div class="kvc"><div class="k">Rack coverage</div><div class="v" style="font-size:13px">${b.window.cover}</div></div>
+     <div class="kvc"><div class="k">Last-truck cutoff</div><div class="v" style="font-size:14px">${b.window.lastTruck}</div></div>
+     <div class="kvc"><div class="k">Settle / sample</div><div class="v">${b.window.settle}<small> h</small></div></div></div>
+   <div class="gate"><b>Document gate:</b> timing &amp; cutoff memo. <b>Tracking:</b> any post-cutoff refusal posts a negative entry to the margin ledger.</div>`;
+ if(s===3){const review=c.review;
+   return `<h3>Validate <span class="tag" style="${review?'color:#8a5e12;background:rgba(224,162,60,.16)':'color:#0a7e62;background:rgba(0,179,152,.14)'}">${review?'PQ REVIEW &middot; fraction '+c.frac.toFixed(2)+' &gt; 0.80':'AUTO-ORDER'}</span></h3>
+   <p class="lead">Exact demand is <b>${c.ex.toFixed(2)} trucks</b>. The fraction clears 0.8, so it routes to PQ with every option priced &mdash; added butane weighed against uncaptured margin, the way you'd compare scenarios by hand.</p>
+   <table class="scn"><thead><tr><th>Option</th><th>Trucks</th><th>Butane</th><th>Resultant RVP</th><th>vs 9.0 ceiling</th><th>Margin</th></tr></thead><tbody>
+     <tr><td class="opt">Truncate<small>auto default</small></td><td>${c.fl}</td><td>${fmt(c.fl*TRUCK)} bbl</td><td><span class="rvpb under">${f2(c.rvpFl)}</span></td><td>${f2(CEIL-c.rvpFl)} under</td><td>leaves <b>${fmt(c.bt-c.fl*TRUCK)} bbl</b> uncaptured</td></tr>
+     <tr><td class="opt">To target<small>exact</small></td><td>${c.ex.toFixed(2)}</td><td>${fmt(c.bt)} bbl</td><td><span class="rvpb on">${TARGET}</span></td><td>${f2(CEIL-TARGET)} under</td><td>captures full margin</td></tr>
+     <tr class="rec"><td class="opt">Round up<small>recommended</small></td><td>${c.ce}</td><td>${fmt(c.ce*TRUCK)} bbl</td><td><span class="rvpb over">${f2(c.rvpCe)}</span></td><td>${f2(CEIL-c.rvpCe)} under</td><td>captures <b>+${fmt((c.ce-c.fl)*TRUCK)} bbl</b> vs truncate</td></tr>
+   </tbody></table>
+   <div class="commbox"><div class="h">&#9993; PQ review message &middot; auto-drafted</div>
+     <p><span class="b4">${b.tank} &middot; ${b.gl} &middot; ${b.id}</span></p>
+     <p>${c.ex.toFixed(2)} trucks brings ${b.tank} to the ${TARGET} target.</p>
+     <p>&bull; <b>${c.ce} trucks</b> &rarr; ${f2(c.rvpCe)} RVP &mdash; adds ${fmt(c.ce*TRUCK)} bbl rackable (+${fmt((c.ce-c.fl)*TRUCK)} vs truncation), ${f2(CEIL-c.rvpCe)} under the 9.0 ceiling.</p>
+     <p>&bull; <b>${c.fl} trucks</b> &rarr; ${f2(c.rvpFl)} RVP &mdash; adds ${fmt(c.fl*TRUCK)} bbl, leaves ~${fmt(c.bt-c.fl*TRUCK)} bbl (${f2(TARGET-c.rvpFl)} RVP) uncaptured.</p></div>
+   ${b.decision?`<div class="gate"><b>Approved:</b> ${b.decision==='round-up'?c.ce+' trucks (round up)':c.fl+' trucks (truncate)'} by PQ &middot; ${b.pq}.</div>`:
+     `<div class="acts"><button class="btn pri" onclick="approve('round-up')">Approve ${c.ce} trucks (round up)</button><button class="btn" onclick="approve('truncate')">Order ${c.fl} trucks (truncate)</button><button class="btn warn">Hold for discussion</button></div>`}`;}
+ if(s===4){const t=b.decision==='round-up'?c.ce:(b.ordered||c.fl);
+   return `<h3>Book <span class="tag" style="color:#0a7e62;background:rgba(0,179,152,.14)">${b.stage>=4?'ORDERED':'READY'}</span></h3>
+   <p class="lead">"Book trucks" fires the automated order email to the butane supplier &mdash; replacing the manual hand-off through the internal scheduler. Order opens with the agreed count and delivery window.</p>
+   <div class="kv"><div class="kvc"><div class="k">Trucks ordered</div><div class="v">${t}</div></div>
+     <div class="kvc"><div class="k">Butane</div><div class="v">${fmt(t*TRUCK)}<small> bbl</small></div></div>
+     <div class="kvc"><div class="k">Arrival cutoff</div><div class="v" style="font-size:14px">${b.window.lastTruck}</div></div></div>
+   <div class="acts">${b.stage>=4?'<button class="btn" disabled style="opacity:.6">&check; Order email sent</button>':'<button class="btn pri">&#9993; Book trucks &mdash; send order</button>'}</div>
+   <div class="gate" style="margin-top:12px"><b>Document gate:</b> butane order email + supplier confirmation.</div>`;}
+ if(s===5){const t=b.decision==='round-up'?c.ce:(b.ordered||c.fl);let tr='';for(let k=0;k<t;k++){tr+=`<div class="truck ${k<b.arrived?'in':'due'}">${k<b.arrived?'&check;':k+1}</div>`;}
+   return `<h3>Receive <span class="tag" style="color:#0a7e62;background:rgba(0,179,152,.14)">${b.arrived}/${t} IN</span></h3>
+   <p class="lead">Each driver is logged on a digital offloading worksheet with the BOL captured &mdash; replacing the per-truck paperwork. Running count is checked against the order; anything past the cutoff is flagged and refused.</p>
+   <div class="trucks">${tr}</div>
+   <div class="kv"><div class="kvc"><div class="k">Received</div><div class="v">${b.arrived} <small>of ${t}</small></div></div>
+     <div class="kvc"><div class="k">Butane in</div><div class="v">${fmt(b.arrived*TRUCK)}<small> bbl</small></div></div>
+     <div class="kvc"><div class="k">Cutoff</div><div class="v" style="font-size:14px">${b.window.lastTruck}</div></div></div>
+   <div class="gate"><b>Document gate:</b> one offloading worksheet + BOL per driver, auto-attached to the folder.</div>`;}
+ if(s===6) return `<h3>Blend <span class="tag" style="color:var(--ink-dim);background:rgba(0,79,113,.08)">PENDING</span></h3>
+   <p class="lead">Butane injected into ${b.tank}. The tank is offline to the rack for the duration &mdash; the board already confirmed the other ${b.gl.toLowerCase()} tank can carry demand.</p>
+   <div class="gate"><b>Document gate:</b> blend execution log (start/stop, volumes).</div>`;
+ if(s===7) return `<h3>Settle <span class="tag" style="color:var(--ink-dim);background:rgba(0,79,113,.08)">PENDING</span></h3>
+   <p class="lead">Hold ~${b.window.settle} h for the butane to fully incorporate before drawing the post-blend sample. Tank stays isolated.</p>
+   <div class="gate"><b>Document gate:</b> settle-time stamp.</div>`;
+ if(s===8){
+   const online=b._server&&SERVER.online;
+   const canAct=editable(b);
+   return `<h3>Self-Certify &amp; iterate <span class="tag" style="color:var(--ink-dim);background:rgba(0,79,113,.08)">${STAGES[8]}</span></h3>
+   <p class="lead">Run the post-blend RVP in-house and record it against this iteration. Then decide: <b>release</b> if on target, <b>capture more margin</b> with another butane round, or <b>correct an overblend</b> by transferring in lower-RVP product and retesting. Each round is a tracked iteration; the case closes on whichever you release.</p>
+   ${iterationsPanel(b)}
+   ${online?`<div class="testbox">
+     <div class="th">Post-blend RVP &mdash; iteration ${currentIteration(b)?currentIteration(b).seq:1}</div>
+     <div class="frow">
+       <div class="fld w1"><label>Measured RVP (psi)</label><input id="iter-rvp" type="number" step="0.01" placeholder="8.70" oninput="onIterEval()" ${canAct?'':'disabled'}></div>
+       <div class="fld" style="justify-content:center"><span style="font-size:11px;font-weight:700;color:var(--ink-dim)">Target ${TARGET} &middot; ceiling ${CEIL}</span></div>
+     </div>
+     <div id="iter-eval"></div>
+     <div class="branchbtns">
+       <button class="rel" onclick="iterRelease()" ${canAct?'':'disabled'}>&#10003; Release on this test &rarr; Close</button>
+       <button onclick="iterContinue()" ${canAct?'':'disabled'}>+ Capture more margin (new round)</button>
+       <button class="corr" onclick="iterCorrect()" ${canAct?'':'disabled'}>&#9888; Overblend &mdash; correct &amp; retest</button>
+     </div>
+     ${canAct?'':'<div style="font-size:10.5px;color:var(--ink-dim);margin-top:8px">Check the case out to this device to record a result and branch.</div>'}
+   </div>`:`<div class="gate"><b>Offline / sample mode:</b> connect to the terminal server to record iteration tests and drive the blend/test loop. <b>Document gate:</b> in-house result + auto compliance approval (COA-equivalent).</div>`}`;
+ }
+ if(s===9) return `<h3>Close <span class="tag" style="color:var(--ink-dim);background:rgba(0,79,113,.08)">PENDING</span></h3>
+   <p class="lead">Role-based sign-off, final margin posted to the ledger, the complete folder filed to SharePoint, and ${b.tank} released back to the rack.</p>
+   <div class="gate"><b>Document gate:</b> signed blend record closes the case.</div>`;
+}
+function folder(b){
+ const docs=[[0,'Planner snapshot'],[1,'TOV lock record'],[1,'3-point sample sheet'],[1,'Blend calc sheet'],[2,'Timing & cutoff memo'],[3,'PQ scenario approval'],[4,'Butane order email'],[4,'Supplier confirmation'],[5,'Offload worksheets'],[5,'Driver BOLs'],[8,'In-house sample / self-cert'],[8,'Compliance approval'],[9,'Signed blend record']];
+ const rows=docs.map(([st,nm])=>{let cls,ic;if(st<b.stage){cls='done';ic='&check;';}else if(st===b.stage){cls='prog';ic='&middot;';}else{cls='wait';ic='';}
+   return `<div class="doc ${cls}"><span class="ic">${ic}</span>${nm}</div>`;}).join('');
+ return `<div class="fh">Case folder</div><div class="fp">SharePoint &rsaquo; Quality &rsaquo; Blends &rsaquo; ${b.id}</div>${rows}`;
+}
+/* live evaluation of the entered RVP — colors the message and steers the branch */
+function onIterEval(){
+ const el=document.getElementById('iter-eval'); if(!el) return;
+ const rvp=+document.getElementById('iter-rvp').value;
+ if(!rvp){ el.innerHTML=''; return; }
+ const e=evalTest(rvp);
+ el.innerHTML=`<div class="testeval ${e.k}">${e.msg}</div>`;
+ // steer buttons: overblend hides release/continue emphasis; on-target emphasizes release
+ const btns=el.parentElement.querySelectorAll('.branchbtns button');
+ if(btns.length===3){
+  const [rel,cont,corr]=btns;
+  // never hard-disable (operator judgment), but visually guide via the 'rel' emphasis
+  rel.classList.toggle('rel', e.k!=='high');
+  corr.style.borderColor = e.k==='high' ? 'var(--bronze)' : '';
+ }
+}
+
+/* ============================================================
+   ITERATIONS — the blend/test loop: continue (margin) / correct (overblend) / release
+   ============================================================ */
+function currentIteration(b){
+ const its=b._iterations||[];
+ return its.length?its[its.length-1]:null;
+}
+function iterationsPanel(b){
+ const its=b._iterations||[];
+ if(!its.length) return '';
+ const rows=its.map(it=>{
+  const out=it.outcome||'open';
+  const meas=(it._measurements||[]).filter(m=>m.parameter==='dvpe').map(m=>+m.value);
+  const rvp=meas.length?meas[meas.length-1].toFixed(2)+' psi':'&mdash;';
+  const reason={initial:'Initial blend','margin-capture':'Margin capture','overblend-correction':'Overblend correction'}[it.reason]||it.reason;
+  return `<div class="iterrow ${out}">
+    <span class="seq">${it.seq}</span>
+    <span class="ireason">${reason}</span>
+    <span class="imeta">&middot; test ${rvp}${it.marginNote?' &middot; '+it.marginNote:''}</span>
+    <span class="iout ${out}">${out}</span>
+  </div>`;
+ }).join('');
+ return `<div class="iterpanel"><div class="ih">Iterations &middot; ${its.length} round${its.length>1?'s':''}</div>${rows}</div>`;
+}
+/* evaluate a post-blend RVP against target/ceiling for the branch prompt */
+function evalTest(rvp){
+ if(rvp>CEIL+1e-9) return {k:'high', msg:`${rvp.toFixed(2)} psi is ABOVE the ${CEIL} ceiling — overblend. Correct by transferring in lower-RVP product, then retest.`};
+ if(rvp>TARGET+0.10) return {k:'low', msg:`${rvp.toFixed(2)} psi is under the ceiling but above target ${TARGET} — margin remains. You may release, or capture it with more butane.`};
+ return {k:'pass', msg:`${rvp.toFixed(2)} psi is on target (&le; ${TARGET}) and within the ${CEIL} ceiling — ready to release.`};
+}
+/* record this iteration's test result as a measurement on the server */
+async function recordIterTest(b, rvp){
+ const it=currentIteration(b); if(!it) return null;
+ await api('/create','POST',{kind:'measurement',iterationId:it.id,caseId:b._caseId,
+   context:'blend-release',method:'D5191',parameter:'dvpe',value:rvp,operator:b.op});
+ return it;
+}
+/* BRANCH 1 — more margin: close this iteration as continued, open the next */
+async function iterContinue(){
+ const b=BLENDS[SEL]; if(!editable(b)){alert('Check out the case first.');return;}
+ const rvp=+document.getElementById('iter-rvp').value;
+ if(!rvp){alert('Enter the post-blend RVP first.');return;}
+ const it=await recordIterTest(b,rvp);
+ await api('/update','POST',{id:it.id,outcome:'continued'});
+ const nextSeq=(b._iterations.length||0)+1;
+ await api('/create','POST',{kind:'iteration',caseId:b._caseId,seq:nextSeq,reason:'margin-capture',outcome:'open',
+   marginNote:'more butane scheduled'});
+ await api('/create','POST',{kind:'disposition',iterationId:it.id,decision:'continue-more-margin'});
+ // loop the case back to Blend (stage 6) for the next round
+ b.stage=6; await persistCase(b,{stage:6}); VIEW=6;
+ await loadCases();
+}
+/* BRANCH 2 — overblend: close this iteration as corrected, open a correction iteration */
+async function iterCorrect(){
+ const b=BLENDS[SEL]; if(!editable(b)){alert('Check out the case first.');return;}
+ const rvp=+document.getElementById('iter-rvp').value;
+ if(!rvp){alert('Enter the post-blend RVP first.');return;}
+ const it=await recordIterTest(b,rvp);
+ await api('/update','POST',{id:it.id,outcome:'corrected'});
+ const nextSeq=(b._iterations.length||0)+1;
+ const ni=await api('/create','POST',{kind:'iteration',caseId:b._caseId,seq:nextSeq,reason:'overblend-correction',outcome:'open',
+   marginNote:'transfer in lower-RVP product'});
+ await api('/create','POST',{kind:'event',iterationId:ni.id,type:'corrective-transfer',sourceProduct:'lower-RVP blendstock'});
+ await api('/create','POST',{kind:'disposition',iterationId:it.id,decision:'correct-overblend'});
+ // loop back to Blend for the corrective transfer + retest
+ b.stage=6; await persistCase(b,{stage:6}); VIEW=6;
+ await loadCases();
+}
+/* BRANCH 3 — release: record the disposition on this iteration, advance to Close */
+async function iterRelease(){
+ const b=BLENDS[SEL]; if(!editable(b)){alert('Check out the case first.');return;}
+ const rvp=+document.getElementById('iter-rvp').value;
+ if(!rvp){alert('Enter the post-blend RVP first.');return;}
+ const it=await recordIterTest(b,rvp);
+ await api('/update','POST',{id:it.id,outcome:'released'});
+ await api('/create','POST',{kind:'disposition',iterationId:it.id,decision:'released',
+   basis:`self-cert · RVP ${rvp.toFixed(2)} ≤ ${CEIL} ceiling`, signedBy:SERVER.op||b.pq});
+ b.stage=9; await persistCase(b,{stage:9,finalIterationId:it.id}); VIEW=9;
+ await loadCases();
+}
+
+/* ============================================================
+   ORIGINATE — create a persistent case (receipt + case + iteration)
+   ============================================================ */
+let RECEIPTS=[];
+async function openOriginate(){
+ const m=document.getElementById('originate');
+ // refresh receipt options if online
+ RECEIPTS=[];
+ if(SERVER.online){
+  try{ const {records}=await api('/list?kind=receipt'); RECEIPTS=records; }catch(e){}
+ }
+ const sel=document.getElementById('o-receipt');
+ sel.innerHTML='<option value="">— new receipt —</option>'+RECEIPTS.map(r=>
+   `<option value="${r.id}">${r.bolNumber||r.id} · ${r.product||''} · ${r.deliveredVolume||0} bbl</option>`).join('');
+ document.getElementById('o-mode').textContent = SERVER.online
+   ? 'Creates a persistent case on the terminal server — receipt (BOL), tank, estimates, and the three-point sample.'
+   : 'Offline — not connected to a server. Connect first (top of page) to create a persistent case; otherwise this is disabled.';
+ document.getElementById('o-create').disabled=!SERVER.online;
+ onReceiptPick(); onOrigCalc();
+ m.classList.add('on');
+}
+function closeOriginate(){ document.getElementById('originate').classList.remove('on'); }
+function onReceiptPick(){
+ const picked=document.getElementById('o-receipt').value;
+ document.getElementById('newreceipt').style.display=picked?'none':'block';
+ onOrigRecon();
+}
+function onOrigCalc(){
+ const tov=+document.getElementById('o-tov').value||0;
+ const s=[1,2,3].map(i=>+document.getElementById('o-s'+i).value||0);
+ const el=document.getElementById('o-calc');
+ if(!tov||s.some(x=>!x)){ el.innerHTML='<span style="font-size:11px;color:var(--ink-dim)">Enter TOV and all three sample RVPs to preview the blend calc and PQ flag.</span>'; return; }
+ const base=(s[0]+s[1]+s[2])/3;
+ const bt=COEFF*tov*(TARGET-base), ex=bt/TRUCK, fl=Math.floor(ex), frac=ex-fl, review=frac>0.8;
+ el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--ink)">
+    Base RVP <b>${base.toFixed(2)}</b> &rarr; target ${TARGET} &middot; butane <b>${Math.round(bt).toLocaleString()}</b> bbl &middot; <b>${ex.toFixed(2)}</b> trucks (${fl} full + ${frac.toFixed(2)})</div>
+    <div class="pqflag ${review?'review':'clear'}">${review?'&#9888; Fraction '+frac.toFixed(2)+' &ge; 0.8 &rarr; routes to PQ review at Validate':'Fraction '+frac.toFixed(2)+' &lt; 0.8 &rarr; no PQ review'}</div>
+    <div id="o-recon-line"></div>`;
+ onOrigRecon();
+}
+function onOrigRecon(){
+ const line=document.getElementById('o-recon-line'); if(!line) return;
+ const picked=document.getElementById('o-receipt').value;
+ const drawn=+document.getElementById('o-drawn').value||0;
+ let delivered=+document.getElementById('o-delivered').value||0;
+ if(picked){ const r=RECEIPTS.find(x=>x.id===picked); delivered=r?+r.deliveredVolume||0:0; }
+ if(!drawn||!delivered){ line.innerHTML=''; return; }
+ // sum other cases already drawing on this receipt (if existing receipt)
+ line.innerHTML=`<div class="recon ${drawn<=delivered+1?'ok':'bad'}">Drawn ${drawn.toLocaleString()} of ${delivered.toLocaleString()} bbl delivered${drawn>delivered+1?' — exceeds BOL delivered volume':''}</div>`;
+}
+async function submitOriginate(){
+ if(!SERVER.online){ alert('Connect to a server first.'); return; }
+ const g=id=>document.getElementById(id).value.trim();
+ const num=id=>+document.getElementById(id).value||0;
+ let receiptId=g('o-receipt');
+ try{
+  if(!receiptId){
+   const rc=await api('/create','POST',{kind:'receipt',bolNumber:g('o-bol'),carrier:g('o-carrier'),
+     product:'butane',deliveredVolume:num('o-delivered')});
+   receiptId=rc.id;
+  }
+  const s=[num('o-s1'),num('o-s2'),num('o-s3')];
+  const c=await api('/create','POST',{kind:'case',receiptId,
+    caseCode:g('o-code')||undefined, grade:g('o-grade'),
+    row:(g('o-grade')==='PREMIUM'?'Premium':'Regular')+' blend',
+    tank:g('o-tank'), tankNo:g('o-tankno'), operator:g('o-op'), pq:g('o-pq'),
+    estVol:num('o-tov'), estRvp:(s[0]+s[1]+s[2])/3, tov:num('o-tov'), samples:s,
+    drawnVolume:num('o-drawn'), drawnTruckFraction:(function(){const tov=num('o-tov');const base=(s[0]+s[1]+s[2])/3;return tov?(COEFF*tov*(TARGET-base)/TRUCK):0;})(),
+    stage:1});
+  await api('/create','POST',{kind:'iteration',caseId:c.id,seq:1,reason:'initial',outcome:'open'});
+  closeOriginate();
+  await loadCases();
+  // select the new case
+  const idx=BLENDS.findIndex(b=>b._caseId===c.id); if(idx>=0){SEL=idx;VIEW=BLENDS[idx].stage;renderBoard();renderDetail();}
+ }catch(e){ alert('Create failed: '+e.message); }
+}
+
+/* ---- boot: try to reconnect to a previously used server, else sample mode ---- */
+async function boot(){
+ renderBoard(); renderDetail();       // sample data shows immediately
+ const s=loadConnPrefs();
+ if(s.url){
+  SERVER.url=s.url; SERVER.device=s.device||'unknown-device'; SERVER.op=s.op||'unknown';
+  try{ const h=await api('/health'); if(h.ok){ setConn(true); await loadCases(); return; } }
+  catch(e){ /* fall through to offline */ }
+ }
+ setConn(false);
+ document.getElementById('connbar').style.display='flex';
+}
+boot();
+</script>
+</body></html>

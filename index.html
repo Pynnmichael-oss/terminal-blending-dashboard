@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Global Partners · Terminal Dashboard — Fort Worth</title>
+<title>Global Partners · Terminal Blending Dashboard — Fort Worth</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -185,7 +185,7 @@ header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-
 <div class="main">
   <div class="ptitle">
     <div>
-      <h1>Terminal Dashboard</h1>
+      <h1>Terminal Blending Dashboard</h1>
       <div class="sub">Fort Worth Terminal &middot; J117 &middot; summer RVP season &middot; gasoline + ULSD</div>
     </div>
     <div class="when">Mon &middot; Jun 22 2026<br><span style="color:var(--ink-faint)">Inventory as of 00:00 &middot; Night shift, M. Ibana</span></div>
@@ -211,11 +211,37 @@ header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-
       <div><span class="g ulsd">ULSD</span><span class="val">6,000</span></div></div></div>
   </div>
 
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel-h"><h2>Tank Farm</h2><span class="hsub">midnight open &middot; pumpable &amp; fill &middot; <span id="farmSourceLabel">Mock data</span></span></div>
+    <div class="farm">
+      <div class="tank" data-tank="TK55"><span class="grp">Regular</span><div class="ves"><div class="safe" style="bottom:89%"></div><div class="fill reg" style="height:66%"></div><div class="heel" style="height:11%"></div></div><span class="nm">55</span><span class="pct">66%</span><span class="bbl">31,208</span><span class="rvp">~8.45</span><span class="st run">Run</span></div>
+      <div class="tank" data-tank="TK56"><span class="grp">Regular</span><div class="ves"><div class="safe" style="bottom:91%"></div><div class="fill reg" style="height:41%"></div><div class="heel" style="height:9%"></div></div><span class="nm">56</span><span class="pct">41%</span><span class="bbl">15,518</span><span class="rvp">~8.62</span><span class="st run">Run</span></div>
+      <div class="tank" data-tank="TK03"><span class="grp">Swing</span><div class="ves"><div class="safe" style="bottom:92%"></div><div class="fill reg" style="height:14%"></div><div class="heel" style="height:8%"></div></div><span class="nm">03</span><span class="pct">14%</span><span class="bbl">914</span><span class="rvp">~8.74</span><span class="st stop">Stop</span></div>
+      <div class="tank" data-tank="TK04"><span class="grp">Premium</span><div class="ves"><div class="safe" style="bottom:93%"></div><div class="fill prem" style="height:51%"></div><div class="heel" style="height:7%"></div></div><span class="nm">04</span><span class="pct">51%</span><span class="bbl">7,258</span><span class="rvp">~8.52</span><span class="st run">Run</span></div>
+      <div class="tank" data-tank="TK05"><span class="grp">Premium</span><div class="ves"><div class="safe" style="bottom:91%"></div><div class="fill prem" style="height:64%"></div><div class="heel" style="height:9%"></div></div><span class="nm">05</span><span class="pct">64%</span><span class="bbl">8,314</span><span class="rvp">~8.71</span><span class="st stop">Stop</span></div>
+    </div>
+  </div>
+
   <div class="secttl">Operations</div>
   <div class="grid">
+    <a href="receipt-schedule.html" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span><span class="tt">Receipt Schedule</span></div><div class="td">Inbound pipeline batches by day and product &mdash; Regular, Premium and ULSD &mdash; split across midnight. Pick any start day &amp; horizon.</div><div class="ts">Today <b>28,592 bbl</b> <span class="muted">in &middot; peak Wed 07/01</span></div><div class="go">Open &rarr;</div></a>
+
     <a href="https://pynnmichael-oss.github.io/blend-planner/" target="_blank" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 3 7-8"/><path d="M3 21h18"/></svg></span><span class="tt">Blend Planner</span></div><div class="td">Project gasoline tank levels and RVP across a multi-day horizon; test blend decisions before committing.</div><div class="ts">Window 06/22&ndash;06/29 &middot; <b>plan ready</b></div><div class="go">Open &rarr;</div></a>
 
+    <a href="blend-case-manager.html" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span><span class="tt">Blend Case Manager</span></div><div class="td">Run gasoline blend cases end to end &mdash; active-blends board, lifecycle stages, scenario validation, margin ledger and self-cert sign-off.</div><div class="ts"><b>Idle</b> <span class="muted">no active blend</span></div><div class="go">Open &rarr;</div></a>
+
     <a href="rack-demand-forecast.html" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="3.4" height="10" rx="1"/><rect x="10.3" y="4" width="3.4" height="16" rx="1"/><rect x="16.6" y="13" width="3.4" height="7" rx="1"/></svg></span><span class="tt">Rack Demand Forecast</span></div><div class="td">Average liftings by product, day of week, and 6-hour slot &mdash; the curve that drives depletion.</div><div class="ts">Reg <b>13,200</b> &middot; Prem 3,800 &middot; ULSD 6,000</div><div class="go">Open &rarr;</div></a>
+  </div>
+
+  <div class="secttl">Quality &amp; Compliance</div>
+  <div class="grid">
+    <a href="https://make.powerapps.com/e/Default-c14d1cf3-56d1-433d-adfd-387ae01f5a3d/canvas/?action=edit&app-id=%2Fproviders%2FMicrosoft.PowerApps%2Fapps%2Ffc1567f8-58e7-4e6c-a119-2c34157217ca" target="_blank" class="tile q"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 7 6 11a6 6 0 11-12 0c0-4 6-11 6-11z"/></svg></span><span class="tt">Sampling / Testing</span></div><div class="td">Sample draws and lab results &mdash; gasoline RVP, ULSD flash, retains and certificates of analysis.</div><div class="ts"><b>2 pending</b> <span class="muted">1 retain &middot; 1 flash</span></div><div class="go">Open &rarr;</div></a>
+
+    <a href="#" class="tile q"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/><path d="M9 13h6M9 17h4"/></svg></span><span class="tt">Blend Documentation</span></div><div class="td">Blend records start to finish &mdash; inputs, butane added, results, COA and operator sign-off.</div><div class="ts"><b>1 to file</b> <span class="muted">sign-off: S. Anderson</span></div><div class="go">Open &rarr;</div></a>
+
+    <a href="operator-proficiency.html" class="tile q"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span><span class="tt">Operator Proficiency</span></div><div class="td">Self-certification testing &mdash; ASTM repeatability/reproducibility scoring per operator, per method.</div><div class="ts"><b>Self-cert</b> <span class="muted">D4052 &middot; D5191 &middot; D86</span></div><div class="go">Open &rarr;</div></a>
+
+    <a href="lab-procedures.html" class="tile q"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span class="tt">Lab Procedures</span></div><div class="td">Step-by-step SOPs for RVP verification, distillation, ethanol hand blends, and rack release testing.</div><div class="ts"><b>5 procedures</b> <span class="muted">RVP &middot; D86 &middot; release</span></div><div class="go">Open &rarr;</div></a>
   </div>
 </div>
 <div class="mockstamp">TERMINAL DASHBOARD &middot; REAL INVENTORY + T4</div>
