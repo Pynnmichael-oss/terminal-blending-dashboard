@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Partners · Terminal Dashboard — Fort Worth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="t4-schedule.js"></script>
+<script src="fuels-snapshot.js"></script>
+<style>
+:root{--slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--ulsd:#C0882E;--ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;
+--line:rgba(0,79,113,.13);--white:#FFFFFF;--gray:#EEF3F6;--gray2:#E5ECF0;--amber:#E0A23C;--red:#D9655B;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+background:radial-gradient(1000px 520px at 92% -14%,rgba(0,179,152,.07),transparent 60%),radial-gradient(760px 440px at -3% 114%,rgba(169,238,138,.11),transparent 60%),var(--white)}
+a{text-decoration:none;color:inherit}
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:50}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:var(--line)}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)} .appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--white);font-size:12px;font-weight:600;color:var(--ink-dim)} .pill b{color:var(--ink);font-weight:700}
+.search{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:9px;border:1px solid var(--line);background:var(--gray);color:var(--ink-faint);font-size:12.5px;font-weight:500;min-width:190px}
+.main{max-width:1400px;margin:0 auto;padding:22px 30px 60px}
+.ptitle{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.ptitle h1{font-size:26px;font-weight:800;letter-spacing:.3px;color:var(--slate)}
+.ptitle .sub{font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-top:3px}
+.ptitle .when{text-align:right;font-size:12px;font-weight:600;color:var(--ink-dim)} .ptitle .when b{color:var(--slate);font-weight:700}
+.prov{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.prov span{font-size:10px;font-weight:600;color:var(--ink-dim);background:var(--gray);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+.prov span b{color:var(--slate);font-weight:700}
+.hero{display:grid;grid-template-columns:296px 1fr;gap:16px;margin-bottom:16px}
+.compliance{border-radius:16px;padding:18px 20px;background:linear-gradient(160deg,rgba(0,179,152,.12),rgba(169,238,138,.10));border:1px solid rgba(0,179,152,.3);display:flex;flex-direction:column;justify-content:center;gap:9px}
+.compliance .badge{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:14.5px;color:#0a7e62;letter-spacing:.3px}
+.compliance .badge .dot{width:13px;height:13px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,179,152,.18)}
+.compliance .cdesc{font-size:11.5px;font-weight:600;color:var(--ink-dim);line-height:1.5}
+.compliance .spec{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.compliance .spec span{font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.7);color:var(--slate)}
+.marginfeat{border-radius:16px;border:1px solid rgba(0,179,152,.4);background:linear-gradient(120deg,rgba(0,79,113,.05),rgba(0,179,152,.10) 55%,rgba(169,238,138,.18));padding:16px 22px;display:flex;flex-direction:column;gap:12px}
+.mf-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mf-head .ttl{font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--slate)}
+.mf-head .sub{font-size:11px;font-weight:600;color:var(--ink-dim)}
+.mf-head .cta{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--teal);text-transform:uppercase}
+.mf-body{display:flex;gap:26px;align-items:center}
+.mf-total{display:flex;flex-direction:column;gap:1px;padding-right:24px;border-right:1px solid rgba(0,79,113,.16);flex-shrink:0}
+.mf-total .num{font-size:42px;font-weight:800;color:#0a7e62;line-height:1} .mf-total .num small{font-size:15px;font-weight:700;color:var(--ink-dim);margin-left:3px}
+.mf-total .lab{font-size:11px;font-weight:700;color:var(--ink-dim)}
+.mf-grades{flex:1;display:flex;flex-direction:column;gap:12px}
+.mf-row{display:flex;flex-direction:column;gap:5px}
+.mf-row .top{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;color:var(--slate)}
+.mf-row .top .g{font-size:8.5px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:5px}
+.mf-row .top .g.reg{color:#0a7e62;background:rgba(0,179,152,.16)} .mf-row .top .g.prem{color:var(--slate);background:rgba(0,79,113,.12)}
+.mf-row .top b{margin-left:auto} .mf-row .top .tk{font-size:10.5px;font-weight:600;color:var(--ink-faint)}
+.mf-bar{height:8px;border-radius:5px;background:rgba(0,79,113,.07);overflow:hidden}
+.mf-bar i{display:block;height:100%;border-radius:5px}
+.mf-foot{font-size:10.5px;font-weight:600;color:var(--ink-faint)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:3px;box-shadow:0 10px 26px -22px rgba(0,79,113,.5)}
+.kpi .l{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink-dim)}
+.kpi .l .ill{color:var(--ink-faint);font-weight:600;letter-spacing:.3px;text-transform:none}
+.bygrade{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.bygrade>div{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--slate)}
+.bygrade .g{font-size:8.5px;font-weight:800;letter-spacing:.5px;padding:3px 0;border-radius:5px;min-width:48px;text-align:center}
+.bygrade .g.reg{color:#0a7e62;background:rgba(0,179,152,.14)}
+.bygrade .g.prem{color:var(--slate);background:rgba(0,79,113,.10)}
+.bygrade .g.ulsd{color:#8a5e12;background:rgba(192,136,46,.18)}
+.bygrade .val{margin-left:auto}
+.bygrade .ok{color:var(--teal);margin-left:6px;font-weight:800}
+.bygrade .unit{font-size:10px;font-weight:600;color:var(--ink-faint);margin-left:3px}
+.midrow{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-bottom:24px}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px -26px rgba(0,79,113,.55)}
+.panel-h{display:flex;align-items:center;justify-content:space-between;padding:15px 18px 6px}
+.panel-h h2{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--slate)}
+.panel-h .hsub{font-size:10px;font-weight:600;color:var(--ink-faint)}
+.panel-h a{font-size:11px;font-weight:700;color:var(--teal)}
+.farm{display:flex;gap:5px;justify-content:space-between;padding:8px 14px 20px}
+.tank{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tank .grp{font-size:7.5px;font-weight:700;letter-spacing:.5px;color:var(--ink-faint);text-transform:uppercase}
+.tank .nm{font-weight:800;font-size:13px;color:var(--slate)}
+.ves{position:relative;width:100%;max-width:48px;height:104px;border:1px solid rgba(0,79,113,.3);border-radius:9px 9px 6px 6px;overflow:hidden;background:linear-gradient(90deg,rgba(0,79,113,.04),rgba(0,79,113,.10))}
+.fill{position:absolute;left:0;right:0;bottom:0;transition:height .5s}
+.fill.reg{background:linear-gradient(180deg,#33c4b1,var(--teal))}
+.fill.prem{background:linear-gradient(180deg,#2f7b9a,var(--slate))}
+.fill.ulsd{background:linear-gradient(180deg,#d8a857,#b5832b)}
+.heel{position:absolute;left:0;right:0;bottom:0;z-index:2;background:repeating-linear-gradient(45deg,rgba(0,79,113,.14),rgba(0,79,113,.14) 4px,transparent 4px,transparent 8px);border-top:1px solid rgba(0,79,113,.25)}
+.safe{position:absolute;left:-3px;right:-3px;border-top:1.5px dashed rgba(224,162,60,.85);z-index:3}
+.tank .pct{font-weight:800;font-size:12px;color:var(--slate)}
+.tank .bbl{font-size:9px;font-weight:700;color:var(--ink-dim)}
+.tank .rvp{font-size:9px;font-weight:700;color:var(--ink-faint)}
+.st{font-size:7px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 0;width:100%;text-align:center;border-radius:5px}
+.st.run{color:#0a7e62;background:rgba(0,179,152,.14)} .st.stop{color:var(--ink-dim);background:rgba(0,79,113,.07)}
+.alerts{padding:6px 16px 14px}
+.alert{display:flex;gap:11px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--line)}
+.alert:last-child{border-bottom:none}
+.alert .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.alert .dot.t{background:var(--teal)} .alert .dot.a{background:var(--amber)} .alert .dot.s{background:var(--slate)} .alert .dot.u{background:var(--ulsd)}
+.alert .body{font-size:12px;font-weight:600;color:var(--ink);line-height:1.4} .alert .body .m{display:block;font-size:10.5px;font-weight:600;color:var(--ink-faint);margin-top:1px}
+.secttl{font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-faint);margin:6px 2px 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:14px;margin-bottom:26px}
+.tile{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:16px 17px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:.16s;box-shadow:0 10px 26px -24px rgba(0,79,113,.55);position:relative;overflow:hidden}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--teal);opacity:0;transition:.16s}
+.tile:hover{transform:translateY(-3px);border-color:rgba(0,179,152,.45);box-shadow:0 18px 34px -22px rgba(0,79,113,.5)}
+.tile:hover::before{opacity:1}
+.tile .th{display:flex;align-items:center;gap:11px}
+.tile .ico{width:38px;height:38px;border-radius:10px;background:var(--gray);display:grid;place-items:center;color:var(--slate);flex-shrink:0}
+.tile .ico svg{width:21px;height:21px}
+.tile.q .ico{background:rgba(0,179,152,.12);color:var(--teal)}
+.tile .tt{font-weight:800;font-size:14.5px;color:var(--slate);letter-spacing:.2px}
+.tile .sug{font-size:8px;font-weight:800;letter-spacing:.8px;color:#6f9a14;background:rgba(169,238,138,.4);border-radius:5px;padding:2px 6px;margin-left:auto;align-self:flex-start}
+.tile .td{font-size:11.5px;font-weight:500;color:var(--ink-dim);line-height:1.5;flex:1}
+.tile .ts{font-size:12px;font-weight:700;color:var(--ink);padding-top:7px;border-top:1px solid var(--line)}
+.tile .ts b{color:var(--teal)} .tile .ts .muted{font-weight:600;color:var(--ink-faint)}
+.tile .go{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--teal);text-transform:uppercase}
+.dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:14px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--ink-faint);cursor:pointer;transition:.15s}
+.dropzone.drag{border-color:var(--teal);background:rgba(0,179,152,.06);color:var(--teal)}
+.drop-table{width:100%;border-collapse:collapse;font-size:11px}
+.drop-table th{text-align:left;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);padding:4px 4px;border-bottom:1px solid var(--line)}
+.drop-table td{padding:5px 4px;border-bottom:1px solid var(--line);font-weight:600;color:var(--ink)}
+.drop-table tr:last-child td{border-bottom:none}
+.skip-badge{font-size:8px;font-weight:800;letter-spacing:.3px;color:#8a5e12;background:rgba(224,162,60,.18);border-radius:5px;padding:2px 5px;white-space:nowrap}
+.no-reading{color:var(--ink-faint);font-weight:600;font-style:italic}
+.drop-actions{display:flex;gap:8px;margin-top:8px}
+.drop-btn{flex:1;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.3px;padding:7px 0;border-radius:8px;cursor:pointer;border:1.5px solid var(--line);background:var(--white);color:var(--ink-dim);transition:.15s}
+.drop-btn.apply{background:var(--teal);border-color:var(--teal);color:var(--white)}
+.drop-btn.apply:hover{background:#00a38e}
+.drop-btn.discard:hover{border-color:var(--red);color:var(--red)}
+.confirmed-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#0a7e62;letter-spacing:.2px}
+.confirmed-head::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.mockstamp{position:fixed;bottom:12px;right:14px;font-size:9px;font-weight:700;letter-spacing:1.4px;color:var(--ink-faint);background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:6px;padding:5px 10px;z-index:60}
+@media(max-width:1080px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.midrow{grid-template-columns:1fr}.mf-body{flex-direction:column;align-items:stretch}.mf-total{border-right:none;border-bottom:1px solid rgba(0,79,113,.16);padding-right:0;padding-bottom:10px}}
+.databtn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;border:1px solid var(--line);background:var(--white);font-size:12px;font-weight:700;color:var(--slate);cursor:pointer;font-family:inherit}
+.databtn:hover{border-color:var(--teal);color:var(--teal)}
+.data-panel{position:absolute;top:56px;right:30px;width:360px;background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 48px -20px rgba(0,79,113,.4);padding:16px 18px;z-index:70}
+.dp-head{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--slate);margin-bottom:3px}
+.dp-sub{font-size:10.5px;font-weight:500;color:var(--ink-dim);margin-bottom:9px;line-height:1.4}
+.dp-divider{height:1px;background:var(--line);margin:14px 0}
+.dp-status{font-size:10.5px;font-weight:600;color:var(--ink-faint);margin-top:7px}
+.dp-status.live{color:#0a7e62}
+#t4Paste{width:100%;min-height:80px;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical;color:var(--ink)}
+</style></head>
+<body>
+<header class="appbar">
+  <div class="wm">GLOBAL<b>PARTNERS</b></div>
+  <div class="divider"></div>
+  <div class="spacer"></div>
+  <div class="search">&#128270; Search tanks, batches, tasks&hellip;</div>
+  <button type="button" class="databtn" id="dataDropBtn">&#8595; Data Drop</button>
+  <div class="pill">&#128205; <b>Fort Worth</b></div>
+</header>
+<div class="data-panel" id="dataPanel" style="display:none">
+  <div class="dp-head">T4 Schedule</div>
+  <div class="dp-sub">Paste tab-separated T4 / Explorer export rows.</div>
+  <textarea id="t4Paste" placeholder="Paste T4 schedule here..."></textarea>
+  <div class="drop-actions">
+    <button type="button" class="drop-btn apply" id="t4ApplyBtn">Parse &amp; Save</button>
+  </div>
+  <div class="dp-status" id="t4Status">No data loaded &mdash; Receipt Schedule using embedded mock data</div>
+  <div class="dp-divider"></div>
+  <div class="dp-head">FuelsManager Snapshot</div>
+  <div class="dp-sub">Drop a FuelsManager export (.xlsx) to pull the latest valid available volume per tank.</div>
+  <div id="dropIdle">
+    <div class="dropzone" id="dropZone">Drop FuelsManager export here, or click to browse</div>
+    <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+  </div>
+  <div id="dropPreview" style="display:none">
+    <table class="drop-table" id="dropResults">
+      <thead><tr><th>Tank</th><th>Available (bbl)</th><th>Pulled At</th><th></th></tr></thead>
+      <tbody id="dropResultsBody"></tbody>
+    </table>
+    <div class="drop-actions">
+      <button type="button" class="drop-btn apply" id="applyBtn">Apply</button>
+      <button type="button" class="drop-btn discard" id="discardBtn">Discard</button>
+    </div>
+  </div>
+  <div id="dropConfirmed" style="display:none">
+    <div class="confirmed-head">Confirmed &mdash; <span id="confirmedAt"></span></div>
+    <table class="drop-table" id="confirmedTable"><tbody id="confirmedBody"></tbody></table>
+    <div class="drop-actions">
+      <button type="button" class="drop-btn discard" id="replaceBtn">Replace data</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="ptitle">
+    <div>
+      <h1>Terminal Dashboard</h1>
+      <div class="sub">Fort Worth Terminal &middot; J117 &middot; summer RVP season &middot; gasoline + ULSD</div>
+    </div>
+    <div class="when">Mon &middot; Jun 22 2026<br><span style="color:var(--ink-faint)">Inventory as of 00:00 &middot; Night shift, M. Ibana</span></div>
+  </div>
+  <div class="prov">
+    <span>Inventory &middot; <b>FuelsManager midnight snapshot (06/22 00:00)</b></span>
+    <span>Schedule &middot; <b>T4 current</b></span>
+    <span>RVP / flash &middot; <b>illustrative</b> &mdash; pending lab feed</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="l">On hand &middot; pumpable bbl</span><div class="bygrade">
+      <div><span class="g reg">REG</span><span class="val">47,640</span></div>
+      <div><span class="g prem">PREM</span><span class="val">15,572</span></div>
+      <div><span class="g ulsd">ULSD</span><span class="val">31,268</span></div></div></div>
+    <div class="kpi"><span class="l">Receipts today &middot; bbl</span><div class="bygrade">
+      <div><span class="g reg">REG</span><span class="val">10,750</span></div>
+      <div><span class="g prem">PREM</span><span class="val">0</span></div>
+      <div><span class="g ulsd">ULSD</span><span class="val">17,842</span></div></div></div>
+    <div class="kpi"><span class="l">Rack demand today <span class="ill">· illustrative</span></span><div class="bygrade">
+      <div><span class="g reg">REG</span><span class="val">13,200</span></div>
+      <div><span class="g prem">PREM</span><span class="val">3,800</span></div>
+      <div><span class="g ulsd">ULSD</span><span class="val">6,000</span></div></div></div>
+  </div>
+
+  <div class="secttl">Operations</div>
+  <div class="grid">
+    <a href="https://pynnmichael-oss.github.io/blend-planner/" target="_blank" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 3 7-8"/><path d="M3 21h18"/></svg></span><span class="tt">Blend Planner</span></div><div class="td">Project gasoline tank levels and RVP across a multi-day horizon; test blend decisions before committing.</div><div class="ts">Window 06/22&ndash;06/29 &middot; <b>plan ready</b></div><div class="go">Open &rarr;</div></a>
+
+    <a href="rack-demand-forecast.html" class="tile"><div class="th"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="3.4" height="10" rx="1"/><rect x="10.3" y="4" width="3.4" height="16" rx="1"/><rect x="16.6" y="13" width="3.4" height="7" rx="1"/></svg></span><span class="tt">Rack Demand Forecast</span></div><div class="td">Average liftings by product, day of week, and 6-hour slot &mdash; the curve that drives depletion.</div><div class="ts">Reg <b>13,200</b> &middot; Prem 3,800 &middot; ULSD 6,000</div><div class="go">Open &rarr;</div></a>
+  </div>
+</div>
+<div class="mockstamp">TERMINAL DASHBOARD &middot; REAL INVENTORY + T4</div>
+<script>
+const TANK_FARM_ORIGINAL = {};
+document.querySelectorAll('.farm .tank[data-tank]').forEach(tankEl => {
+  const tankId = tankEl.dataset.tank;
+  const bbl = Number(tankEl.querySelector('.bbl').textContent.replace(/,/g, ''));
+  const pct = parseFloat(tankEl.querySelector('.pct').textContent);
+  TANK_FARM_ORIGINAL[tankId] = { bbl, pct, capacity: bbl / (pct / 100) };
+});
+
+function renderTankFarm(){
+  const snapshot = loadSnapshot();
+  const labelEl = document.getElementById('farmSourceLabel');
+  let anyLive = false;
+  Object.keys(TANK_FARM_ORIGINAL).forEach(tankId => {
+    const tankEl = document.querySelector(`.farm .tank[data-tank="${tankId}"]`);
+    if(!tankEl) return;
+    const orig = TANK_FARM_ORIGINAL[tankId];
+    const entry = snapshot && snapshot.tanks ? snapshot.tanks[tankId] : null;
+    const bblEl = tankEl.querySelector('.bbl');
+    const pctEl = tankEl.querySelector('.pct');
+    const fillEl = tankEl.querySelector('.fill');
+    if(entry && entry.available != null){
+      anyLive = true;
+      const pct = Math.max(0, Math.min(100, (entry.available / orig.capacity) * 100));
+      bblEl.textContent = Number(entry.available).toLocaleString();
+      pctEl.textContent = Math.round(pct) + '%';
+      fillEl.style.height = pct + '%';
+    } else {
+      bblEl.textContent = orig.bbl.toLocaleString();
+      pctEl.textContent = orig.pct + '%';
+      fillEl.style.height = orig.pct + '%';
+    }
+  });
+  if(labelEl){
+    if(anyLive && snapshot){
+      const d = new Date(snapshot.confirmedAt);
+      labelEl.textContent = 'Live from FuelsManager · ' + (isNaN(d) ? snapshot.confirmedAt : d.toLocaleString());
+    } else {
+      labelEl.textContent = 'Mock data';
+    }
+  }
+}
+
+(function(){
+  const idle = document.getElementById('dropIdle');
+  const preview = document.getElementById('dropPreview');
+  const confirmed = document.getElementById('dropConfirmed');
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  let pendingByTank = null;
+
+  function showState(state){
+    idle.style.display = state === 'idle' ? '' : 'none';
+    preview.style.display = state === 'preview' ? '' : 'none';
+    confirmed.style.display = state === 'confirmed' ? '' : 'none';
+  }
+
+  function renderRow(tankId, r){
+    if(r){
+      const d = new Date(r.pulledAt);
+      const pulledAt = isNaN(d) ? String(r.pulledAt) : d.toLocaleString();
+      const badge = r.skippedBadRows > 0 ? `<span class="skip-badge">${r.skippedBadRows} skipped</span>` : '';
+      return `<td>${tankId}</td><td>${Number(r.available).toLocaleString()}</td><td>${pulledAt}</td><td>${badge}</td>`;
+    }
+    return `<td>${tankId}</td><td class="no-reading">no valid reading</td><td>&mdash;</td><td></td>`;
+  }
+
+  function renderPreview(byTank){
+    const tbody = document.getElementById('dropResultsBody');
+    tbody.innerHTML = '';
+    Object.values(TANK_ID_MAP).forEach(tankId => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = renderRow(tankId, byTank[tankId]);
+      tbody.appendChild(tr);
+    });
+    showState('preview');
+  }
+
+  function renderConfirmed(snapshot){
+    document.getElementById('confirmedAt').textContent = new Date(snapshot.confirmedAt).toLocaleString();
+    const tbody = document.getElementById('confirmedBody');
+    tbody.innerHTML = '';
+    Object.values(TANK_ID_MAP).forEach(tankId => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = renderRow(tankId, snapshot.tanks[tankId]);
+      tbody.appendChild(tr);
+    });
+    showState('confirmed');
+  }
+
+  function handleFile(file){
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingByTank = parseFuelsManagerFile(e.target.result);
+      renderPreview(pendingByTank);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); fileInput.value = ''; });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if(file) handleFile(file);
+  });
+
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    if(!pendingByTank) return;
+    saveSnapshot(pendingByTank);
+    pendingByTank = null;
+    renderConfirmed(loadSnapshot());
+    renderTankFarm();
+  });
+  document.getElementById('discardBtn').addEventListener('click', () => {
+    pendingByTank = null;
+    showState('idle');
+  });
+  document.getElementById('replaceBtn').addEventListener('click', () => {
+    showState('idle');
+  });
+
+  const dataDropBtn = document.getElementById('dataDropBtn');
+  const dataPanel = document.getElementById('dataPanel');
+  dataDropBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dataPanel.style.display = dataPanel.style.display === 'none' ? '' : 'none';
+  });
+  document.addEventListener('click', (e) => {
+    if(dataPanel.style.display !== 'none' && !dataPanel.contains(e.target) && e.target !== dataDropBtn){
+      dataPanel.style.display = 'none';
+    }
+  });
+  function renderT4Status(){
+    const t4 = loadT4();
+    const statusEl = document.getElementById('t4Status');
+    if(t4 && t4.batches.length){
+      const d = new Date(t4.confirmedAt);
+      statusEl.textContent = `Live — ${t4.batches.length} batches loaded · ${isNaN(d) ? t4.confirmedAt : d.toLocaleString()}`;
+      statusEl.classList.add('live');
+    } else {
+      statusEl.textContent = 'No data loaded — Receipt Schedule using embedded mock data';
+      statusEl.classList.remove('live');
+    }
+  }
+  document.getElementById('t4ApplyBtn').addEventListener('click', () => {
+    const text = document.getElementById('t4Paste').value;
+    const {batches, skipped} = parseT4Paste(text);
+    if(!batches.length){
+      document.getElementById('t4Status').textContent = 'No valid rows found — check the pasted format';
+      document.getElementById('t4Status').classList.remove('live');
+      return;
+    }
+    saveT4(batches);
+    renderT4Status();
+    document.getElementById('t4Paste').value = '';
+  });
+  renderT4Status();
+
+  const existing = loadSnapshot();
+  if(existing) renderConfirmed(existing);
+  renderTankFarm();
+})();
+</script>
+</body></html>
