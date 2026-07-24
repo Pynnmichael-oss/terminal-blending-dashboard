@@ -1,0 +1,43 @@
+name: Remove dashboard inventory as-of label
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/remove-inventory-as-of.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove inventory as-of text
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text()
+          old = '<div class="when">Mon &middot; Jun 22 2026<br><span style="color:var(--ink-faint)">Inventory as of 00:00 &middot; Night shift, M. Ibana</span></div>'
+          new = '<div class="when">Mon &middot; Jun 22 2026</div>'
+          if old not in text:
+              raise SystemExit('Expected inventory as-of line was not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Remove one-time workflow
+        run: rm .github/workflows/remove-inventory-as-of.yml
+
+      - name: Commit change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/remove-inventory-as-of.yml
+          git commit -m "Remove inventory as-of label from dashboard"
+          git push
