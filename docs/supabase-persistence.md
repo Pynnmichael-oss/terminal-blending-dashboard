@@ -357,6 +357,17 @@ back in, but a different device loading the same case never inherits
 someone else's token. `checkout_device`/`checkout_by` remain free-text
 display/audit labels, not verified identities (see "No authentication").
 
+**Auto-renewal:** `renew_blend_case_checkout` existed but nothing called
+it, so a lease could lapse mid-task on a stage that legitimately runs
+longer than the 20-minute default (blend + settle hold routinely does).
+`syncCheckoutRenewal()` now runs from `render()` (the same chokepoint
+`persistCurrentCase()` uses) and starts a 5-minute `setInterval` calling
+`renew_blend_case_checkout` whenever the current case is checked out to
+this device; it's idempotent per case (won't restart the interval on
+every render) and stops on checkin, force-release, close, abandonment, a
+rejected renewal (token mismatch — this device no longer actually holds
+the lease), or the tab closing (`beforeunload`/`pagehide`).
+
 ### Delivery lifecycle
 
 Generic `upsert()` on `blend_case_deliveries` is revoked (`INSERT`/`UPDATE`
@@ -381,18 +392,33 @@ direct `UPDATE` on those columns is now revoked. Freeform notes go through
 revoked for anon/authenticated; it is insert-only by design (no
 `UPDATE`/`DELETE` policy exists for any caller, including the RPCs).
 
-**Not fully eliminated in this pass:** `persistCurrentCase()` in
-`blend-case-manager.html` still runs after every `render()` rather than
-purely from explicit save actions (objective: rendering should be
-read-only). What *did* change: it's now scoped to `case_data` + results
-only (both version-checked, allow-listed), and `decision`,
-`actual_tov_bbl`, checkout, and deliveries are written by their own
-explicit RPC calls at the point of the user action
-(`recordOpenGauge`, `approveScenario`, `beginTruckOffload`/`refuseTruck`/
-`completeOffload`, checkout/checkin/force-release) rather than swept up
-generically. Converting every remaining stage-specific action
-(certification, gauges, oversight sampling) to fully own its save call is
-follow-up work.
+**Not fully eliminated:** `persistCurrentCase()` in `blend-case-manager.html`
+still runs after every `render()` rather than purely from explicit save
+actions (objective: rendering should be read-only). It remains as a
+snapshot-deduped safety net for any `case_data` field not yet covered by
+an explicit call site — normally a no-op, since the actions below now
+save before they render.
+
+What *has* been converted to its own explicit, version-checked save call
+(await the RPC, update `c.dbVersion` from the response, `handleStaleVersion()`
+on a stale conflict, only then `render()`), on top of the RPCs that already
+did this (`recordOpenGauge`, `approveScenario`, `beginTruckOffload`/
+`refuseTruck`/`completeOffload`, checkout/checkin/force-release):
+`chooseTerminalCertification`, `recordSplOrder`, `evaluateTest`,
+`releaseIteration`, `startBlend`, `stopBlend`, `completeSettle`. These all
+share a `syncCaseData(c, actor)` helper factored out of
+`persistCurrentCase()`'s core logic (`updateBlendCaseData` +, when
+gauge/reconciliation/release/closed data is present, `saveBlendCaseResults`),
+so both the explicit call sites and the safety-net path stay in sync on
+what "already saved" means (`lastSyncedSnapshot`).
+
+**`sendAndRecordOversightOrder` / `recordOversightResult` were checked and
+found to need no change here:** neither function mutates any field on the
+case object (`c`) at all — they only mutate the local-only supplier
+compliance record (`state.compliance.suppliers[...]`, not yet in Supabase —
+see "Remaining follow-up work" above) and call `log()`, which is already
+its own independent, already-persisted RPC (`add_blend_case_note`). There
+was no `case_data` write for these two to protect with a version check.
 
 ### Invariant constraints
 
