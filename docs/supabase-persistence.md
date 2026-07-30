@@ -23,29 +23,33 @@ brief's "First Milestone" vertical slice:
 
 ## Environment configuration
 
-This is a static site with **no build step**, so there's no bundler to
-inject `process.env` values. The convention used instead:
+This is a static site with **no build step**, deployed via **GitHub Pages**
+(which serves committed files directly — there is no CI/build stage to
+inject secrets at deploy time). Because of that, the convention here is
+the opposite of a typical `.env` setup:
 
 ```
-assets/js/supabase-config.example.js   <- checked in, template, no real values
-assets/js/supabase-config.js           <- gitignored, your real project URL + anon key
+assets/js/supabase-config.example.js   <- template, for reference
+assets/js/supabase-config.js           <- the REAL, COMMITTED config file
 ```
 
-To set up a fresh clone:
+**`supabase-config.js` must be committed to the repo, not gitignored.**
+This is safe: it only contains the project URL and the **anon/publishable
+key**, which Supabase is explicitly designed to expose in browser code —
+access is enforced entirely by Row Level Security policies, not by keeping
+this key secret (see `supabase/migrations/00000000000008_row_level_security.sql`
+for the current, intentionally-permissive dev policies).
 
-```bash
-cp assets/js/supabase-config.example.js assets/js/supabase-config.js
-# then edit supabase-config.js and fill in:
-#   url: your project's API URL (Project Settings -> API -> Project URL)
-#   anonKey: the anon/publishable key (Project Settings -> API -> anon public)
-```
+> **Earlier version of this doc got this backwards** — it gitignored
+> `supabase-config.js`, which meant the file never made it to the GitHub
+> Pages deployment and the live site hung indefinitely on "Connecting to
+> Supabase…" with no config at all. That's been corrected: the file is
+> now committed with real values, and `waitForBlendRepo()` in
+> `blend-case-manager.html` now times out after 8s and shows the red error
+> banner instead of hanging silently if this ever breaks again.
 
-`supabase-config.js` for this milestone has already been created and
-populated with the new project's URL and anon key, so the app works
-out of the box in this environment. It is excluded from git via `.gitignore`.
-
-**Only the anon/publishable key ever appears in browser code.** The
-service-role key is never referenced anywhere in this repository.
+**The service-role key must never appear anywhere in this repository.**
+There is no server-side component here to keep it safe in.
 
 ## Files changed / added
 
@@ -59,8 +63,8 @@ supabase/migrations/00000000000006_blend_case_results.sql
 supabase/migrations/00000000000007_rpc_functions.sql
 supabase/migrations/00000000000008_row_level_security.sql
 supabase/migrations/00000000000009_dev_seed.sql
-assets/js/supabase-config.example.js   (new, committed)
-assets/js/supabase-config.js           (new, gitignored)
+assets/js/supabase-config.example.js   (new, committed, template only)
+assets/js/supabase-config.js           (new, committed — see note above on why)
 assets/js/supabase-client.js           (new)
 assets/js/blend-repository.js          (new — the data-access/repository layer)
 blend-case-manager.html                (modified — see below)

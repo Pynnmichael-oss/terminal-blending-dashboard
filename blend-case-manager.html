@@ -297,10 +297,11 @@ function normalize(){if(!state.plans)state.plans=[];if(!state.compliance)state.c
 //     read from on a fresh load unless the Supabase fetch itself fails.
 // ---------------------------------------------------------------------
 
-function waitForBlendRepo(){
-  return new Promise(resolve=>{
+function waitForBlendRepo(timeoutMs=8000){
+  return new Promise((resolve,reject)=>{
     if(window.BlendRepo){resolve();return}
-    window.addEventListener('blend-repo-ready',()=>resolve(),{once:true});
+    const timer=setTimeout(()=>reject(new Error('Timed out waiting for the Supabase repository module to load (check assets/js/supabase-config.js is present and valid, and that the esm.sh CDN import succeeded -- see browser console for the underlying error)')),timeoutMs);
+    window.addEventListener('blend-repo-ready',()=>{clearTimeout(timer);resolve()},{once:true});
   });
 }
 
