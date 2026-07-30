@@ -225,6 +225,20 @@ async function updateBlendPlan(planDbId, patch) {
   return data;
 }
 
+/**
+ * Permanently deletes a blend case (and its deliveries/events/results via
+ * cascade) through the delete_blend_case RPC. Reverts the source plan to
+ * 'proposed' if one was linked. Irreversible.
+ */
+async function deleteBlendCase(blendCaseId, actor = 'system') {
+  const { data, error } = await supabase.rpc('delete_blend_case', {
+    p_blend_case_id: blendCaseId,
+    p_actor: actor,
+  });
+  assertNoError(error, 'deleteBlendCase');
+  return data?.[0] ?? null;
+}
+
 window.BlendRepo = {
   listBlendPlans,
   listBlendCases,
@@ -236,6 +250,7 @@ window.BlendRepo = {
   updateBlendPlan,
   upsertDelivery,
   saveBlendCaseResults,
+  deleteBlendCase,
 };
 
 // Signal to the classic <script> below that the repository is ready to use.
