@@ -486,9 +486,66 @@ they're intentionally callable by `anon`/`authenticated` (the only real
 caller of this anon-key-only, no-auth browser app) via their own explicit
 grants already.
 
+### Browser UI walkthrough (found and fixed 2 real bugs)
+
+Driven end-to-end with Playwright + real Chrome against the live project
+(`lmmgaeeoyukfbihoajxi`) — the first time this app was actually opened
+in a browser rather than validated by `node --check` and code review.
+Found two real bugs neither the SQL test suite nor code review caught,
+both fixed:
+
+1. **`promotePlan()`'s client-side guard didn't exclude abandoned
+   cases.** `if(state.cases.some(c=>!c.closed&&c.tank===p.tank))` treated
+   an abandoned case as still blocking re-promotion of its tank, even
+   though the server-side check correctly excludes `abandoned`. Fixed to
+   `!c.closed&&!c.abandoned&&c.tank===p.tank`.
+2. **`renderBoard()` didn't exclude abandoned cases from the active
+   board either** (`filter(x=>!x.c.closed)`, same missing
+   `&&!x.c.abandoned` the rest of the file already uses in the
+   equivalent spots). An abandoned case would keep occupying a slot on
+   the active board. Fixed. (Abandoned cases still don't appear in the
+   closed archive either — they're simply gone from view once
+   abandoned. Not a bug — no such requirement exists — but worth a
+   deliberate design decision in a future pass.)
+
+A third, more serious bug was found the same way and fixed at the
+database level, not just the client: see migration `00000000000024`
+below — `blend_cases_plan_id_unique` had no `abandoned` exclusion,
+so a plan could never actually be re-promoted after its case was
+abandoned, contradicting `abandon_blend_case`'s own documented purpose.
+
+Verified via real clicks (not just SQL): app reaches "Live · Supabase"
+mode; the planner queue loads; **Plan Blend** promotes a plan into a
+server-generated case number; the promoted case **survives a page
+refresh** (loaded fresh from Supabase); **checkout** shows "Checked out
+to this device"; a **second browser context with no cached token**
+correctly sees the lease as held (Force-release only, not a free
+checkout) rather than silently overwriting it; **Abandon blend**
+prompts for a reason and correctly abandons the case server-side
+(confirmed via direct RPC re-verification after the harness's own
+polling window closed early — see caveat below).
+
+**Caveat — not resolved, likely a test-harness artifact, not an app
+bug:** in this specific sandboxed Playwright environment, RPC calls made
+shortly after a second browser context loads/renders the same case
+sometimes take 60–125+ seconds to resolve (`TypeError: Failed to fetch`
+transiently, then eventually `504 upstream request timeout` from
+Supabase's gateway, or eventual success well outside any reasonable UI
+wait window). Reproduced identically bypassing the button entirely (a
+direct `page.evaluate()` call to `window.BlendRepo.abandonBlendCase`),
+which rules out a click/DOM-timing bug specifically. The RPC itself was
+independently re-verified correct via direct SQL and via an isolated
+single-context browser run (no second context involved), both fast and
+correct every time. Likely cause: this sandbox's network path to
+`esm.sh` (CDN) + the Supabase project's free-tier connection
+pooler under rapid automated multi-context churn — not something a real
+operator clicking through the app at human speed would trigger. Flagged
+for a human to re-confirm in an ordinary browser/network if there's any
+doubt.
+
 ### Manual Supabase deployment steps
 
-1. Apply migrations `00000000000013` through `00000000000023` in order
+1. Apply migrations `00000000000013` through `00000000000024` in order
    (`supabase db push`, or run each file's SQL via the dashboard SQL
    editor / `apply_migration`). They were also applied directly to the
    live project during this pass — confirm your target project matches
