@@ -467,9 +467,28 @@ indexes).
 Revoked `EXECUTE` (kept defined, not dropped): `delete_blend_case`,
 `change_blend_case_status`.
 
+**This revoke did not actually take effect until migration 023.**
+Migrations 017/018 revoked `EXECUTE` on both functions from
+`anon, authenticated` only. Postgres grants `EXECUTE` to the `PUBLIC`
+pseudo-role by default when a function is created, and every role
+(including `anon`) implicitly inherits `PUBLIC`'s grants — so neither
+revoke had any real effect, confirmed via `has_function_privilege()`
+while writing `supabase/tests/05_stage_skip_rejection.sql`. Both the old
+arbitrary-stage/status RPC and the permanent-delete RPC remained fully
+callable by anyone holding the anon key for the entire time between
+migration 018 and 023, undermining the lifecycle-enforcement RPCs and the
+abandonment-preserves-everything guarantee this pass exists to provide.
+`00000000000023_revoke_public_execute_on_superseded_rpcs.sql` fixes this
+by explicitly revoking from `PUBLIC` too, and has been applied to the
+live project. The other 21 `SECURITY DEFINER` functions added in this
+pass carry the same implicit `PUBLIC` grant, but it's a no-op for them —
+they're intentionally callable by `anon`/`authenticated` (the only real
+caller of this anon-key-only, no-auth browser app) via their own explicit
+grants already.
+
 ### Manual Supabase deployment steps
 
-1. Apply migrations `00000000000013` through `00000000000022` in order
+1. Apply migrations `00000000000013` through `00000000000023` in order
    (`supabase db push`, or run each file's SQL via the dashboard SQL
    editor / `apply_migration`). They were also applied directly to the
    live project during this pass — confirm your target project matches
@@ -511,11 +530,16 @@ available):
 - ✅ Full audit trail for the test case read back in order — one event per
   transition, in the intended sequence.
 
-**Not yet run:** the reusable SQL integration-test scripts called for by
-the brief (items like simultaneous-promotion races, checkout expiration,
-`case_data` partial-merge-doesn't-erase-other-keys) were exercised
-conceptually above but are not saved as standalone, re-runnable test
-files in this repo yet. Client-side (`blend-case-manager.html`) flows were
-verified by static syntax-check (`node --check`) and code review against
-the new RPC surface, not by driving the actual browser UI.
+**Since resolved:** reusable SQL integration-test scripts now exist at
+`supabase/tests/` (8 files, see that folder's `README.md`) covering
+concurrent-tank-conflict, concurrent-plan-promotion, stale-version
+rejection, checkout conflict + expiration, stage-skip rejection, closure
+without required data, abandonment preserving child rows, and hold
+requiring a reason. All 8 pass against the live project. Writing them is
+what found the `PUBLIC`-grant gap documented above under "New/changed
+RPCs (this pass)". Client-side (`blend-case-manager.html`) flows were
+still only verified by static syntax-check (`node --check`) and code
+review against the new RPC surface as of this writing, not by driving the
+actual browser UI — see the follow-up items in
+"Remaining follow-up work" above.
 

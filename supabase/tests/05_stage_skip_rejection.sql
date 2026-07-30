@@ -7,15 +7,15 @@
 -- anon/authenticated at all -- its EXECUTE grant was revoked in the
 -- hardening pass rather than the function being dropped.
 --
--- CURRENTLY FAILS against the live project as of migration 022: writing
--- this test found that the has_function_privilege() checks below fail --
+-- Writing this test against the live project (as of migration 022, before
+-- 023) found that the has_function_privilege() checks below FAILED:
 -- migrations 017/018 revoked EXECUTE on change_blend_case_status and
 -- delete_blend_case from `anon, authenticated`, but never from PUBLIC,
 -- which Postgres grants EXECUTE to by default on function creation and
--- which anon/authenticated implicitly inherit. Both functions are
--- therefore still fully callable by anyone holding the anon key. See
+-- which anon/authenticated implicitly inherit -- both functions were
+-- fully callable by anyone holding the anon key the entire time. Fixed by
 -- migration 00000000000023_revoke_public_execute_on_superseded_rpcs.sql,
--- which fixes this -- apply it before this test will pass.
+-- applied to the live project; this test now passes.
 begin;
 
 do $$
