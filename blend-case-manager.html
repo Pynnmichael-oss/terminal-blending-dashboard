@@ -360,7 +360,12 @@ function normalize(){if(!state.plans)state.plans=[];state.ftwAuthority=Object.as
 const CASE_DATA_EXCLUDE = new Set([
   'id','dbId','deliveries','log','openGauge','closeGauge','reconciliation',
   'est','act','stage','status','hold','decision','checkout','operator','pq',
-  'grade','tank','tankNo','row','sourcePlan','closed'
+  'grade','tank','tankNo','row','sourcePlan','closed',
+  // Hardening pass: server-authoritative fields that are never part of the
+  // case_data catch-all -- dbVersion is blend_cases.record_version (the
+  // optimistic-concurrency token), checkoutToken is the server-issued
+  // checkout lease token, abandoned mirrors abandoned_at/by/reason.
+  'dbVersion','checkoutToken','abandoned'
 ]);
 // Serialize "everything else" on a case into case_data generically, so a
 // future new field on the case object persists automatically without a
@@ -418,6 +423,13 @@ function mapDbCaseToAppCase(row){
   const results=(row.blend_case_results&&row.blend_case_results[0])||null;
   const c=makeCase(Object.assign({
     id:row.case_number,dbId:row.id,
+    dbVersion:row.record_version!=null?Number(row.record_version):1,
+    // checkoutToken is intentionally NOT hydrated from the row -- a token
+    // only belongs to the device that acquired the lease, tracked
+    // separately in checkoutTokensByCase (see below) so a page refresh on
+    // a DIFFERENT device never inherits someone else's lease.
+    checkoutToken:checkoutTokensByCase[row.id]||null,
+    abandoned:row.status==='abandoned'?{at:row.abandoned_at,by:row.abandoned_by,reason:row.abandonment_reason}:null,
     sourcePlan:row.source_plan_snapshot?{
       id:row.source_plan_snapshot.plan_code,butane:Number(row.source_plan_snapshot.butane_bbl||0),
       targetRvp:Number(row.source_plan_snapshot.target_rvp||0),truckFinish:row.source_plan_snapshot.truck_finish
@@ -429,7 +441,9 @@ function mapDbCaseToAppCase(row){
     hold:row.status==='hold'?{reason:row.hold_reason,at:row.hold_at}:null,
     closed:row.status==='closed'?{at:row.completed_at,by:(results&&results.completed_by)||row.pq}:null,
     deliveries,log:evLog,
-    checkout:row.checkout_device?{device:row.checkout_device,by:row.checkout_by,at:row.checkout_at}:null,
+    checkout:(row.checkout_device&&row.checkout_expires_at&&new Date(row.checkout_expires_at).getTime()>Date.now())
+      ?{device:row.checkout_device,by:row.checkout_by,at:row.checkout_at,expiresAt:row.checkout_expires_at}
+      :null,
     openGauge:(results&&results.open_gauge)||cd.openGauge||null,
     closeGauge:(results&&results.close_gauge)||cd.closeGauge||null,
     reconciliation:results?{expectedBbl:Number(results.expected_close_bbl||0),actualBbl:Number(results.actual_close_bbl||0),
@@ -457,24 +471,38 @@ async function buildStateFromSupabase(){
  * selected case only, and is a no-op for cases that aren't Supabase-backed
  * (no dbId) or haven't changed since the last sync.
  */
+// HARDENING PASS NOTE (objective #9, partially addressed): this is still
+// called after every render() rather than only from explicit save
+// actions -- fully eliminating that pattern would mean converting every
+// remaining stage-specific action function (certification, gauges,
+// oversight, etc.) to explicitly own its own save call the way
+// recordOpenGauge/beginTruckOffload/completeOffload/approveScenario now
+// do, which is tracked as follow-up work in
+// docs/supabase-persistence.md. What HAS changed here: decision,
+// actual_tov_bbl, checkout, and deliveries are no longer touched by this
+// function at all (direct writes to those columns are revoked at the
+// database level -- they're written by their own explicit, version-
+// checked RPC calls at the point of the user action). This function is
+// now scoped to case_data (allow-listed keys, merged server-side) and
+// the results row, both under optimistic concurrency: a conflict reloads
+// the case via handleStaleVersion() instead of retrying with a stale
+// version and silently losing a concurrent edit.
 let lastSyncedSnapshot=null,syncInFlight=false;
 async function persistCurrentCase(){
   const c=currentCase();
   if(!c||!c.dbId||syncInFlight)return;
+  if(c.status==='closed'||c.status==='abandoned')return; // these RPCs reject edits on a closed/abandoned case
   const payload=buildCaseDataPayload(c);
-  const snapshot=JSON.stringify({payload,decision:c.decision,act:c.act,checkout:c.checkout,
-    openGauge:c.openGauge,closeGauge:c.closeGauge,reconciliation:c.reconciliation,closed:c.closed});
+  const snapshot=JSON.stringify({payload,
+    openGauge:c.openGauge,closeGauge:c.closeGauge,reconciliation:c.reconciliation,
+    certificationRelease:c.certification?.release,closed:c.closed});
   if(snapshot===lastSyncedSnapshot)return;
   syncInFlight=true;
   try{
-    await window.BlendRepo.updateBlendCase(c.dbId,{
-      decision:c.decision,actual_tov_bbl:c.act.tov,
-      checkout_device:c.checkout?.device||null,checkout_by:c.checkout?.by||null,checkout_at:c.checkout?.at||null,
-      case_data:payload
-    });
-    await Promise.all(c.deliveries.map(d=>window.BlendRepo.upsertDelivery(c.dbId,d)));
+    const updated=await window.BlendRepo.updateBlendCaseData(c.dbId,c.dbVersion,payload,c.operator);
+    c.dbVersion=Number(updated.record_version);
     if(c.openGauge||c.closeGauge||c.reconciliation||c.certification?.release||c.closed){
-      await window.BlendRepo.saveBlendCaseResults(c.dbId,{
+      await window.BlendRepo.saveBlendCaseResults(c.dbId,c.dbVersion,{
         final_quantity_bbl:c.closeGauge?.netBbl??null,
         open_gauge:c.openGauge||null,close_gauge:c.closeGauge||null,
         expected_close_bbl:c.reconciliation?.expectedBbl??null,actual_close_bbl:c.reconciliation?.actualBbl??null,
@@ -483,17 +511,33 @@ async function persistCurrentCase(){
         quality_data:{preBlendResults:c.preBlendResults,iterations:c.iterations,certification:c.certification},
         operational_notes:c.reconciliation?.reason||c.hold?.reason||null,
         completed_by:c.closed?.by||null,completed_at:c.closed?.at||null
-      });
+      },c.operator);
+      // save_blend_case_results also bumps blend_cases.record_version
+      // server-side but returns the results row, not the case row -- pull
+      // the authoritative version rather than guess it.
+      const refreshed=await window.BlendRepo.getBlendCase(c.dbId);
+      c.dbVersion=Number(refreshed.record_version);
     }
     lastSyncedSnapshot=snapshot;
     hideSyncBanner();
   }catch(e){
     console.error(e);
+    if(e.isStaleVersion){await handleStaleVersion(c,e);return}
     showSyncBanner('Supabase save failed: '+e.message+' — your latest change may not be saved. Retrying on the next action.','error');
   }finally{
     syncInFlight=false;
   }
 }
+
+// Hardening pass: checkout lease tokens are device-local credentials, not
+// domain data -- kept in their own localStorage key (never sent to
+// other devices, never part of case_data) so a refresh on the SAME
+// device can still renew/release its own lease, but a different device
+// loading the same case never inherits someone else's token.
+const CHECKOUT_TOKENS_KEY='ftw_bcm_checkout_tokens_v1';
+function loadCheckoutTokens(){try{const raw=localStorage.getItem(CHECKOUT_TOKENS_KEY);return raw?JSON.parse(raw):{}}catch(e){return{}}}
+function saveCheckoutTokens(){try{localStorage.setItem(CHECKOUT_TOKENS_KEY,JSON.stringify(checkoutTokensByCase))}catch(e){console.warn('Could not persist checkout token locally',e)}}
+let checkoutTokensByCase=loadCheckoutTokens();
 
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):seed()}catch(e){return seed()}}
 function updateStorageStatus(bytes,error){const box=document.getElementById('storageStatus');if(!box)return;if(error){box.className='storage-status error';box.innerHTML=`<b>Save failed on this device.</b> ${esc(error)} Export the case JSON/PDF now; attachments or recent entries may not survive a refresh. The 8090 terminal server is required for shared-device testing.`;return}box.className='storage-status';box.innerHTML=`<b>Saved locally on this device</b> · ${(bytes/1024).toFixed(0)} KB · not shared with other tablets or workstations. Confirm this status after attaching BOLs or CoAs.`}
@@ -504,9 +548,28 @@ function currentCase(){return state.cases[selected]}
 function currentIteration(c){return c.iterations[c.iterations.length-1]}
 function latestMeasurement(c){const it=currentIteration(c);return it&&it.measurements&&it.measurements.length?it.measurements[it.measurements.length-1]:null}
 function hasActuals(c){return Number(c.act?.tov)>0&&Array.isArray(c.act?.s)&&c.act.s.length===3&&c.act.s.every(v=>Number(v)>0)}
-function log(c,who,text,type){c.log.push(event(who,text,type));saveState();if(c.dbId){window.BlendRepo.appendEvent(c.dbId,{eventType:type==='warning'?'hold':'note',message:text,actor:who}).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}}
+function log(c,who,text,type){c.log.push(event(who,text,type));saveState();if(c.dbId){window.BlendRepo.addNote(c.dbId,who,text).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}}
 function markDoc(c,key,status='generated'){if(c.documents[key])c.documents[key].status=status}
-function setStage(c,n){const next=Math.max(c.stage,n);if(next!==c.stage&&c.dbId){window.BlendRepo.changeBlendCaseStatus(c.dbId,{newStage:next,actor:c.operator,message:`Advanced to stage ${next} (${STAGES[next]})`}).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}c.stage=next;viewStageIndex=n}
+function setStage(c,n){const next=Math.max(c.stage,n);const changed=next!==c.stage;c.stage=next;viewStageIndex=n;if(changed&&c.dbId){window.BlendRepo.advanceBlendCaseStage(c.dbId,c.dbVersion,c.operator,`Advanced to stage ${next} (${STAGES[next]})`).then(updated=>{c.dbVersion=Number(updated.record_version)}).catch(e=>{console.error(e);if(e.isStaleVersion){handleStaleVersion(c,e)}else{showSyncBanner('Supabase save failed: '+e.message,'error')}})}}
+/**
+ * Shared handler for a stale-record_version rejection from any RPC. Never
+ * retries with the same (now-wrong) version and never silently overwrites
+ * -- reloads the authoritative row from Supabase, replaces the in-memory
+ * case, and tells the operator to review and retry.
+ */
+async function handleStaleVersion(c,err){
+  showSyncBanner('This case changed elsewhere since you loaded it. Reloading the latest version — please review and retry your last action.','error');
+  try{
+    const fresh=await window.BlendRepo.getBlendCase(c.dbId);
+    const updated=mapDbCaseToAppCase(fresh);
+    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    if(idx>=0)state.cases[idx]=updated;
+    render();
+  }catch(e){
+    console.error('Could not reload after stale-version conflict',e);
+    showSyncBanner('This case changed elsewhere and the latest version could not be reloaded automatically. Refresh the page before continuing.','error');
+  }
+}
 function editable(c){return !c.closed&&c.checkout&&c.checkout.device===DEVICE}
 function requireEdit(c){if(!editable(c)){alert('Check the case out to this device before taking this action.');return false}return true}
 
@@ -551,8 +614,38 @@ function selectCase(i){selected=i;viewStageIndex=state.cases[i].stage;render()}
 function selectClosedCase(i){selectCase(i);setTimeout(()=>document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'start'}),30)}
 function openClosedSummary(i){selected=i;viewStageIndex=9;render();setTimeout(()=>openBlendSummary(),30)}
 function viewStage(n){viewStageIndex=n;renderDetail()}
-function checkoutBlock(c){if(c.closed)return '<span class="lockbadge open">Closed · frozen</span><button class="btn" onclick="openBlendSummary()">Open packet</button><button class="btn danger" onclick="deleteCurrentCase()">Delete blend</button>';let badge,buttons;if(!c.checkout){badge='<span class="lockbadge open">Available for checkout</span>';buttons=`<button class="btn primary" onclick="checkoutCase()">Check out to ${DEVICE}</button>`}else if(c.checkout.device===DEVICE){badge='<span class="lockbadge mine">Checked out to this device</span>';buttons='<button class="btn" onclick="checkinCase()">Check in / hand off</button>'}else{badge=`<span class="lockbadge other">Held by ${c.checkout.device}</span>`;buttons='<button class="btn danger" onclick="forceRelease()">Prototype force-release</button>'}return badge+buttons+'<button class="btn" onclick="openBlendSummary()">Preview / save packet PDF</button><button class="btn danger" onclick="deleteCurrentCase()">Delete blend</button>'}
-async function deleteCurrentCase(){const c=currentCase();if(!c)return;if(!confirm(`Permanently delete ${c.id} (${c.tank})? This removes all deliveries, events, and results for this case and cannot be undone.${c.plannerId?' The source planner row will be reverted to proposed so it can be promoted again.':''}`))return;if(!c.dbId){state.cases.splice(selected,1);selected=Math.max(0,selected-1);render();return}const btns=document.querySelectorAll('.checkout .btn.danger');btns.forEach(b=>{b.disabled=true;b.textContent='Deleting…'});try{await window.BlendRepo.deleteBlendCase(c.dbId,c.operator);const fresh=await buildStateFromSupabase();state.plans=fresh.plans;state.cases=fresh.cases;selected=Math.max(0,Math.min(selected,state.cases.length-1));hideSyncBanner();render()}catch(e){console.error(e);alert('Could not delete this blend: '+e.message);showSyncBanner('Delete failed: '+e.message,'error');btns.forEach(b=>{b.disabled=false;b.textContent='Delete blend'})}}
+function checkoutBlock(c){if(c.abandoned)return `<span class="lockbadge open">Abandoned · frozen</span><span class="smallnote">${esc(c.abandoned.reason||'')} — ${esc(c.abandoned.by||'')} · ${fmtWhen(c.abandoned.at)}</span>`;if(c.closed)return '<span class="lockbadge open">Closed · frozen</span><button class="btn" onclick="openBlendSummary()">Open packet</button><button class="btn danger" onclick="abandonCurrentCase()">Abandon blend</button>';let badge,buttons;if(!c.checkout){badge='<span class="lockbadge open">Available for checkout</span>';buttons=`<button class="btn primary" onclick="checkoutCase()">Check out to ${DEVICE}</button>`}else if(c.checkout.device===DEVICE&&c.checkoutToken){badge='<span class="lockbadge mine">Checked out to this device</span>';buttons='<button class="btn" onclick="checkinCase()">Check in / hand off</button>'}else{badge=`<span class="lockbadge other">Held by ${esc(c.checkout.device)} until ${fmtWhen(c.checkout.expiresAt)}</span>`;buttons='<button class="btn danger" onclick="forceRelease()">Force-release (requires a reason)</button>'}return badge+buttons+'<button class="btn" onclick="openBlendSummary()">Preview / save packet PDF</button><button class="btn danger" onclick="abandonCurrentCase()">Abandon blend</button>'}
+/**
+ * Abandonment replaces permanent deletion. Requires a reason, preserves
+ * every record (case, deliveries, events, results stay in the database
+ * forever), and reverts a promoted source plan to proposed. See
+ * abandon_blend_case() in supabase/migrations for the server-side
+ * guarantees -- this is not a client-side-only safeguard.
+ */
+async function abandonCurrentCase(){
+  const c=currentCase();if(!c)return;
+  if(!c.dbId){state.cases.splice(selected,1);selected=Math.max(0,selected-1);render();return}
+  const reason=prompt(`Abandon ${c.id} (${c.tank})? This is NOT a delete -- the case, its deliveries, events, and results all remain in history and cannot be undone as an abandonment.${c.plannerId?' The source planner row will be reverted to proposed so it can be promoted again.':''}\n\nEnter a reason to continue:`);
+  if(reason===null)return;
+  if(!reason.trim()){alert('A reason is required to abandon a blend case.');return}
+  const btns=document.querySelectorAll('.checkout .btn.danger');btns.forEach(b=>{b.disabled=true;b.textContent='Abandoning…'});
+  try{
+    await window.BlendRepo.abandonBlendCase(c.dbId,c.dbVersion,c.operator,reason.trim());
+    delete checkoutTokensByCase[c.dbId];saveCheckoutTokens();
+    // Re-fetch the authoritative row (including the new abandonment
+    // event in its audit trail) rather than reconstruct it client-side.
+    const fresh=await window.BlendRepo.getBlendCase(c.dbId);
+    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    if(idx>=0)state.cases[idx]=mapDbCaseToAppCase(fresh);
+    hideSyncBanner();render();
+  }catch(e){
+    console.error(e);
+    if(e.isStaleVersion){await handleStaleVersion(c,e)}
+    else{alert('Could not abandon this blend: '+e.message);showSyncBanner('Abandon failed: '+e.message,'error')}
+  }finally{
+    btns.forEach(b=>{b.disabled=false;b.textContent='Abandon blend'})
+  }
+}
 function renderDetail(){const c=currentCase();if(!c){document.getElementById('detail').innerHTML='';return}const z=calc(c);let steps='',visibleStep=1;for(let s=0;s<STAGES.length;s++){if(s===2||s===4)continue;const cls=s<c.stage||c.closed?'done':s===c.stage?(c.hold?'hold':'active'):'';steps+=`<div class="step ${cls} ${s===viewStageIndex?'view':''}" onclick="viewStage(${s})"><div class="node">${s<c.stage||c.closed?'✓':visibleStep}</div><span>${STAGES[s]}</span></div>`;visibleStep++}const events=c.log.slice().reverse().map(e=>`<div class="event"><time>${fmtWhen(e.at)}</time><b>${esc(e.who)}</b><span>${esc(e.text)}</span></div>`).join('');document.getElementById('detail').innerHTML=`<div class="detail-head"><h2>${c.tank}<small>${c.id} · ${c.grade} · ${c.row} · source ${c.plannerId||'legacy'}</small></h2><div class="people">Operator <b>${esc(c.operator)}</b> · PQ <b>${esc(c.pq)}</b></div></div><div class="checkout">${checkoutBlock(c)}</div><div class="stepper">${steps}</div><div class="detail-body"><div class="stage">${stageHtml(c,z,viewStageIndex)}</div><aside class="folder">${folderHtml(c)}</aside></div><details class="audit"><summary>Case audit trail <span class="audit-count">${c.log.length} event${c.log.length===1?'':'s'}</span></summary><div class="audit-events">${events||'<div class="smallnote">No events recorded.</div>'}</div></details>`}
 
 function stageHtml(c,z,s){
@@ -594,14 +687,48 @@ function renderSiteVisitWarning(){const box=document.getElementById('siteVisitWa
 function certificationStage(c){const m=latestMeasurement(c),route=c.certification.route,testDate=m?.sampleDate||localDateIso(),ruleHtml=m?.rules?.length?m.rules.map(r=>`<div class="rule"><div class="rh"><span>${esc(r.name)}</span><span class="${r.pass?'pill-pass':r.hard?'pill-fail':'pill-adv'}">${r.pass?'PASS':r.hard?'FAIL':'ADVISORY'}</span></div><div class="rr">${esc(r.observed)}</div></div>`).join(''):'';let routeBox='';if(!route)routeBox=`<div class="route-cards"><div class="route-card"><h4>Qualified terminal self-certification</h4><p>Record Fort Worth terminal results. A passing evaluation generates a Terminal Certificate of Analysis for the packet.</p><button class="btn primary" onclick="chooseTerminalCertification()" ${editable(c)?'':'disabled'}>Use terminal results</button></div><div class="route-card"><h4>SPL third-party laboratory</h4><p>Order an SPL inspector, upload the returned CoA, and independently evaluate SPL’s measured Ptot using the Fort Worth EPA-equation rules. SPL’s disposition is advisory.</p><button class="btn" onclick="openLabOrderModal()" ${editable(c)?'':'disabled'}>Order SPL testing</button></div></div>`;else if(route==='terminal')routeBox=`<div class="banner green"><b>Selected path:</b> qualified terminal self-certification. Passing results generate the in-house CoA attached to the final packet.</div><div class="actionbar"><button class="btn primary" onclick="openTestModal('terminal')" ${editable(c)?'':'disabled'}>${m?'Record another terminal test':'Record terminal result set'}</button><button class="btn" onclick="openLabOrderModal()" ${editable(c)?'':'disabled'}>Switch to third-party testing</button></div>`;else routeBox=`<div class="banner amber"><b>Selected path:</b> SPL third-party laboratory. ${c.certification.labOrder?'Testing request '+esc(c.certification.labOrder.id)+' recorded.':'Testing request not yet recorded.'} The returned CoA must be attached before review. SPL’s printed disposition is advisory; Global Partners’ release determination controls.</div><div class="actionbar">${!c.certification.labOrder?`<button class="btn primary" onclick="openLabOrderModal()" ${editable(c)?'':'disabled'}>Record laboratory order</button>`:`<button class="btn primary" onclick="openTestModal('third-party')" ${editable(c)?'':'disabled'}>${m?'Review revised CoA':'Upload and review returned CoA'}</button>`}<button class="btn" onclick="chooseTerminalCertification()" ${editable(c)?'':'disabled'}>Use qualified terminal results instead</button></div>`;return `<h3>Certify &amp; Release <span class="tag ${c.certification.release?'ok':c.hold?'bad':'warn'}">${c.certification.release?'Released':c.hold?'Hold':'Choose path / record results'}</span></h3><p class="lead">The Fort Worth-specific path fixes the terminal, jurisdiction, program, waiver limits, and decision posture. Operators do not select a state, RFG area, or volatility class.</p>${waiverProfileHtml(testDate,true)}${routeBox}${m?`<div class="rule-grid">${ruleHtml}</div>${m.releaseAllowed?`<div class="banner green"><b>Release eligible:</b> all hard Fort Worth gates passed using ${m.route==='terminal'?'qualified terminal results and a generated CoA':'SPL’s measured results after Global Partners internal review'}.</div><div class="actionbar"><button class="btn primary" onclick="releaseIteration()" ${editable(c)&&!c.certification.release?'':'disabled'}>Authorize release</button></div>`:`<div class="banner red"><b>Release blocked:</b> ${esc(c.hold?.reason||'Hard gate failed')}.</div>`}`:''}`}
 function closePacketStage(c){const missing=packetMissing(c),items=Object.entries(c.documents).filter(([k])=>k!=='isolation').map(([k,d])=>{const generatedAtClose=['signed','summary'].includes(k),required=requiredDocs(c).includes(k),ok=['generated','filed'].includes(d.status),cls=ok?'ok':generatedAtClose?'pending':!required?'na':'missing';const label=ok?d.status:generatedAtClose?'Generated when case is closed':!required?'Not required for selected path':'Missing';return `<div class="packet-item ${cls}"><b>${esc(d.name)}</b><span>${label}</span></div>`}).join('');return `<h3>Close / Packet <span class="tag ${c.closed?'ok':missing.length?'warn':'ok'}">${c.closed?'Closed':missing.length?missing.length+' required records missing':'Ready to close'}</span></h3><p class="lead">The packet can be printed at any time. Formal closure requires a recorded release and all route-specific packet components. Signing and the final packet index are generated by the close action.</p><div class="packet-grid">${items}</div><div class="actionbar"><button class="btn" onclick="openBlendSummary()">Preview / save packet PDF</button>${!c.closed?`<button class="btn primary" onclick="closeCase()" ${editable(c)&&!missing.length&&c.certification.release?'':'disabled'}>Sign, close and archive</button>`:''}</div>${missing.length?`<div class="gate"><b>Missing:</b> ${missing.map(k=>c.documents[k]?.name||k).join('; ')}</div>`:'<div class="banner green"><b>Packet complete:</b> ready for final sign-off.</div>'}`}
 function folderHtml(c){const order=['planner','openGauge','presample','calc','window','pq','order','confirmation','delivery','closeGauge','reconciliation','valveOpening','blend','valveClosing','settle','labOrder','results','coa','release','signed','summary'];return `<h4>Digital blend packet</h4><div class="folder-path">SharePoint › Quality › Blends › ${c.id}</div>${order.map(k=>{const d=c.documents[k],st=d.status,ic=['generated','filed'].includes(st)?'✓':st==='not-required'?'—':'·';return `<div class="doc ${st}" onclick="previewDoc('${k}')"><span class="icon">${ic}</span><span>${d.name}</span><span class="dst">${st.replace('-',' ')}</span></div>`}).join('')}`}
-function closeCase(){const c=currentCase();if(!requireEdit(c)||c.stage!==9)return;const missing=packetMissing(c);if(missing.length){alert('Complete the required packet records before closing: '+missing.map(k=>c.documents[k]?.name||k).join('; '));return}if(!c.certification.release){alert('Release authorization is required before closure.');return}if(!confirm(`Sign, close, and archive ${c.id}? The prototype record will become read-only.`))return;const by=c.pq||c.operator;c.documents.signed.status='generated';c.documents.summary.status='generated';c.summaryGenerated={at:iso(),by,version:'V8.8.3 prototype'};c.closed={at:iso(),by};c.status='closed';c.checkout=null;c.log.push(event(by,'Case signed, closed, and blend packet archived'));if(c.dbId){window.BlendRepo.changeBlendCaseStatus(c.dbId,{newStatus:'closed',actor:by,message:'Case signed, closed, and blend packet archived'}).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}saveState();render();setTimeout(()=>openBlendSummary(),50)}
-function checkoutCase(){const c=currentCase();if(c.closed)return;if(c.checkout){alert('Already checked out.');return}c.checkout={device:DEVICE,by:c.operator,at:iso()};log(c,c.operator,'Case checked out to '+DEVICE);render()}
-function checkinCase(){const c=currentCase();if(!editable(c))return;c.checkout=null;log(c,c.operator,'Case checked in / available for handoff');render()}
-function forceRelease(){const c=currentCase();if(c.closed)return;if(!confirm('Force-release this prototype checkout?'))return;log(c,'Prototype QC','Checkout force-released; prior holder '+(c.checkout?.device||'none'),'warning');c.checkout=null;render()}
+async function closeCase(){const c=currentCase();if(!requireEdit(c)||c.stage!==9)return;const missing=packetMissing(c);if(missing.length){alert('Complete the required packet records before closing: '+missing.map(k=>c.documents[k]?.name||k).join('; '));return}if(!c.certification.release){alert('Release authorization is required before closure.');return}if(!confirm(`Sign, close, and archive ${c.id}? The record becomes read-only.`))return;const by=c.pq||c.operator;if(c.dbId){try{const updated=await window.BlendRepo.closeBlendCase(c.dbId,c.dbVersion,by,'Case signed, closed, and blend packet archived');c.dbVersion=Number(updated.record_version)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}alert('Could not close this case: '+e.message);showSyncBanner('Close failed: '+e.message,'error');return}}c.documents.signed.status='generated';c.documents.summary.status='generated';c.summaryGenerated={at:iso(),by,version:'V8.8.3 prototype'};c.closed={at:iso(),by};c.status='closed';c.checkout=null;checkoutTokensByCase[c.dbId]&&delete checkoutTokensByCase[c.dbId];saveCheckoutTokens();c.log.push(event(by,'Case signed, closed, and blend packet archived'));saveState();render();setTimeout(()=>openBlendSummary(),50)}
+async function checkoutCase(){
+  const c=currentCase();if(!c||c.closed||c.abandoned)return;
+  if(!c.dbId){c.checkout={device:DEVICE,by:c.operator,at:iso()};render();return}
+  try{
+    const updated=await window.BlendRepo.checkoutBlendCase(c.dbId,DEVICE,c.operator);
+    checkoutTokensByCase[c.dbId]=updated.checkout_token;saveCheckoutTokens();
+    const fresh=await window.BlendRepo.getBlendCase(c.dbId); // pull deliveries/events/results too, not just the case row
+    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    if(idx>=0)state.cases[idx]=mapDbCaseToAppCase(fresh);
+    hideSyncBanner();render();
+  }catch(e){console.error(e);alert('Could not check out this case: '+e.message);showSyncBanner('Checkout failed: '+e.message,'error')}
+}
+async function checkinCase(){
+  const c=currentCase();if(!editable(c))return;
+  if(!c.dbId){c.checkout=null;render();return}
+  try{
+    await window.BlendRepo.releaseBlendCaseCheckout(c.dbId,c.checkoutToken,c.operator);
+    delete checkoutTokensByCase[c.dbId];saveCheckoutTokens();
+    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    if(idx>=0)state.cases[idx]=mapDbCaseToAppCase(await window.BlendRepo.getBlendCase(c.dbId));
+    hideSyncBanner();render();
+  }catch(e){console.error(e);alert('Could not check in this case: '+e.message);showSyncBanner('Check-in failed: '+e.message,'error')}
+}
+async function forceRelease(){
+  const c=currentCase();if(!c||c.closed||c.abandoned)return;
+  const reason=prompt(`Force-release the checkout on ${c.id} (currently held by ${c.checkout?.device||'no one'})? A reason is required and this is recorded in the case audit trail.`);
+  if(reason===null)return;
+  if(!reason.trim()){alert('A reason is required to force-release a checkout.');return}
+  if(!c.dbId){c.checkout=null;render();return}
+  try{
+    await window.BlendRepo.forceReleaseBlendCaseCheckout(c.dbId,DEVICE,reason.trim());
+    delete checkoutTokensByCase[c.dbId];saveCheckoutTokens();
+    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    if(idx>=0)state.cases[idx]=mapDbCaseToAppCase(await window.BlendRepo.getBlendCase(c.dbId));
+    hideSyncBanner();render();
+  }catch(e){console.error(e);alert('Could not force-release this checkout: '+e.message);showSyncBanner('Force-release failed: '+e.message,'error')}
+}
 function updatePreblendValidation(){const el=document.getElementById('og-validation');if(!el)return;const rows=[1,2,3].map(i=>{const pt=Number(val('og-p'+i)),dv=Number(val('og-s'+i)),calc=dvpeFromPtot(pt),diff=dv-calc;return{pt,dv,calc,diff,valid:Number.isFinite(pt)&&pt>0&&Number.isFinite(dv)&&dv>0&&Math.abs(diff)<=CONFIG.dvpeTolerance+1e-9}});const labels=['Upper','Middle','Lower'];el.className='gate';el.innerHTML='<b>EPA correlation check:</b> '+rows.map((r,i)=>`${labels[i]} ${Number.isFinite(r.calc)?f2(r.calc):'—'} calculated vs ${Number.isFinite(r.dv)?f2(r.dv):'—'} entered · <span class="${r.valid?'recon-good':'recon-bad'}">${r.valid?'PASS':'CHECK'}</span>`).join(' &nbsp; | &nbsp; ')}
-function recordOpenGauge(){const c=currentCase();if(!requireEdit(c)||c.stage!==1)return;const height=val('og-height'),net=Number(val('og-net')),temp=Number(val('og-temp')),api=Number(val('og-api')),ptots=[1,2,3].map(i=>Number(val('og-p'+i))),dvpEs=[1,2,3].map(i=>Number(val('og-s'+i)));if(!height||!(net>0)||!Number.isFinite(temp)||!Number.isFinite(api)||ptots.some(x=>!(x>0))||dvpEs.some(x=>!(x>0))){alert('Gauge height, temperature, API gravity, open net volume, and all Ptot/DVPE values are required.');return}const samples=['Upper','Middle','Lower'].map((position,i)=>{const calculatedDvpe=dvpeFromPtot(ptots[i]),difference=dvpEs[i]-calculatedDvpe;return{position,ptot:ptots[i],dvpe:dvpEs[i],calculatedDvpe,difference,valid:Math.abs(difference)<=CONFIG.dvpeTolerance+1e-9}});const bad=samples.filter(x=>!x.valid);if(bad.length){alert('Ptot/DVPE validation failed for: '+bad.map(x=>x.position).join(', ')+`. EPA equation tolerance is ±${f2(CONFIG.dvpeTolerance)} psi.`);return}c.openGauge={at:iso(),height,temperature:temp,api,netBbl:net,operator:c.operator};c.isolation=null;c.preBlendResults={method:CONFIG.dvpeMethod,equation:'DVPE = 0.956 × Ptot − 0.347',tolerance:CONFIG.dvpeTolerance,samples};c.act={tov:net,s:dvpEs};['openGauge','presample','calc'].forEach(k=>markDoc(c,k));setStage(c,3);log(c,c.operator,`Open gauge recorded at ${f1(net)} bbl; all three Ptot/DVPE pairs passed EPA validation`);render()}
-function approveScenario(kind){const c=currentCase();if(!requireEdit(c)||c.stage!==3)return;if(!captureTruckArrivalWindow(c))return;const vp=calc(c).volumePlan,p=kind==='exact-load'?vp.exact:kind==='round-up'?vp.roundUp:vp.truncate;if(!p)return;c.decision=kind;c.truckPlan=deepClone(p);c.ordered=p.trucks;c.orderedVolume=p.total;markDoc(c,'pq');c.hold=null;log(c,kind==='exact-load'?c.operator:c.pq,`${kind} approved: ${p.trucks} trucks totaling ${f1(p.total)} bbl (${loadList(p)} bbl)`);render();setTimeout(openOrderModal,0)}
-function placeDiscussionHold(){const c=currentCase();if(!requireEdit(c))return;c.hold={reason:'Load plan held for discussion',at:iso()};c.status='hold';if(c.dbId){window.BlendRepo.changeBlendCaseStatus(c.dbId,{newStatus:'hold',holdReason:c.hold.reason,actor:c.operator,message:'Load plan placed on hold'}).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}log(c,c.operator,'Load plan placed on hold','warning');render()}
+async function recordOpenGauge(){const c=currentCase();if(!requireEdit(c)||c.stage!==1)return;const height=val('og-height'),net=Number(val('og-net')),temp=Number(val('og-temp')),api=Number(val('og-api')),ptots=[1,2,3].map(i=>Number(val('og-p'+i))),dvpEs=[1,2,3].map(i=>Number(val('og-s'+i)));if(!height||!(net>0)||!Number.isFinite(temp)||!Number.isFinite(api)||ptots.some(x=>!(x>0))||dvpEs.some(x=>!(x>0))){alert('Gauge height, temperature, API gravity, open net volume, and all Ptot/DVPE values are required.');return}const samples=['Upper','Middle','Lower'].map((position,i)=>{const calculatedDvpe=dvpeFromPtot(ptots[i]),difference=dvpEs[i]-calculatedDvpe;return{position,ptot:ptots[i],dvpe:dvpEs[i],calculatedDvpe,difference,valid:Math.abs(difference)<=CONFIG.dvpeTolerance+1e-9}});const bad=samples.filter(x=>!x.valid);if(bad.length){alert('Ptot/DVPE validation failed for: '+bad.map(x=>x.position).join(', ')+`. EPA equation tolerance is ±${f2(CONFIG.dvpeTolerance)} psi.`);return}c.openGauge={at:iso(),height,temperature:temp,api,netBbl:net,operator:c.operator};c.isolation=null;c.preBlendResults={method:CONFIG.dvpeMethod,equation:'DVPE = 0.956 × Ptot − 0.347',tolerance:CONFIG.dvpeTolerance,samples};c.act={tov:net,s:dvpEs};['openGauge','presample','calc'].forEach(k=>markDoc(c,k));if(c.dbId){try{const updated=await window.BlendRepo.recordBlendCaseActualVolume(c.dbId,c.dbVersion,net,c.operator);c.dbVersion=Number(updated.record_version)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error')}}setStage(c,3);log(c,c.operator,`Open gauge recorded at ${f1(net)} bbl; all three Ptot/DVPE pairs passed EPA validation`);render()}
+async function approveScenario(kind){const c=currentCase();if(!requireEdit(c)||c.stage!==3)return;if(!captureTruckArrivalWindow(c))return;const vp=calc(c).volumePlan,p=kind==='exact-load'?vp.exact:kind==='round-up'?vp.roundUp:vp.truncate;if(!p)return;const wasOnHold=c.status==='hold';if(c.dbId){try{const d=await window.BlendRepo.setBlendCaseDecision(c.dbId,c.dbVersion,kind,c.operator);c.dbVersion=Number(d.record_version);if(wasOnHold){const h=await window.BlendRepo.releaseBlendCaseHold(c.dbId,c.dbVersion,c.operator,`Hold released: ${kind} approved`);c.dbVersion=Number(h.record_version)}}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}alert('Could not record this decision: '+e.message);showSyncBanner('Save failed: '+e.message,'error');return}}c.decision=kind;c.truckPlan=deepClone(p);c.ordered=p.trucks;c.orderedVolume=p.total;markDoc(c,'pq');c.hold=null;c.status='open';log(c,kind==='exact-load'?c.operator:c.pq,`${kind} approved: ${p.trucks} trucks totaling ${f1(p.total)} bbl (${loadList(p)} bbl)`);render();setTimeout(openOrderModal,0)}
+async function placeDiscussionHold(){const c=currentCase();if(!requireEdit(c))return;const reason=prompt('Reason for placing this case on hold:','Load plan held for discussion');if(reason===null)return;if(!reason.trim()){alert('A reason is required to place a case on hold.');return}if(c.dbId){try{const updated=await window.BlendRepo.placeBlendCaseOnHold(c.dbId,c.dbVersion,reason.trim(),c.operator);c.dbVersion=Number(updated.record_version)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}alert('Could not place this case on hold: '+e.message);showSyncBanner('Hold failed: '+e.message,'error');return}}c.hold={reason:reason.trim(),at:iso()};c.status='hold';log(c,c.operator,'Load plan placed on hold: '+reason.trim(),'warning');render()}
 function orderWindowDefault(c){const w=truckArrivalWindowValues(c);return w.start&&w.stop?`${w.start} - ${w.stop}`:w.stop||w.start||''}
 function orderFields(){return{supplier:val('o-supplier'),hauler:val('o-hauler'),contact:val('o-contact'),origin:val('o-origin'),window:val('o-window')}}
 function buildOrderEmail(c,f){const p=selectedTruckPlan(c),loads=p.loads.map((x,i)=>`Truck ${i+1}: ${f1(x)} bbl`).join('\n');return `All,\n\nPlease see below nomination for delivered certified butane trucks to offload into the Fort Worth Facility.\n\nSupplier: ${f.supplier}\nHauler: ${f.hauler}, ${f.contact} please confirm and forward ETAs.\nProduct: Certified Butane\nVolume: ${f1(p.total)} bbl\nTruck load plan:\n${loads}\n\n${f.supplier}, per EPA regulations, please add the following language to the CoA or BOL: “Certified butane for use by certified butane blenders.”\nDate: ${f.window}\nOrigin: ${f.origin}\nGlobal Batch ID#: ${c.id}\nDestination tank: ${c.tank} / ${c.tankNo}\n\nAfter butane enters ${c.tank}, no product is to move in or out until further notification.\n\nEach load requires an acceptable CoA, BOL reference, proper PPE, terminal check-in, and the Fort Worth pre-transfer worksheet.\n`}
@@ -616,10 +743,10 @@ function imageFromUrl(url){return new Promise((resolve,reject)=>{const img=new I
 async function handleBolPhoto(input){const file=input.files&&input.files[0],preview=document.getElementById('t-bol-preview');if(!file){clearBolPhoto();return}if(!file.type.startsWith('image/')){alert('Choose an image from the camera or photo library.');clearBolPhoto();return}try{const original=await fileDataUrl(file),img=await imageFromUrl(original),max=1400,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const dataUrl=canvas.toDataURL('image/jpeg',.76);pendingBolPhoto={name:file.name||'truck-bol.jpg',type:'image/jpeg',dataUrl,capturedAt:iso()};preview.innerHTML=`<img src="${dataUrl}" alt="BOL preview"><span><b>${esc(pendingBolPhoto.name)}</b><br>BOL image ready to attach</span>`}catch(e){console.error(e);alert('The BOL image could not be prepared.');clearBolPhoto()}}
 function openTruckModal(){const c=currentCase();if(!requireEdit(c)||c.stage!==5||!c.order)return;if(c.documents.confirmation.status!=='generated'){alert('Record supplier confirmation first.');return}const holder=activeOffload();if(holder&&holder.case.id!==c.id){alert('Offload slot is in use by '+holder.case.id);return}pendingTruckCaseId=c.id;const slot=completedTrucks(c)+1;document.getElementById('truckSubtitle').textContent=`${c.id} · ${c.tank} · planned load ${slot} of ${orderedTrucks(c)} · ${f1(plannedLoadForTruck(c,completedTrucks(c)))} bbl`;document.getElementById('truckWorksheetTitle').textContent=`Pre-transfer coordination worksheet · truck ${slot} of ${orderedTrucks(c)} · ${c.id}`;['t-bol','t-driver','t-op'].forEach(id=>document.getElementById(id).value=id==='t-op'?c.operator:'');TRUCK_CHECK_IDS.forEach(id=>document.getElementById(id).checked=false);clearBolPhoto();openModal('truckModal')}
 function worksheetData(){return{bol:val('t-bol'),driver:val('t-driver'),operator:val('t-op'),bolPhoto:pendingBolPhoto?deepClone(pendingBolPhoto):null,allChecked:TRUCK_CHECK_IDS.every(checked),version:'FTW controlled wording · V8.6',checks:deepClone(TRUCK_CHECKLIST)}}
-function beginTruckOffload(){const c=caseById(pendingTruckCaseId),w=worksheetData();if(!w.bol||!w.driver||!w.operator){alert('BOL, driver and operator are required.');return}if(!w.allChecked){alert('Every Fort Worth checkbox must be completed or the truck must be refused.');return}if(!caseHasBlendStarted(c)){const gate=oversightStartGate(c);if(!gate.allowed){alert(gate.reason+' Use the Certified-Butane Oversight panel above to open the order email.');closeModal('truckModal');document.getElementById('complianceCard').scrollIntoView({behavior:'smooth',block:'center'});return}if(gate.ev.orderPending)log(c,'system',gate.reason)}const holder=activeOffload();if(holder&&holder.case.id!==c.id){alert('Offload slot is no longer available.');return}c.deliveries.push({n:c.deliveries.length+1,plannedBbl:plannedLoadForTruck(c,completedTrucks(c)),bol:w.bol,driver:w.driver,operator:w.operator,status:'offloading',startedAt:iso(),worksheet:w});log(c,w.operator,`Truck ${c.deliveries.length} worksheet complete; offload started`);closeModal('truckModal');render()}
-function refuseTruck(){const c=caseById(pendingTruckCaseId),w=worksheetData();c.deliveries.push({n:c.deliveries.length+1,plannedBbl:plannedLoadForTruck(c,completedTrucks(c)),bol:w.bol||'—',driver:w.driver||'—',operator:w.operator||c.operator,status:'refused',refusedAt:iso(),worksheet:w});log(c,w.operator||c.operator,`Truck ${c.deliveries.length} refused at pre-transfer verification`,'warning');closeModal('truckModal');render()}
+async function beginTruckOffload(){const c=caseById(pendingTruckCaseId),w=worksheetData();if(!w.bol||!w.driver||!w.operator){alert('BOL, driver and operator are required.');return}if(!w.allChecked){alert('Every Fort Worth checkbox must be completed or the truck must be refused.');return}if(!caseHasBlendStarted(c)){const gate=oversightStartGate(c);if(!gate.allowed){alert(gate.reason+' Use the Certified-Butane Oversight panel above to open the order email.');closeModal('truckModal');document.getElementById('complianceCard').scrollIntoView({behavior:'smooth',block:'center'});return}if(gate.ev.orderPending)log(c,'system',gate.reason)}const holder=activeOffload();if(holder&&holder.case.id!==c.id){alert('Offload slot is no longer available.');return}const seq=c.deliveries.length+1,plannedBbl=plannedLoadForTruck(c,completedTrucks(c));let dbId=null;if(c.dbId){try{const row=await window.BlendRepo.startDelivery(c.dbId,{sequence:seq,plannedBbl,bol:w.bol,driver:w.driver,operator:w.operator,worksheet:w});dbId=row.id}catch(e){console.error(e);alert('Could not start this delivery: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}c.deliveries.push({n:seq,dbId,plannedBbl,bol:w.bol,driver:w.driver,operator:w.operator,status:'offloading',startedAt:iso(),worksheet:w});log(c,w.operator,`Truck ${c.deliveries.length} worksheet complete; offload started`);closeModal('truckModal');render()}
+async function refuseTruck(){const c=caseById(pendingTruckCaseId),w=worksheetData();const seq=c.deliveries.length+1,plannedBbl=plannedLoadForTruck(c,completedTrucks(c));let dbId=null;if(c.dbId){try{const started=await window.BlendRepo.startDelivery(c.dbId,{sequence:seq,plannedBbl,bol:w.bol||null,driver:w.driver||null,operator:w.operator||c.operator,worksheet:w});const refused=await window.BlendRepo.refuseDelivery(started.id,w.operator||c.operator,'Refused at pre-transfer verification');dbId=refused.id}catch(e){console.error(e);alert('Could not record this refusal: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}c.deliveries.push({n:seq,dbId,plannedBbl,bol:w.bol||'—',driver:w.driver||'—',operator:w.operator||c.operator,status:'refused',refusedAt:iso(),worksheet:w});log(c,w.operator||c.operator,`Truck ${c.deliveries.length} refused at pre-transfer verification`,'warning');closeModal('truckModal');render()}
 function applyComplianceGallons(c,d){if(d.complianceApplied)return;const gal=bblToGal(d.netBbl);d.complianceApplied=true;c.complianceContributionGal+=gal;const supplier=complianceSupplierName(c),rec=supplierCompliance(supplier);c.complianceSupplier=supplier;rec.firstDeliveryReceived=true;rec.gallonsSinceSample=Number(rec.gallonsSinceSample||0)+gal;const ev=complianceEvaluation(rec);if(ev.startBlocked)log(c,'system',`Supplier oversight order required before the next blend for ${supplier}: ${ev.dueReasons.join('; ')}`,'warning');else if(ev.warning)log(c,'system',`Compliance coordination threshold reached for ${supplier}: ${ev.warningReasons.join('; ')}`,'warning')}
-function completeOffload(){const c=currentCase();if(!requireEdit(c)||c.stage!==5)return;const d=c.deliveries.find(x=>x.status==='offloading'),v=Number(document.getElementById('offloadVolume')?.value);if(!d)return;if(!Number.isFinite(v)||v<CONFIG.truckMin||v>CONFIG.truckMax){alert(`Verified net volume must be ${CONFIG.truckMin}–${CONFIG.truckMax} bbl.`);return}d.status='complete';d.netBbl=v;d.completedAt=iso();applyComplianceGallons(c,d);log(c,d.operator,`Truck ${d.n} complete; ${f1(v)} bbl verified`);if(completedTrucks(c)>=orderedTrucks(c))markDoc(c,'delivery');render()}
+async function completeOffload(){const c=currentCase();if(!requireEdit(c)||c.stage!==5)return;const d=c.deliveries.find(x=>x.status==='offloading'),v=Number(document.getElementById('offloadVolume')?.value);if(!d)return;if(!Number.isFinite(v)||v<CONFIG.truckMin||v>CONFIG.truckMax){alert(`Verified net volume must be ${CONFIG.truckMin}–${CONFIG.truckMax} bbl.`);return}if(d.dbId){try{await window.BlendRepo.completeDelivery(d.dbId,v,d.operator)}catch(e){console.error(e);alert('Could not complete this delivery: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}d.status='complete';d.netBbl=v;d.completedAt=iso();applyComplianceGallons(c,d);log(c,d.operator,`Truck ${d.n} complete; ${f1(v)} bbl verified`);if(completedTrucks(c)>=orderedTrucks(c))markDoc(c,'delivery');render()}
 function advanceToCloseGauge(){const c=currentCase();if(!requireEdit(c)||c.stage!==5)return;if(completedTrucks(c)<orderedTrucks(c)){alert('All ordered trucks must be complete.');return}markDoc(c,'delivery');setStage(c,6);log(c,c.operator,'Receiving complete; close gauge required');render()}
 function recordCloseGauge(){const c=currentCase();if(!requireEdit(c)||c.stage!==6)return;const expected=expectedCloseBbl(c),actual=Number(val('cg-net')),variance=actual-expected,within=Math.abs(variance)<=CONFIG.reconToleranceBbl,reason=val('cg-reason');if(!val('cg-height')||!(actual>0)||!Number.isFinite(Number(val('cg-temp')))||!Number.isFinite(Number(val('cg-api')))){alert('Gauge height, close net volume, temperature and API are required.');return}if(!within&&!reason){alert('A variance explanation is required outside the prototype tolerance.');return}c.closeGauge={at:iso(),height:val('cg-height'),temperature:Number(val('cg-temp')),api:Number(val('cg-api')),netBbl:actual,operator:c.operator};c.reconciliation={expectedBbl:expected,actualBbl:actual,varianceBbl:variance,toleranceBbl:CONFIG.reconToleranceBbl,withinTolerance:within,reason:reason||'Within prototype tolerance',approvedBy:c.operator,at:iso()};markDoc(c,'closeGauge');markDoc(c,'reconciliation');setStage(c,7);log(c,c.operator,`Close gauge ${f1(actual)} bbl; loss/gain ${variance>=0?'+':''}${f1(variance)} bbl`);render()}
 function startBlend(){const c=currentCase();if(!requireEdit(c)||c.stage!==7)return;if(!c.closeGauge){alert('Close gauge and reconciliation are required first.');return}const gate=oversightStartGate(c);if(!gate.allowed){alert(gate.reason+' Use the Certified-Butane Oversight panel above.');document.getElementById('complianceCard').scrollIntoView({behavior:'smooth',block:'center'});return}c.timestamps.blendStartAt=iso();log(c,c.operator,'Blend / injection start recorded');render()}
@@ -681,9 +808,12 @@ async function promotePlan(){
   const promoteBtn=document.querySelector('#promoteModal .btn.primary');
   if(promoteBtn){promoteBtn.disabled=true;promoteBtn.textContent='Saving…'}
   try{
-    const caseNumber=`BL-2026-${idSuffix()}`;
-    await window.BlendRepo.promoteBlendPlan({id:p.dbId,tank:p.tank,tank_no:p.tankNo,grade:p.grade,label:p.label,
-      est_tov_bbl:p.estTov,incoming_rvp:p.incomingRvp,truck_finish:p.truckFinish},{operator:op,pq,note,caseNumber});
+    // case_number is generated by the database (next_blend_case_number())
+    // -- the browser never invents one. Use whatever create_blend_case
+    // actually returns to find the new case afterward.
+    const created=await window.BlendRepo.promoteBlendPlan({id:p.dbId,tank:p.tank,tank_no:p.tankNo,grade:p.grade,label:p.label,
+      est_tov_bbl:p.estTov,incoming_rvp:p.incomingRvp,truck_finish:p.truckFinish},{operator:op,pq,note});
+    const caseNumber=created.case_number;
     // Plan Blend succeeded -- re-pull the source of truth from Supabase so
     // state.plans/state.cases exactly reflect what was atomically saved,
     // rather than hand-assembling the new objects locally.

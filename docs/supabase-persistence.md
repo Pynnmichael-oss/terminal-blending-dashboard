@@ -250,3 +250,246 @@ failing to load in your specific browser).
   for that.
 - Debounce/queue `persistCurrentCase()` writes more robustly (currently a
   simple snapshot-hash compare) if multiple rapid edits ever race.
+
+## Hardening pass (migrations 013–022)
+
+A second pass focused on data-integrity risks that the first milestone
+left open: no way to end a case except a real hard delete, no protection
+against two concurrent writers, and no server-side enforcement of the
+workflow. **Authentication was explicitly out of scope for this pass** —
+see "No authentication" below.
+
+### Abandonment replaces permanent deletion
+
+`delete_blend_case` (migration 012) permanently removed a case and
+cascaded through its deliveries/events/results. That is no longer part of
+the normal workflow — its `EXECUTE` grant has been revoked (the function
+itself is kept, unused, rather than dropped). The Blend Case Manager's
+"Delete blend" button is now **"Abandon blend"**:
+
+- Requires a non-empty reason (prompted in the UI).
+- Sets `blend_cases.status = 'abandoned'` and records
+  `abandoned_at` / `abandoned_by` / `abandonment_reason`.
+- Clears any checkout lease.
+- Reverts a promoted source `blend_plans` row back to `proposed` so it can
+  be promoted again.
+- Writes an audit event. **Never deletes** `blend_cases`,
+  `blend_case_deliveries`, `blend_case_events`, or `blend_case_results`.
+
+RPC: `abandon_blend_case(p_blend_case_id, p_actor, p_reason, p_expected_version)`.
+
+### Lifecycle enforced in Postgres
+
+The old `change_blend_case_status` RPC (migration 007) accepted any
+status/stage combination — its `EXECUTE` grant is now revoked in favor of
+four business-specific RPCs, each locking the row, validating the
+transition, checking `record_version`, updating the row, and writing the
+audit event in one transaction:
+
+- `advance_blend_case_stage` — moves exactly one legal step forward per
+  `ftw_allowed_next_stage()`, which encodes the real stage graph the app
+  already uses (`0→1→3→5→6→7→8→9`; stages 2 and 4 are UI placeholders the
+  app never assigns). Stage skipping and regression are rejected.
+- `place_blend_case_on_hold` — requires a non-empty reason.
+- `release_blend_case_hold` — always writes an audit event; the reason is
+  preserved in that event rather than left on the row.
+- `close_blend_case` — requires stage 9, requires release authorization
+  (`case_data->certification->release`) and close-gauge results to already
+  be recorded, and sets `completed_at`. **Reopening a closed case is not
+  supported.**
+
+### One active case per tank / one case per plan
+
+Both are real unique indexes now, not read-before-insert checks:
+
+- `blend_cases_one_active_per_tank` — unique on the generated `tank_key`
+  column (prefers `tank_no`, falls back to a normalized `tank` label for
+  legacy rows with a blank `tank_no`) `where status in ('open','hold')`.
+- `blend_cases_plan_id_unique` — unique on `plan_id where plan_id is not null`.
+
+`create_blend_case` still does a friendly pre-check for a nicer error
+message, but under real concurrency the unique index is what actually
+prevents two simultaneous requests from both succeeding — the function
+catches the resulting `unique_violation` and re-raises a clear message.
+
+### Case numbers generated in Postgres
+
+`next_blend_case_number()` uses a sequence (`blend_case_number_seq`) to
+atomically produce `BL-<year>-<6-digit seq>` (e.g. `BL-2026-000123`). The
+browser no longer generates or supplies a case number — `create_blend_case`
+calls this internally and returns the generated value. Existing
+shorter-form numbers (e.g. `BL-2026-6719`) remain valid; formats never
+collide because new numbers are always 6 digits.
+
+### Optimistic concurrency (`record_version`)
+
+`blend_cases.record_version` starts at 1 and is incremented by every
+mutation RPC. Every mutating RPC takes `p_expected_version` and rejects a
+mismatch with SQLSTATE `40001` (`serialization_failure`) and a
+`stale record: expected version X but case is at version Y` message.
+`blend-repository.js` marks these errors with `.isStaleVersion = true`;
+the UI's `handleStaleVersion()` reloads the case from Supabase and shows a
+banner rather than retrying or overwriting. **Nothing does blind
+last-write-wins on `case_data` or any other field.**
+
+### Checkout leases
+
+The `checkout_device`/`checkout_by`/`checkout_at` columns were previously
+just a client-side convention — any browser could overwrite them via a
+generic update. They're now driven entirely by RPCs:
+
+- `checkout_blend_case(id, device, by, lease_minutes=20)` — fails if
+  already leased with time remaining; the server generates
+  `checkout_token` (a `uuid`) and sets `checkout_expires_at`.
+- `renew_blend_case_checkout(id, token, lease_minutes)` — only succeeds if
+  the caller presents the current token.
+- `release_blend_case_checkout(id, token, actor)` — normal check-in;
+  requires the matching token.
+- `force_release_blend_case_checkout(id, actor, reason)` — bypasses the
+  token check but requires a reason and always writes an audit event.
+- An **expired** lease can be acquired by a different device without
+  going through force-release.
+
+The client stores `checkout_token` in its own localStorage key
+(`ftw_bcm_checkout_tokens_v1`), separate from the case-data cache, keyed
+per case `dbId` — so a refresh on the *same* device can still check itself
+back in, but a different device loading the same case never inherits
+someone else's token. `checkout_device`/`checkout_by` remain free-text
+display/audit labels, not verified identities (see "No authentication").
+
+### Delivery lifecycle
+
+Generic `upsert()` on `blend_case_deliveries` is revoked (`INSERT`/`UPDATE`
+from anon/authenticated). Specific RPCs replace it:
+`plan_blend_case_delivery`, `complete_blend_case_delivery`,
+`refuse_blend_case_delivery`, and
+`correct_completed_blend_case_delivery` (the *only* way to change a
+delivery already `status='complete'` — requires a reason and writes a
+distinct audit event from the original completion, so a correction is
+visible in history rather than silently overwriting it).
+
+### `case_data` / results / decision / actual volume
+
+`case_data` is no longer replaced wholesale. `update_blend_case_data`
+merges an explicit allow-list of top-level keys server-side, under
+`record_version`, and logs which keys changed. `save_blend_case_results`
+upserts the results row the same way. `decision` and `actual_tov_bbl` are
+dedicated columns with their own narrow setters
+(`set_blend_case_decision`, `record_blend_case_actual_volume`) since
+direct `UPDATE` on those columns is now revoked. Freeform notes go through
+`add_blend_case_note` — direct `INSERT` into `blend_case_events` is
+revoked for anon/authenticated; it is insert-only by design (no
+`UPDATE`/`DELETE` policy exists for any caller, including the RPCs).
+
+**Not fully eliminated in this pass:** `persistCurrentCase()` in
+`blend-case-manager.html` still runs after every `render()` rather than
+purely from explicit save actions (objective: rendering should be
+read-only). What *did* change: it's now scoped to `case_data` + results
+only (both version-checked, allow-listed), and `decision`,
+`actual_tov_bbl`, checkout, and deliveries are written by their own
+explicit RPC calls at the point of the user action
+(`recordOpenGauge`, `approveScenario`, `beginTruckOffload`/`refuseTruck`/
+`completeOffload`, checkout/checkin/force-release) rather than swept up
+generically. Converting every remaining stage-specific action
+(certification, gauges, oversight sampling) to fully own its save call is
+follow-up work.
+
+### Invariant constraints
+
+Added via `CHECK` constraints (verified against live data before adding —
+this project had 1 case / 0 deliveries at the time, so no conflicting
+rows): nonnegative planned/actual volume, positive delivery sequence,
+positive planned delivery volume, nonnegative actual delivery volume,
+completed deliveries require `completed_at`, refused deliveries require
+`refused_at`, closed cases require `completed_at` and `stage=9`, abandoned
+cases require `abandoned_at`/`abandoned_by`/`abandonment_reason`, hold
+status requires `hold_reason`.
+
+### No authentication (explicitly out of scope for this pass)
+
+**This application still has no login, no session, and no verified user
+identity.** Anyone holding the Supabase anon/publishable key can call any
+RPC granted to `anon` — including `abandon_blend_case`,
+`force_release_blend_case_checkout`, and every lifecycle transition. The
+RPC validation added in this pass protects against **accidental**
+corruption, invalid workflow transitions, race conditions, stale
+overwrites, and loss of audit history — it does **not** protect against a
+person with the anon key who intentionally calls an allowed function.
+Operator/device labels (`operator`, `pq`, `checkout_by`, `checkout_device`,
+event `created_by`) are free text for display and audit context, not
+verified identities. A future authentication milestone (Supabase Auth,
+`auth.uid()`-scoped RLS policies, replacing free-text actor fields with
+verified identity) is deferred and **not implemented** here.
+
+### New/changed RPCs (this pass)
+
+Added: `next_blend_case_number`, `abandon_blend_case`,
+`advance_blend_case_stage`, `place_blend_case_on_hold`,
+`release_blend_case_hold`, `close_blend_case`, `checkout_blend_case`,
+`renew_blend_case_checkout`, `release_blend_case_checkout`,
+`force_release_blend_case_checkout`, `plan_blend_case_delivery`,
+`complete_blend_case_delivery`, `refuse_blend_case_delivery`,
+`correct_completed_blend_case_delivery`, `update_blend_case_data`,
+`save_blend_case_results` (replaces the old direct-upsert version),
+`add_blend_case_note`, `set_blend_case_decision`,
+`record_blend_case_actual_volume`, `ftw_allowed_next_stage` (helper).
+
+Changed: `create_blend_case` (no longer accepts `p_case_number`; generates
+it via `next_blend_case_number()`; catches `unique_violation` from the new
+indexes).
+
+Revoked `EXECUTE` (kept defined, not dropped): `delete_blend_case`,
+`change_blend_case_status`.
+
+### Manual Supabase deployment steps
+
+1. Apply migrations `00000000000013` through `00000000000022` in order
+   (`supabase db push`, or run each file's SQL via the dashboard SQL
+   editor / `apply_migration`). They were also applied directly to the
+   live project during this pass — confirm your target project matches
+   before re-applying.
+2. Run `supabase db diff` / the security advisor
+   (`get_advisors(type: 'security')` via the Supabase MCP tools, or the
+   dashboard's Advisors panel) after applying — this pass could not run
+   it interactively and it has not been independently re-verified.
+3. If you have existing `blend_cases` rows with `tank_no` as an empty
+   string on more than one **simultaneously active** (`open`/`hold`) case
+   for the same tank, `blend_cases_one_active_per_tank` will fail to
+   create — resolve the conflicting rows first (this project had none).
+
+### Testing performed
+
+Run directly against the live project (`lmmgaeeoyukfbihoajxi`) via SQL,
+end to end on a disposable test case (created, exercised, then deleted —
+not through the app, since normal deletion is intentionally no longer
+available):
+
+- ✅ Case number generated as `BL-2026-000123`-style, not client-supplied.
+- ✅ Duplicate active case for the same tank rejected
+  (`23505 unique_violation: an active case already exists for tank...`).
+- ✅ Stage advance moves exactly one legal step (`1→3`); a stale
+  `p_expected_version` is rejected with `40001 serialization_failure`.
+- ✅ `close_blend_case` rejected at a non-final stage.
+- ✅ A second `checkout_blend_case` from a different device while a lease
+  is active is rejected (`55P03 lock_not_available`).
+- ✅ `plan_blend_case_delivery` → `complete_blend_case_delivery` →
+  `correct_completed_blend_case_delivery` (with reason) all round-tripped
+  correctly; a second `complete_blend_case_delivery` on an already-complete
+  row is rejected.
+- ✅ `place_blend_case_on_hold` rejects an empty reason; hold → release
+  round-tripped, `hold_reason` cleared on release.
+- ✅ `abandon_blend_case` rejects an empty reason; on success, status,
+  metadata, checkout-clearing, and the audit event were all correct, and
+  every delivery/event row for the case was confirmed still present
+  afterward (not cascaded away).
+- ✅ Full audit trail for the test case read back in order — one event per
+  transition, in the intended sequence.
+
+**Not yet run:** the reusable SQL integration-test scripts called for by
+the brief (items like simultaneous-promotion races, checkout expiration,
+`case_data` partial-merge-doesn't-erase-other-keys) were exercised
+conceptually above but are not saved as standalone, re-runnable test
+files in this repo yet. Client-side (`blend-case-manager.html`) flows were
+verified by static syntax-check (`node --check`) and code review against
+the new RPC surface, not by driving the actual browser UI.
+
