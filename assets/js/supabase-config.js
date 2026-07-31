@@ -10,5 +10,5 @@
 // else in this static site.
 window.__SUPABASE_CONFIG__ = {
   url: 'https://lmmgaeeoyukfbihoajxi.supabase.co',
-  anonKey: 'sb_publishable_dc5b7cGz5jdkC_ghbv6lxg_sKp018C0',
+  anonKey: 'sb_publishable_Uy7J0bVKrImzlAkmUdxFQA_C21_-BoZ',
 };
