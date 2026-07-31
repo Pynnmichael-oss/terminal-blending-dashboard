@@ -381,7 +381,7 @@ function latestMeasurement(c){const it=currentIteration(c);return it&&it.measure
 function hasActuals(c){return Number(c.act?.tov)>0&&Array.isArray(c.act?.s)&&c.act.s.length===3&&c.act.s.every(v=>Number(v)>0)}
 function log(c,who,text,type){c.log.push(event(who,text,type));saveState();if(c.dbId){window.BlendRepo.addNote(c.dbId,who,text).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}}
 function markDoc(c,key,status='generated'){if(c.documents[key])c.documents[key].status=status}
-function setStage(c,n){const next=Math.max(c.stage,n);const changed=next!==c.stage;c.stage=next;viewStageIndex=n;if(changed&&c.dbId){window.BlendRepo.advanceBlendCaseStage(c.dbId,c.dbVersion,c.operator,`Advanced to stage ${next} (${STAGES[next]})`).then(updated=>{c.dbVersion=Number(updated.record_version)}).catch(e=>{console.error(e);if(e.isStaleVersion){handleStaleVersion(c,e)}else{showSyncBanner('Supabase save failed: '+e.message,'error')}})}}
+function setStage(c,n){const next=Math.max(c.stage,n);const changed=next!==c.stage;c.stage=next;viewStageIndex=n;if(changed&&c.dbId&&!staleRetryBlocked(c.dbId)){window.BlendRepo.advanceBlendCaseStage(c.dbId,c.dbVersion,c.operator,`Advanced to stage ${next} (${STAGES[next]})`).then(updated=>{c.dbVersion=Number(updated.record_version)}).catch(e=>{console.error(e);if(e.isStaleVersion){handleStaleVersion(c,e)}else{showSyncBanner('Supabase save failed: '+e.message,'error')}})}}
 /**
  * Shared handler for a stale-record_version rejection from any RPC. Never
  * retries with the same (now-wrong) version and never silently overwrites
@@ -699,12 +699,21 @@ function waitForBlendRepo(timeoutMs=8000){
     window.addEventListener('blend-repo-ready',()=>{clearTimeout(timer);resolve()},{once:true});
   });
 }
-function showSyncBanner(text,kind){
+function showSyncBanner(text,kind,opts){
   const el=document.getElementById('syncBanner');
   if(!el)return;
   const colors={info:['#eef3f6','#17394b'],error:['#fdecea','#8a2d24'],ok:['#e9f7f1','#1c5f45']};
   const c=colors[kind]||colors.info;
-  el.style.display='block';el.style.background=c[0];el.style.color=c[1];el.textContent=text;
+  el.style.display='block';el.style.background=c[0];el.style.color=c[1];
+  if(opts&&opts.reloadDbId){
+    el.innerHTML='';
+    const span=document.createElement('span');span.textContent=text;
+    const btn=document.createElement('button');btn.className='btn';btn.style.marginLeft='10px';btn.textContent='Reload case';
+    btn.onclick=()=>manualReloadCase(opts.reloadDbId);
+    el.appendChild(span);el.appendChild(btn);
+  }else{
+    el.textContent=text;
+  }
 }
 function hideSyncBanner(){const el=document.getElementById('syncBanner');if(el)el.style.display='none'}
 function setModeChip(text,ok){const el=document.getElementById('modeChip');if(!el)return;el.textContent=text;el.className='chip '+(ok?'':'demo')}
@@ -838,11 +847,13 @@ async function syncCaseData(c,actor){
     c.dbVersion=Number(refreshed.record_version);
   }
   lastSyncedSnapshot=snapshot;
+  resetStaleRetry(c.dbId); // a real success clears any prior retry count for this case
 }
 async function persistCurrentCase(){
   const c=currentCase();
   if(!c||!c.dbId||syncInFlight)return;
   if(c.status==='closed'||c.status==='abandoned')return; // these RPCs reject edits on a closed/abandoned case
+  if(staleRetryBlocked(c.dbId))return; // circuit open -- do not attempt, do not spin; operator must click "Reload case"
   if(caseDataSnapshot(c)===lastSyncedSnapshot)return;
   syncInFlight=true;
   try{
@@ -896,17 +907,69 @@ function syncCheckoutRenewal(){
 }
 window.addEventListener('beforeunload',stopCheckoutRenewal);
 window.addEventListener('pagehide',stopCheckoutRenewal);
+// Incident response (2026-07-31): a runaway sequence of rapid stage
+// actions (11 syncCaseData calls in ~20 seconds from one real operator)
+// produced a self-amplifying pile-up of concurrent stale-version reload
+// cycles -- handleStaleVersion() had no cap and no delay, so nothing
+// stopped it from retrying indefinitely once triggered. Confirmed live:
+// ~1500 req/sec sustained for over an hour against this exact path
+// (postgres logs full of "stale record: expected version N but case is
+// at version M" with N stuck at old values). Every caller of syncCaseData
+// (persistCurrentCase's render-triggered safety net AND every explicit
+// stage-action call site) already funnels a stale-version failure through
+// this one function, so capping it here bounds the whole app at once.
+// Keyed by dbId (not stored on the case object, since handleStaleVersion
+// replaces that object wholesale on every reload).
+const staleRetry={}; // { [dbId]: { count, circuitOpenUntil } }
+const STALE_RETRY_MAX=3;
+const STALE_RETRY_BACKOFF_MS=[500,1500,4000]; // one entry per attempt, longest last
+const STALE_RETRY_COOLDOWN_MS=5*60*1000; // circuit stays open this long once tripped
+function staleRetryBlocked(dbId){const st=staleRetry[dbId];return !!(st&&st.circuitOpenUntil&&Date.now()<st.circuitOpenUntil)}
+function resetStaleRetry(dbId){delete staleRetry[dbId]}
 async function handleStaleVersion(c,err){
-  showSyncBanner('This case changed elsewhere since you loaded it. Reloading the latest version — please review and retry your last action.','error');
+  const dbId=c.dbId;
+  const st=staleRetry[dbId]||{count:0,circuitOpenUntil:0};
+  st.count++;
+  staleRetry[dbId]=st;
+
+  if(st.count>STALE_RETRY_MAX){
+    st.circuitOpenUntil=Date.now()+STALE_RETRY_COOLDOWN_MS;
+    showSyncBanner(
+      `This case has failed to sync ${st.count} times in a row due to repeated version conflicts. Automatic retry has been stopped to avoid hammering the database -- click Reload to fetch the latest version before making further changes.`,
+      'error',{reloadDbId:dbId}
+    );
+    return; // hard stop: no reload, no render() here -- breaks the loop completely
+  }
+
+  const backoff=STALE_RETRY_BACKOFF_MS[Math.min(st.count-1,STALE_RETRY_BACKOFF_MS.length-1)];
+  showSyncBanner(`This case changed elsewhere since you loaded it. Reloading the latest version (attempt ${st.count}/${STALE_RETRY_MAX})…`,'error');
+  await new Promise(resolve=>setTimeout(resolve,backoff)); // enforce real spacing, not machine-speed retry
   try{
-    const fresh=await window.BlendRepo.getBlendCase(c.dbId);
+    const fresh=await window.BlendRepo.getBlendCase(dbId);
     const updated=mapDbCaseToAppCase(fresh);
-    const idx=state.cases.findIndex(x=>x.dbId===c.dbId);
+    const idx=state.cases.findIndex(x=>x.dbId===dbId);
     if(idx>=0)state.cases[idx]=updated;
     render();
   }catch(e){
     console.error('Could not reload after stale-version conflict',e);
     showSyncBanner('This case changed elsewhere and the latest version could not be reloaded automatically. Refresh the page before continuing.','error');
+  }
+}
+/** Manual escape hatch from the "Reload case" button in the sync banner
+ *  once the stale-retry circuit has tripped. Clears the breaker and does
+ *  exactly one fresh fetch -- it does not resume any automatic retry. */
+async function manualReloadCase(dbId){
+  resetStaleRetry(dbId);
+  try{
+    const fresh=await window.BlendRepo.getBlendCase(dbId);
+    const updated=mapDbCaseToAppCase(fresh);
+    const idx=state.cases.findIndex(x=>x.dbId===dbId);
+    if(idx>=0)state.cases[idx]=updated;
+    hideSyncBanner();
+    render();
+  }catch(e){
+    console.error('Manual reload failed',e);
+    showSyncBanner('Reload failed: '+e.message+'. Refresh the page.','error');
   }
 }
 async function initApp(){
