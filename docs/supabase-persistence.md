@@ -600,3 +600,153 @@ review against the new RPC surface as of this writing, not by driving the
 actual browser UI — see the follow-up items in
 "Remaining follow-up work" above.
 
+## V8.9.8 UI merge (migration 025)
+
+A separate design/UI effort produced a new `blend-case-manager.html`
+(V8.9.8) on top of an **earlier, pre-hardening baseline** with zero
+Supabase wiring of its own. This merge grafted the hardening pass's
+Supabase layer (checkout leases, abandonment, optimistic concurrency,
+lifecycle RPCs, `case_data` sync) onto that UI's new business logic,
+and added one new migration (`00000000000025_ftw_case_number_and_stage_10.sql`)
+for two real backend-affecting changes that shipped in the new UI:
+
+### Case numbers are client-supplied again (FTW format)
+
+The V8.9.8 UI replaced the DB-generated `BL-<year>-<6-digit seq>` case
+number with an operator-typed number in the format
+`FTW<2-digit tank number><MMDDYY>[optional disambiguation letter]`
+(e.g. `FTW55073026`), validated client-side against
+`/^[A-Z]{3}\d{8}[A-Z]?$/`.
+
+`create_blend_case` now accepts `p_case_number` again (it had stopped
+accepting it in migration 016 during the hardening pass). It:
+- re-validates the format server-side against `^FTW\d{8}[A-Z]?$`
+  (defense in depth — never trusts the client-side check alone),
+- relies on the pre-existing `case_number not null unique` constraint
+  (migration 003) as the real concurrency guarantee, same as it already
+  was for DB-generated numbers,
+- catches the resulting `unique_violation` on a collision and raises a
+  friendly `"blend number X already exists"` error, following the same
+  pattern already used in this function for tank/plan conflicts.
+
+`next_blend_case_number()` (migration 015) is **kept defined but no
+longer called automatically** — it's not invoked anywhere in the current
+UI, but is left in place in case a future flow wants a generated-fallback
+option. `assets/js/blend-repository.js`'s `createBlendCase()` /
+`promoteBlendPlan()` now take a `caseNumber` and pass `p_case_number`
+through to the RPC.
+
+### Stage 10 ("Close Blend") is now the terminal stage
+
+The UI's `STAGES` array grew from 10 entries (0–9) to 11: stage 9 is now
+"Final Blend Summary" (`finalBlendSummaryStage()` /
+`continueFromFinalSummary()`, which calls `setStage(c,10)`), and the new
+stage 10 ("Close Blend") is what `closeCase()` gates on
+(`c.stage!==10`, previously `!==9`). Migration 025 updates every place
+that hardcoded 9 as the terminal stage:
+- `blend_cases.stage` CHECK constraint: `0–9` → `0–10`.
+- `blend_cases_closed_requires_final_stage`: `stage = 9` → `stage = 10`.
+- `ftw_allowed_next_stage()`: added the `9 → 10` transition; `8 → 9`
+  is unchanged (still "Certify & Release → Final Blend Summary", just no
+  longer terminal).
+- `close_blend_case()`: requires `stage = 10` (was 9); the audit event
+  it writes now records `previous_stage`/`new_stage` as `10, 10`.
+
+A full grep of all 24 prior migrations for `stage.*9|9.*stage` confirmed
+these were the only hardcoded terminal-stage references needing a change
+(migration 011's comment mentioning "stage 0" and migration 017's
+`ftw_allowed_next_stage` doc comment were updated for accuracy but had no
+other logic depending on 9 being terminal).
+
+**Verified live** against project `lmmgaeeoyukfbihoajxi` (see git history
+for the exact SQL): a valid FTW-format case create succeeds; a duplicate
+FTW number is rejected with the friendly error; a malformed (non-FTW)
+case number is rejected server-side even though the client would never
+send one; advancing a case through stage 9 → 10 via
+`advance_blend_case_stage`/`ftw_allowed_next_stage` succeeds; attempting
+`close_blend_case` at stage 9 is rejected ("must be at the final stage");
+at stage 10 without release authorization or close-gauge results it is
+still correctly rejected by the existing gates; with both present, close
+succeeds and the row ends at `status='closed', stage=10`. The widened
+`stage between 0 and 10` and `stage=11` correctly still rejected.
+
+### `case_data` allow-list gained `circulation` and `marginReview`
+
+The V8.9.8 UI added tank-circulation-timing tracking (`c.circulation`,
+written by `recordCirculationStart`/`recordButaneIsolation`/
+`completeCirculationShutdown`/`beginTruckOffload`/`completeOffload`) and
+a margin/target-capture review step (`c.marginReview`, written by
+`continueFromFinalSummary()`). Both are now in `update_blend_case_data`'s
+`v_allowed_keys` allow-list (migration 025).
+
+**Verified mechanically, not by inspection:** a Node harness constructed
+a case via `makeCase({})` and via `seed()`'s three demo cases, ran
+`buildCaseDataPayload(c)` on each, and diffed the resulting key sets
+against `CASE_DATA_EXCLUDE` and the RPC's allow-list. Result: zero keys
+produced by any real case object fall outside the allow-list (i.e.
+nothing a real save would ever attempt to sync gets rejected). Three
+allow-list entries (`truckPlan`, `orderedVolume`, `actualSamples`) are
+absent from a freshly-created case's payload — expected, since those are
+only populated once `approveScenario()`/gauge recording run, not part of
+the pre-existing allow-list gap this migration fixes. One seed-only
+`mixing` field appeared in a raw (pre-`normalize()`) seeded case's
+payload; `normalize()` (which runs at the start of every `render()`,
+before any sync can fire) unconditionally deletes it, so it never
+reaches a real save.
+
+### `oversightCompliance()` confirmed local-only, no change needed
+
+`oversightCompliance()` reads/writes `state.compliance.suppliers[...]`
+only — a top-level `state.compliance` field, never part of any case's
+`case_data`, and never sent through any Supabase RPC. This matches
+`freshCompliance()`'s existing local-only design (see "Deviations from
+the original brief" above) exactly. No wiring was needed or added.
+
+### Known limitation (new, not addressed here): Oversight CoA records are local-only and unsynced
+
+The V8.9.8 UI removed the old `renderLedger()`/`ledgerRows` ledger
+entirely, replacing it with an **"Oversight CoA records" system**
+(`openOversightCoaDb`, `saveOversightCoaFile`, `loadOversightCoaFile`,
+`clearOversightCoaFiles`, `handleOversightCoa`, `renderOversightRecords`)
+that stores AmSpec Certificate-of-Analysis file **attachments in the
+browser's IndexedDB** (`ftw-oversight-coa` object store), not Supabase.
+
+**This is a real, permanent gap, not a temporary placeholder:**
+- CoA files never leave the browser that recorded them.
+- They are lost if the browser's storage is cleared, or if the operator
+  switches devices/workstations.
+- Unlike every other domain field on a case, there is no server-side
+  copy, no audit-trail linkage beyond a `recordId` string stored in
+  `case_data.complianceSupplier`-adjacent oversight records (which
+  *is* synced, but the `recordId` is only useful on the device that
+  actually holds the IndexedDB blob).
+
+Wiring this into Supabase Storage was **out of scope for this merge**
+(no Storage bucket exists yet, and doing so is a real design decision —
+bucket policy, upload flow, size limits — not a drop-in fix). Flagged
+here explicitly rather than silently accepted; whether the UI should
+also say this out loud to the operator (today it only says "not shared
+with other tablets or workstations" in the generic storage-status
+banner, not specifically about CoA files) is a product call for a human
+to make, not something changed silently as part of this merge.
+
+### Checkout/abandon layer: unchanged, straight swap
+
+The checkout/abandon business logic in the V8.9.8 UI was unchanged from
+the pre-hardening prototype (same `'Already checked out.'` alert text, no
+abandon flow). `checkoutBlock`, `checkoutCase`, `checkinCase`,
+`forceRelease`, `abandonCurrentCase`, `log()`, `setStage()`,
+`placeDiscussionHold()`, `approveScenario()`, `recordOpenGauge()`,
+`chooseTerminalCertification()`, `recordSplOrder()`, `evaluateTest()`,
+and `refuseTruck()` were swapped in verbatim from the hardening-pass
+branch (verified byte-identical business logic aside from the Supabase
+wiring itself, done via exact-match-count string replacement, not manual
+line editing). `releaseIteration`, `completeSettle`, `beginTruckOffload`,
+`completeOffload`, the three circulation functions
+(`recordCirculationStart`/`recordButaneIsolation`/
+`completeCirculationShutdown`), and `promotePlan` had genuinely new
+business logic in the V8.9.8 UI (circulation gating, valve alignment,
+the settle-warning-override branch, the FTW case-number capture) and got
+the same `syncCaseData()`/delivery-RPC wiring pattern grafted in at the
+equivalent point in each function's new body instead of a wholesale swap.
+
