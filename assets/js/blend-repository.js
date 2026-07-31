@@ -2,22 +2,44 @@
 //
 // Data-access layer for the Blend Planner / Blend Case Manager. All
 // Supabase calls for this feature live here -- the presentation code in
-// blend-case-manager.html should never call `supabase.from(...)` directly.
-// Exposed as `window.BlendRepo` (this app has no module bundler, so the
-// classic inline <script> below consumes it as a global).
+// blend-case-manager.html should never call `supabase.from(...)` or
+// `supabase.rpc(...)` directly. Exposed as `window.BlendRepo` (this app
+// has no module bundler, so the classic inline <script> below consumes
+// it as a global).
 //
 // Every function throws a plain Error with a readable `.message` on
 // failure; callers are expected to catch and surface it in the UI (see
-// showErrorBanner() in blend-case-manager.html).
+// showSyncBanner() in blend-case-manager.html). A stale-version conflict
+// is thrown with `.isStaleVersion = true` set on the Error so callers can
+// distinguish it from an ordinary failure and reload + ask the operator
+// to retry, instead of quietly overwriting newer data.
+//
+// HARDENING PASS NOTE: most mutating functions now require the caller's
+// last-known `expectedVersion` (blend_cases.record_version) and route
+// through business-specific RPCs instead of generic table
+// update()/upsert() calls. Direct table writes for these fields are
+// revoked at the database level (see migrations 019-021), so this file no
+// longer exposes the old broad updateBlendCase/upsertDelivery/
+// saveBlendCaseResults(id, patch)/deleteBlendCase methods -- calling
+// supabase.from(...).update(...) on those columns directly from the
+// browser will now fail with a permissions error by design.
 
 import { supabase } from './supabase-client.js';
 
 function assertNoError(error, context) {
   if (error) {
     console.error(`[BlendRepo] ${context}:`, error);
-    throw new Error(`${context}: ${error.message || 'unknown Supabase error'}`);
+    const isStale = error.code === '55P03' || error.code === '40001' || /serialization_failure|stale record/i.test(error.message || '');
+    const err = new Error(`${context}: ${error.message || 'unknown Supabase error'}`);
+    err.isStaleVersion = isStale;
+    err.code = error.code;
+    throw err;
   }
 }
+
+// ---------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------
 
 /** List blend plans that have not yet been promoted (proposed/deferred). */
 async function listBlendPlans() {
@@ -51,12 +73,39 @@ async function listBlendCases() {
   return data;
 }
 
+/** Re-fetch a single case (used to reload authoritative state after a
+ *  successful write, or after a stale-version conflict). */
+async function getBlendCase(blendCaseId) {
+  const { data, error } = await supabase
+    .from('blend_cases')
+    .select(`
+      *,
+      blend_case_deliveries ( * ),
+      blend_case_events ( * ),
+      blend_case_results ( * )
+    `)
+    .eq('id', blendCaseId)
+    .single();
+  assertNoError(error, 'getBlendCase');
+  return data;
+}
+
+// ---------------------------------------------------------------------
+// Plan Blend
+// ---------------------------------------------------------------------
+
 /**
  * Atomically creates a blend case (optionally promoting a blend_plans row)
- * via the create_blend_case RPC. Backs the "Plan Blend" action. Throws if
- * the tank already has an active case, or if required fields are missing --
- * no partially-saved case can result, since the whole thing runs as one
- * Postgres function invocation.
+ * via the create_blend_case RPC. Backs the "Plan Blend" action.
+ *
+ * V8.9.8 UI merge: case_number is once again supplied by the browser
+ * (operator-typed FTW<tank><MMDDYY>[letter] format, validated client-side
+ * in blend-case-manager.html and re-validated server-side in
+ * create_blend_case -- see supabase/migrations/00000000000025_*). Throws
+ * if the tank already has an active case, the plan is already promoted,
+ * or the case number is malformed/already taken; the unique indexes are
+ * the real guarantee under concurrency, this is just the friendly error
+ * path for the common non-concurrent case.
  */
 async function createBlendCase({
   caseNumber,
@@ -93,7 +142,7 @@ async function createBlendCase({
 }
 
 /** Convenience wrapper: promote a proposed blend_plans row into a case. */
-async function promoteBlendPlan(plan, { operator, pq, note, caseNumber }) {
+async function promoteBlendPlan(plan, { caseNumber, operator, pq, note }) {
   return createBlendCase({
     caseNumber,
     operator,
@@ -110,110 +159,8 @@ async function promoteBlendPlan(plan, { operator, pq, note, caseNumber }) {
   });
 }
 
-/**
- * Atomically updates a case's status/stage and writes the corresponding
- * blend_case_events row via the change_blend_case_status RPC.
- */
-async function changeBlendCaseStatus(blendCaseId, {
-  newStatus = null,
-  newStage = null,
-  holdReason = null,
-  message = null,
-  actor = 'system',
-}) {
-  const { data, error } = await supabase.rpc('change_blend_case_status', {
-    p_blend_case_id: blendCaseId,
-    p_new_status: newStatus,
-    p_new_stage: newStage,
-    p_hold_reason: holdReason,
-    p_message: message,
-    p_actor: actor,
-  });
-  assertNoError(error, 'changeBlendCaseStatus');
-  return data;
-}
-
-/** Append a row to the append-only blend_case_events audit trail. */
-async function appendEvent(blendCaseId, { eventType = 'note', message, actor = 'system', eventData = {} }) {
-  const { data, error } = await supabase
-    .from('blend_case_events')
-    .insert({
-      blend_case_id: blendCaseId,
-      event_type: eventType,
-      message,
-      created_by: actor,
-      event_data: eventData,
-    })
-    .select()
-    .single();
-  assertNoError(error, 'appendEvent');
-  return data;
-}
-
-/**
- * General-purpose case field sync -- used for everything that isn't a
- * status/stage transition (decision, actual_tov_bbl, checkout lock,
- * case_data catch-all for documents/certification/preBlendResults/etc).
- * Never touches planned_est_vol_bbl / planned_est_rvp, so planned values
- * are never silently overwritten by actuals.
- */
-async function updateBlendCase(blendCaseId, patch) {
-  const { data, error } = await supabase
-    .from('blend_cases')
-    .update(patch)
-    .eq('id', blendCaseId)
-    .select()
-    .single();
-  assertNoError(error, 'updateBlendCase');
-  return data;
-}
-
-/**
- * Upsert a single truck delivery (planned bbl set once, actual bbl set
- * independently later). Uses the (blend_case_id, sequence) unique key.
- */
-async function upsertDelivery(blendCaseId, delivery) {
-  const row = {
-    blend_case_id: blendCaseId,
-    sequence: delivery.sequence,
-    bol: delivery.bol ?? null,
-    driver: delivery.driver ?? null,
-    operator: delivery.operator ?? null,
-    status: delivery.status ?? 'offloading',
-    planned_bbl: delivery.plannedBbl,
-    actual_bbl: delivery.actualBbl ?? null,
-    worksheet: delivery.worksheet ?? {},
-    started_at: delivery.startedAt ?? null,
-    completed_at: delivery.completedAt ?? null,
-    refused_at: delivery.refusedAt ?? null,
-  };
-  const { data, error } = await supabase
-    .from('blend_case_deliveries')
-    .upsert(row, { onConflict: 'blend_case_id,sequence' })
-    .select()
-    .single();
-  assertNoError(error, 'upsertDelivery');
-  return data;
-}
-
-/**
- * Upsert the case's single results row: close gauge, reconciliation,
- * quality data (DVPE samples / certification), operational notes, and
- * completion. `blendCaseId` is unique on blend_case_results, so this is a
- * true upsert (create-on-first-write, update thereafter).
- */
-async function saveBlendCaseResults(blendCaseId, patch) {
-  const row = { blend_case_id: blendCaseId, ...patch };
-  const { data, error } = await supabase
-    .from('blend_case_results')
-    .upsert(row, { onConflict: 'blend_case_id' })
-    .select()
-    .single();
-  assertNoError(error, 'saveBlendCaseResults');
-  return data;
-}
-
-/** Update a blend_plans row directly (used for defer / reopen actions). */
+/** Update a blend_plans row directly (used for defer / reopen actions on
+ *  a not-yet-promoted plan -- low risk, plans aren't the audited record). */
 async function updateBlendPlan(planDbId, patch) {
   const { data, error } = await supabase
     .from('blend_plans')
@@ -225,32 +172,211 @@ async function updateBlendPlan(planDbId, patch) {
   return data;
 }
 
-/**
- * Permanently deletes a blend case (and its deliveries/events/results via
- * cascade) through the delete_blend_case RPC. Reverts the source plan to
- * 'proposed' if one was linked. Irreversible.
- */
-async function deleteBlendCase(blendCaseId, actor = 'system') {
-  const { data, error } = await supabase.rpc('delete_blend_case', {
-    p_blend_case_id: blendCaseId,
-    p_actor: actor,
+// ---------------------------------------------------------------------
+// Lifecycle (stage / hold / close / abandon) -- all version-checked
+// ---------------------------------------------------------------------
+
+async function advanceBlendCaseStage(blendCaseId, expectedVersion, actor, message = null) {
+  const { data, error } = await supabase.rpc('advance_blend_case_stage', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_actor: actor, p_message: message,
   });
-  assertNoError(error, 'deleteBlendCase');
-  return data?.[0] ?? null;
+  assertNoError(error, 'advanceBlendCaseStage');
+  return data;
+}
+
+async function placeBlendCaseOnHold(blendCaseId, expectedVersion, reason, actor) {
+  const { data, error } = await supabase.rpc('place_blend_case_on_hold', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_reason: reason, p_actor: actor,
+  });
+  assertNoError(error, 'placeBlendCaseOnHold');
+  return data;
+}
+
+async function releaseBlendCaseHold(blendCaseId, expectedVersion, actor, message = null) {
+  const { data, error } = await supabase.rpc('release_blend_case_hold', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_actor: actor, p_message: message,
+  });
+  assertNoError(error, 'releaseBlendCaseHold');
+  return data;
+}
+
+async function closeBlendCase(blendCaseId, expectedVersion, actor, message = null) {
+  const { data, error } = await supabase.rpc('close_blend_case', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_actor: actor, p_message: message,
+  });
+  assertNoError(error, 'closeBlendCase');
+  return data;
+}
+
+/**
+ * Abandons a case in place of permanent deletion. Requires a non-empty
+ * reason. Preserves all deliveries/events/results and reverts a promoted
+ * source plan back to 'proposed'.
+ */
+async function abandonBlendCase(blendCaseId, expectedVersion, actor, reason) {
+  const { data, error } = await supabase.rpc('abandon_blend_case', {
+    p_blend_case_id: blendCaseId, p_actor: actor, p_reason: reason, p_expected_version: expectedVersion,
+  });
+  assertNoError(error, 'abandonBlendCase');
+  return data;
+}
+
+// ---------------------------------------------------------------------
+// Checkout lease
+// ---------------------------------------------------------------------
+
+async function checkoutBlendCase(blendCaseId, device, by, leaseMinutes = 20) {
+  const { data, error } = await supabase.rpc('checkout_blend_case', {
+    p_blend_case_id: blendCaseId, p_device: device, p_by: by, p_lease_minutes: leaseMinutes,
+  });
+  assertNoError(error, 'checkoutBlendCase');
+  return data;
+}
+
+async function renewBlendCaseCheckout(blendCaseId, checkoutToken, leaseMinutes = 20) {
+  const { data, error } = await supabase.rpc('renew_blend_case_checkout', {
+    p_blend_case_id: blendCaseId, p_checkout_token: checkoutToken, p_lease_minutes: leaseMinutes,
+  });
+  assertNoError(error, 'renewBlendCaseCheckout');
+  return data;
+}
+
+async function releaseBlendCaseCheckout(blendCaseId, checkoutToken, actor = null) {
+  const { data, error } = await supabase.rpc('release_blend_case_checkout', {
+    p_blend_case_id: blendCaseId, p_checkout_token: checkoutToken, p_actor: actor,
+  });
+  assertNoError(error, 'releaseBlendCaseCheckout');
+  return data;
+}
+
+async function forceReleaseBlendCaseCheckout(blendCaseId, actor, reason) {
+  const { data, error } = await supabase.rpc('force_release_blend_case_checkout', {
+    p_blend_case_id: blendCaseId, p_actor: actor, p_reason: reason,
+  });
+  assertNoError(error, 'forceReleaseBlendCaseCheckout');
+  return data;
+}
+
+// ---------------------------------------------------------------------
+// Deliveries
+// ---------------------------------------------------------------------
+
+async function startDelivery(blendCaseId, { sequence, plannedBbl, bol, driver, operator, worksheet }) {
+  const { data, error } = await supabase.rpc('plan_blend_case_delivery', {
+    p_blend_case_id: blendCaseId, p_sequence: sequence, p_planned_bbl: plannedBbl,
+    p_bol: bol ?? null, p_driver: driver ?? null, p_operator: operator ?? null, p_worksheet: worksheet ?? {},
+  });
+  assertNoError(error, 'startDelivery');
+  return data;
+}
+
+async function completeDelivery(deliveryId, actualBbl, actor) {
+  const { data, error } = await supabase.rpc('complete_blend_case_delivery', {
+    p_delivery_id: deliveryId, p_actual_bbl: actualBbl, p_actor: actor,
+  });
+  assertNoError(error, 'completeDelivery');
+  return data;
+}
+
+async function refuseDelivery(deliveryId, actor, reason = null) {
+  const { data, error } = await supabase.rpc('refuse_blend_case_delivery', {
+    p_delivery_id: deliveryId, p_actor: actor, p_reason: reason,
+  });
+  assertNoError(error, 'refuseDelivery');
+  return data;
+}
+
+/** The only way to change an already-complete delivery. Requires a reason
+ *  and always writes a distinct audit event. */
+async function correctCompletedDelivery(deliveryId, actualBbl, actor, reason) {
+  const { data, error } = await supabase.rpc('correct_completed_blend_case_delivery', {
+    p_delivery_id: deliveryId, p_actual_bbl: actualBbl, p_actor: actor, p_reason: reason,
+  });
+  assertNoError(error, 'correctCompletedDelivery');
+  return data;
+}
+
+// ---------------------------------------------------------------------
+// Case data / results / decision / actuals / notes -- all version-checked
+// ---------------------------------------------------------------------
+
+/**
+ * Merges an allow-listed set of case_data keys server-side (documents
+ * checklist, gauge readings, certification bookkeeping, etc.) -- never a
+ * blind whole-object replace. See update_blend_case_data() for the
+ * allow-list. Rejects an unrecognized key rather than silently dropping
+ * or accepting it.
+ */
+async function updateBlendCaseData(blendCaseId, expectedVersion, patch, actor, note = null) {
+  const { data, error } = await supabase.rpc('update_blend_case_data', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_patch: patch, p_actor: actor, p_note: note,
+  });
+  assertNoError(error, 'updateBlendCaseData');
+  return data;
+}
+
+/** Upserts the case's single results row (close gauge, reconciliation,
+ *  quality data, completion). Version-checked against the parent case. */
+async function saveBlendCaseResults(blendCaseId, expectedVersion, patch, actor) {
+  const { data, error } = await supabase.rpc('save_blend_case_results', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_patch: patch, p_actor: actor,
+  });
+  assertNoError(error, 'saveBlendCaseResults');
+  return data;
+}
+
+async function setBlendCaseDecision(blendCaseId, expectedVersion, decision, actor) {
+  const { data, error } = await supabase.rpc('set_blend_case_decision', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_decision: decision, p_actor: actor,
+  });
+  assertNoError(error, 'setBlendCaseDecision');
+  return data;
+}
+
+async function recordBlendCaseActualVolume(blendCaseId, expectedVersion, actualTovBbl, actor) {
+  const { data, error } = await supabase.rpc('record_blend_case_actual_volume', {
+    p_blend_case_id: blendCaseId, p_expected_version: expectedVersion, p_actual_tov_bbl: actualTovBbl, p_actor: actor,
+  });
+  assertNoError(error, 'recordBlendCaseActualVolume');
+  return data;
+}
+
+/** Appends a freeform note to the audit trail. This is the only way the
+ *  browser client can write to blend_case_events now -- direct INSERT is
+ *  revoked at the database level. */
+async function addNote(blendCaseId, actor, message) {
+  const { data, error } = await supabase.rpc('add_blend_case_note', {
+    p_blend_case_id: blendCaseId, p_actor: actor, p_message: message,
+  });
+  assertNoError(error, 'addNote');
+  return data;
 }
 
 window.BlendRepo = {
   listBlendPlans,
   listBlendCases,
+  getBlendCase,
   createBlendCase,
   promoteBlendPlan,
-  changeBlendCaseStatus,
-  appendEvent,
-  updateBlendCase,
   updateBlendPlan,
-  upsertDelivery,
+  advanceBlendCaseStage,
+  placeBlendCaseOnHold,
+  releaseBlendCaseHold,
+  closeBlendCase,
+  abandonBlendCase,
+  checkoutBlendCase,
+  renewBlendCaseCheckout,
+  releaseBlendCaseCheckout,
+  forceReleaseBlendCaseCheckout,
+  startDelivery,
+  completeDelivery,
+  refuseDelivery,
+  correctCompletedDelivery,
+  updateBlendCaseData,
   saveBlendCaseResults,
-  deleteBlendCase,
+  setBlendCaseDecision,
+  recordBlendCaseActualVolume,
+  addNote,
 };
 
 // Signal to the classic <script> below that the repository is ready to use.
