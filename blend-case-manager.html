@@ -148,6 +148,7 @@ button{cursor:pointer}
   </div>
 </header>
 <div id="syncBanner" style="display:none;margin:12px 24px 0;padding:10px 14px;border-radius:8px;font-size:12px"></div>
+<div id="butaneComplianceBanner" style="display:none;margin:12px 24px 0;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:700"></div>
 <main class="shell">
   <div class="hero">
     <div><h1>Blend Case Manager</h1><p class="overview-label">Overview</p></div>
@@ -595,7 +596,7 @@ async function beginTruckOffload(force=false){const c=caseById(pendingTruckCaseI
 
 async function refuseTruck(){const c=caseById(pendingTruckCaseId),w=worksheetData();const seq=c.deliveries.length+1,plannedBbl=plannedLoadForTruck(c,completedTrucks(c));let dbId=null;if(c.dbId){try{const started=await window.BlendRepo.startDelivery(c.dbId,{sequence:seq,plannedBbl,bol:w.bol||null,driver:w.driver||null,operator:w.operator||c.operator,worksheet:w});const refused=await window.BlendRepo.refuseDelivery(started.id,w.operator||c.operator,'Refused at pre-transfer verification');dbId=refused.id}catch(e){console.error(e);alert('Could not record this refusal: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}c.deliveries.push({n:seq,dbId,plannedBbl,bol:w.bol||'—',driver:w.driver||'—',operator:w.operator||c.operator,status:'refused',refusedAt:iso(),worksheet:w});log(c,w.operator||c.operator,`Truck ${c.deliveries.length} refused at pre-transfer verification`,'warning');closeModal('truckModal');render()}
 function applyComplianceGallons(c,d){if(d.complianceApplied)return;const gal=bblToGal(d.netBbl);d.complianceApplied=true;c.complianceContributionGal+=gal;const rec=oversightCompliance();rec.firstDeliveryReceived=true;rec.gallonsSinceSample=Number(rec.gallonsSinceSample||0)+gal;const ev=complianceEvaluation(rec);if(ev.startBlocked)log(c,'system',`Certified-butane oversight sample required before the next blend: ${ev.dueReasons.join('; ')}`,'warning');else if(ev.warning)log(c,'system',`Certified-butane oversight coordination threshold reached: ${ev.warningReasons.join('; ')}`,'warning')}
-async function completeOffload(){const c=currentCase();if(!requireEdit(c)||c.stage!==5)return;const d=c.deliveries.find(x=>x.status==='offloading'),v=Number(document.getElementById('offloadVolume')?.value);if(!d)return;if(!Number.isFinite(v)||v<CONFIG.truckMin||v>CONFIG.truckMax){alert(`Verified net volume must be ${CONFIG.truckMin}–${CONFIG.truckMax} bbl.`);return}if(d.dbId){try{await window.BlendRepo.completeDelivery(d.dbId,v,d.operator)}catch(e){console.error(e);alert('Could not complete this delivery: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}d.status='complete';d.netBbl=v;d.completedAt=iso();applyComplianceGallons(c,d);log(c,d.operator,`Truck ${d.n} complete; ${f1(v)} bbl verified; butane pump stopped for this load`);if(completedTrucks(c)>=orderedTrucks(c)){markDoc(c,'delivery');const circ=ensureCirculation(c);circ.finalTruckAt=d.completedAt;if(c.dbId){try{await syncCaseData(c,c.operator)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error');return}}log(c,c.operator,'Final truck complete; close the butane pump / valve path and continue tank circulation')}render()}
+async function completeOffload(){const c=currentCase();if(!requireEdit(c)||c.stage!==5)return;const d=c.deliveries.find(x=>x.status==='offloading'),v=Number(document.getElementById('offloadVolume')?.value);if(!d)return;if(!Number.isFinite(v)||v<CONFIG.truckMin||v>CONFIG.truckMax){alert(`Verified net volume must be ${CONFIG.truckMin}–${CONFIG.truckMax} bbl.`);return}if(d.dbId){try{await window.BlendRepo.completeDelivery(d.dbId,v,d.operator);refreshButaneComplianceStatus()}catch(e){console.error(e);alert('Could not complete this delivery: '+e.message);showSyncBanner('Delivery save failed: '+e.message,'error');return}}d.status='complete';d.netBbl=v;d.completedAt=iso();applyComplianceGallons(c,d);log(c,d.operator,`Truck ${d.n} complete; ${f1(v)} bbl verified; butane pump stopped for this load`);if(completedTrucks(c)>=orderedTrucks(c)){markDoc(c,'delivery');const circ=ensureCirculation(c);circ.finalTruckAt=d.completedAt;if(c.dbId){try{await syncCaseData(c,c.operator)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error');return}}log(c,c.operator,'Final truck complete; close the butane pump / valve path and continue tank circulation')}render()}
 function advanceToCloseGauge(){const c=currentCase(),circ=ensureCirculation(c);if(!requireEdit(c)||c.stage!==5)return;if(completedTrucks(c)<orderedTrucks(c)){alert('All ordered trucks must be complete.');return}if(!circ.stoppedAt||!c.valveAlignment?.closing?.completedAt){alert('Complete the post-truck circulation record and closing valve alignment before proceeding.');return}markDoc(c,'delivery');markDoc(c,'circulation');setStage(c,6);log(c,c.operator,`Receiving and circulation cycle complete; pre ${durationLabel(circ.preMinutes)}, post ${durationLabel(circ.postMinutes)}; close gauge required`);render()}
 
 function recordCloseGauge(){const c=currentCase();if(!requireEdit(c)||c.stage!==6)return;const expected=expectedCloseBbl(c),actual=Number(val('cg-net')),variance=actual-expected,within=Math.abs(variance)<=CONFIG.reconToleranceBbl,reason=val('cg-reason');if(!val('cg-height')||!(actual>0)||!Number.isFinite(Number(val('cg-temp')))||!Number.isFinite(Number(val('cg-api')))){alert('Gauge height, close net volume, temperature and API are required.');return}if(!within&&!reason){alert('A variance explanation is required outside the configured tolerance.');return}c.closeGauge={at:iso(),height:val('cg-height'),temperature:Number(val('cg-temp')),api:Number(val('cg-api')),netBbl:actual,operator:c.operator};c.reconciliation={expectedBbl:expected,actualBbl:actual,varianceBbl:variance,toleranceBbl:CONFIG.reconToleranceBbl,withinTolerance:within,reason:reason||'Within configured tolerance',approvedBy:c.operator,at:iso()};markDoc(c,'closeGauge');markDoc(c,'reconciliation');setStage(c,7);log(c,c.operator,`Close gauge ${f1(actual)} bbl; loss/gain ${variance>=0?'+':''}${f1(variance)} bbl`);render()}
@@ -716,6 +717,41 @@ function showSyncBanner(text,kind,opts){
   }
 }
 function hideSyncBanner(){const el=document.getElementById('syncBanner');if(el)el.style.display='none'}
+
+// NOTE: this banner is a separate, Supabase-backed signal
+// (butane_compliance_tracker / add_butane_delivery_volume RPC) from the
+// existing local-only compliance-card system above (oversightCompliance /
+// complianceEvaluation / renderCompliance, state.compliance.suppliers).
+// The two are not reconciled -- they use different thresholds (this one:
+// 300,000 gal lead time / 500,000 gal ceiling; the local one: 350,000 gal
+// warning / 500,000 gal or 90 days) and can disagree. See follow-up notes.
+function showButaneComplianceBanner(text,kind){
+  const el=document.getElementById('butaneComplianceBanner');
+  if(!el)return;
+  const colors={warning:['#fdf3e0','#8a5e12'],critical:['#fdecea','#8a2d24']};
+  const c=colors[kind]||colors.warning;
+  el.style.display='block';el.style.background=c[0];el.style.color=c[1];
+  el.textContent=text;
+}
+function hideButaneComplianceBanner(){const el=document.getElementById('butaneComplianceBanner');if(el)el.style.display='none'}
+function renderButaneComplianceStatus(status){
+  if(!status){hideButaneComplianceBanner();return}
+  if(status.ceiling_reached){
+    showButaneComplianceBanner(`⛔ Butane compliance ceiling reached: ${fmt(status.cumulative_volume_gal)} / 500,000 gal (cycle started ${status.cycle_start_date}). No further certified-butane deliveries should proceed until sampled.`,'critical');
+  }else if(status.sample_ordered){
+    showButaneComplianceBanner(`⚠ Butane compliance sample should be ordered: ${fmt(status.cumulative_volume_gal)} / 500,000 gal cumulative (300,000 gal lead-time threshold reached).`,'warning');
+  }else{
+    hideButaneComplianceBanner();
+  }
+}
+async function refreshButaneComplianceStatus(){
+  try{
+    const status=await window.BlendRepo.getButaneComplianceStatus();
+    renderButaneComplianceStatus(status);
+  }catch(e){
+    console.error('[refreshButaneComplianceStatus]',e);
+  }
+}
 function setModeChip(text,ok){const el=document.getElementById('modeChip');if(!el)return;el.textContent=text;el.className='chip '+(ok?'':'demo')}
 
 // Real compliance cycle, starts at zero -- supplierCompliance() lazily
@@ -982,6 +1018,7 @@ async function initApp(){
     viewStageIndex=state.cases.length?state.cases[0].stage:0;
     setModeChip('● Live · Supabase',true);
     hideSyncBanner();
+    refreshButaneComplianceStatus();
   }catch(e){
     console.error('[initApp] Supabase load failed, falling back to local demo data:',e);
     state=seed();

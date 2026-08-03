@@ -275,6 +275,16 @@ async function completeDelivery(deliveryId, actualBbl, actor) {
     p_delivery_id: deliveryId, p_actual_bbl: actualBbl, p_actor: actor,
   });
   assertNoError(error, 'completeDelivery');
+
+  // Every blend_case_deliveries row is a butane truck load (see migration
+  // 004), so a completed delivery always counts toward the compliance
+  // ceiling. actual_bbl is barrels; the tracker is gallons.
+  try {
+    await recordButaneDeliveryVolume(actualBbl * BBL_TO_GAL);
+  } catch (complianceError) {
+    console.error('[BlendRepo] completeDelivery: recordButaneDeliveryVolume failed:', complianceError);
+  }
+
   return data;
 }
 
@@ -293,6 +303,38 @@ async function correctCompletedDelivery(deliveryId, actualBbl, actor, reason) {
     p_delivery_id: deliveryId, p_actual_bbl: actualBbl, p_actor: actor, p_reason: reason,
   });
   assertNoError(error, 'correctCompletedDelivery');
+  return data;
+}
+
+// ---------------------------------------------------------------------
+// Butane compliance tracking
+// ---------------------------------------------------------------------
+
+const BBL_TO_GAL = 42;
+
+/**
+ * Adds delivered butane volume (gallons) to the running 500,000 gal / 90-day
+ * compliance ceiling via the add_butane_delivery_volume RPC. The RPC itself
+ * flips sample_ordered at 300k and ceiling_reached at 500k server-side --
+ * this call just reports the volume and returns the updated tracker row.
+ */
+async function recordButaneDeliveryVolume(volumeGal) {
+  const { data, error } = await supabase.rpc('add_butane_delivery_volume', {
+    p_volume_gal: volumeGal,
+  });
+  assertNoError(error, 'recordButaneDeliveryVolume');
+  return data;
+}
+
+/** Reads the current (single-row) butane compliance tracker state. */
+async function getButaneComplianceStatus() {
+  const { data, error } = await supabase
+    .from('butane_compliance_tracker')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  assertNoError(error, 'getButaneComplianceStatus');
   return data;
 }
 
@@ -377,6 +419,8 @@ window.BlendRepo = {
   setBlendCaseDecision,
   recordBlendCaseActualVolume,
   addNote,
+  recordButaneDeliveryVolume,
+  getButaneComplianceStatus,
 };
 
 // Signal to the classic <script> below that the repository is ready to use.
