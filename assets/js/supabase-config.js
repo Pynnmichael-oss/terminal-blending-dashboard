@@ -9,6 +9,6 @@
 // key secret. The service-role key must NEVER go in this file or anywhere
 // else in this static site.
 window.__SUPABASE_CONFIG__ = {
-  url: 'https://lmmgaeeoyukfbihoajxi.supabase.co',
-  anonKey: 'sb_publishable_Uy7J0bVKrImzlAkmUdxFQA_C21_-BoZ',
+  url: 'https://iefjhifomettmfkxidsq.supabase.co',
+  anonKey: 'sb_publishable_cSSRdJIb_72crwXcy5wscg_lDQWJn-4',
 };
