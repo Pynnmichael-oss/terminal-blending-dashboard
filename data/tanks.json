@@ -1,11 +1,11 @@
 {
-  "confirmedAt": "2026-08-05T11:02:38.3862256Z",
+  "confirmedAt": "2026-08-05T17:02:34.2485931Z",
   "source": "SharePoint · Terminal Tank Readings",
   "tanks": {
     "TK55": {
       "sourceTankId": "23155",
       "product": "REGULAR",
-      "available": 27066,
+      "available": 27069,
       "workingCap": 56866,
       "level": null,
       "temperature": null,
@@ -14,28 +14,28 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:33.6593313Z",
+      "pulledAt": "2026-08-05T17:02:28.8955098Z",
       "skippedBadRows": 0
     },
     "TK56": {
       "sourceTankId": "23156",
       "product": "REGULAR",
-      "available": 17483,
+      "available": 15211,
       "workingCap": 48382,
       "level": null,
       "temperature": null,
       "space": null,
       "tov": null,
-      "tankStatus": "Stopped",
+      "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:34.2153167Z",
+      "pulledAt": "2026-08-05T17:02:29.2899065Z",
       "skippedBadRows": 0
     },
     "TK57": {
       "sourceTankId": "23157",
       "product": "ULSD",
-      "available": 20720,
+      "available": 14917,
       "workingCap": 35414,
       "level": null,
       "temperature": null,
@@ -44,7 +44,7 @@
       "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:35.2989026Z",
+      "pulledAt": "2026-08-05T17:02:30.3468854Z",
       "skippedBadRows": 0
     },
     "TK58": {
@@ -59,22 +59,22 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:35.6953061Z",
+      "pulledAt": "2026-08-05T17:02:31.0013044Z",
       "skippedBadRows": 0
     },
     "TK04": {
       "sourceTankId": "27404",
       "product": "PREMIUM",
-      "available": 9323,
+      "available": 9122,
       "workingCap": 17086,
       "level": null,
       "temperature": null,
       "space": null,
       "tov": null,
-      "tankStatus": "Stopped",
+      "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:36.6070527Z",
+      "pulledAt": "2026-08-05T17:02:32.2456108Z",
       "skippedBadRows": 0
     },
     "TK05": {
@@ -89,7 +89,7 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-05T11:02:37.0244586Z",
+      "pulledAt": "2026-08-05T17:02:32.7265209Z",
       "skippedBadRows": 0
     }
   }
