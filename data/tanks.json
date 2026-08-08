@@ -1,20 +1,20 @@
 {
-  "confirmedAt": "2026-08-08T05:02:32.6322144Z",
+  "confirmedAt": "2026-08-08T11:02:52.0552775Z",
   "source": "SharePoint · Terminal Tank Readings",
   "tanks": {
     "TK55": {
       "sourceTankId": "23155",
       "product": "REGULAR",
-      "available": 22409,
+      "available": 17866,
       "workingCap": 56866,
       "level": null,
       "temperature": null,
       "space": null,
       "tov": null,
-      "tankStatus": "Stopped",
+      "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:26.7060266Z",
+      "pulledAt": "2026-08-08T11:02:47.2564889Z",
       "skippedBadRows": 0
     },
     "TK56": {
@@ -29,13 +29,13 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:27.2990797Z",
+      "pulledAt": "2026-08-08T11:02:47.6557656Z",
       "skippedBadRows": 0
     },
     "TK57": {
       "sourceTankId": "23157",
       "product": "ULSD",
-      "available": 21763,
+      "available": 19137,
       "workingCap": 35414,
       "level": null,
       "temperature": null,
@@ -44,7 +44,7 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:28.2536645Z",
+      "pulledAt": "2026-08-08T11:02:48.9848310Z",
       "skippedBadRows": 0
     },
     "TK58": {
@@ -59,22 +59,37 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:28.6834465Z",
+      "pulledAt": "2026-08-08T11:02:49.5369558Z",
       "skippedBadRows": 0
     },
-    "TK04": {
-      "sourceTankId": "27404",
-      "product": "PREMIUM",
-      "available": 4276,
-      "workingCap": 17086,
+    "TK87": {
+      "sourceTankId": "31487",
+      "product": "ULSD",
+      "available": 28697,
+      "workingCap": 30761,
       "level": null,
       "temperature": null,
       "space": null,
       "tov": null,
       "tankStatus": "Stopped",
+      "tankCommand": "Stop",
+      "transferStatus": "",
+      "pulledAt": "2026-08-08T11:02:49.9466335Z",
+      "skippedBadRows": 0
+    },
+    "TK04": {
+      "sourceTankId": "27404",
+      "product": "PREMIUM",
+      "available": 3762,
+      "workingCap": 17086,
+      "level": null,
+      "temperature": null,
+      "space": null,
+      "tov": null,
+      "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:29.7702613Z",
+      "pulledAt": "2026-08-08T11:02:50.3255411Z",
       "skippedBadRows": 0
     },
     "TK05": {
@@ -89,7 +104,7 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T05:02:30.3296125Z",
+      "pulledAt": "2026-08-08T11:02:50.7273440Z",
       "skippedBadRows": 0
     }
   }
