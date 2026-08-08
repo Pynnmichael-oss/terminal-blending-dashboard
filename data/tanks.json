@@ -1,11 +1,11 @@
 {
-  "confirmedAt": "2026-08-08T17:02:34.4554483Z",
+  "confirmedAt": "2026-08-08T23:03:03.0677397Z",
   "source": "SharePoint · Terminal Tank Readings",
   "tanks": {
     "TK55": {
       "sourceTankId": "23155",
       "product": "REGULAR",
-      "available": 14130,
+      "available": 10343,
       "workingCap": 56866,
       "level": null,
       "temperature": null,
@@ -14,13 +14,13 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:29.2926659Z",
+      "pulledAt": "2026-08-08T23:02:58.9050464Z",
       "skippedBadRows": 0
     },
     "TK56": {
       "sourceTankId": "23156",
       "product": "REGULAR",
-      "available": 11353,
+      "available": 11371,
       "workingCap": 48382,
       "level": null,
       "temperature": null,
@@ -29,28 +29,13 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:30.0179244Z",
-      "skippedBadRows": 0
-    },
-    "TK03": {
-      "sourceTankId": "27403",
-      "product": "REGULAR",
-      "available": 12671,
-      "workingCap": 15742,
-      "level": null,
-      "temperature": null,
-      "space": null,
-      "tov": null,
-      "tankStatus": "Stopped",
-      "tankCommand": "Stop",
-      "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:30.5112171Z",
+      "pulledAt": "2026-08-08T23:02:59.2747488Z",
       "skippedBadRows": 0
     },
     "TK57": {
       "sourceTankId": "23157",
       "product": "ULSD",
-      "available": 16274,
+      "available": 14220,
       "workingCap": 35414,
       "level": null,
       "temperature": null,
@@ -59,13 +44,13 @@
       "tankStatus": "Stopped",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:30.9890797Z",
+      "pulledAt": "2026-08-08T23:03:00.2626715Z",
       "skippedBadRows": 0
     },
     "TK58": {
       "sourceTankId": "23158",
       "product": "ULSD",
-      "available": 24219,
+      "available": 24221,
       "workingCap": 26577,
       "level": null,
       "temperature": null,
@@ -74,37 +59,22 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:31.4214020Z",
-      "skippedBadRows": 0
-    },
-    "TK87": {
-      "sourceTankId": "31487",
-      "product": "ULSD",
-      "available": 28697,
-      "workingCap": 30761,
-      "level": null,
-      "temperature": null,
-      "space": null,
-      "tov": null,
-      "tankStatus": "Stopped",
-      "tankCommand": "Stop",
-      "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:31.9169575Z",
+      "pulledAt": "2026-08-08T23:03:00.6910442Z",
       "skippedBadRows": 0
     },
     "TK04": {
       "sourceTankId": "27404",
       "product": "PREMIUM",
-      "available": 3224,
+      "available": 3082,
       "workingCap": 17086,
       "level": null,
       "temperature": null,
       "space": null,
       "tov": null,
-      "tankStatus": "Stopped",
+      "tankStatus": "Emptying",
       "tankCommand": "Run",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:32.3178851Z",
+      "pulledAt": "2026-08-08T23:03:01.5377444Z",
       "skippedBadRows": 0
     },
     "TK05": {
@@ -119,7 +89,7 @@
       "tankStatus": "Stopped",
       "tankCommand": "Stop",
       "transferStatus": "",
-      "pulledAt": "2026-08-08T17:02:32.7387489Z",
+      "pulledAt": "2026-08-08T23:03:01.9035675Z",
       "skippedBadRows": 0
     }
   }
