@@ -23,7 +23,10 @@ talk to a real Supabase project (prototype backend, added 2026-08-03/04).
   setup steps, and deferred work (Storage-bucket file attachments not yet wired).
 - The Blend Planner (separate repo, deployed at
   `pynnmichael-oss.github.io/blend-planner/`) must point at the same Supabase
-  project URL/key for the planner→case-manager handoff to work.
+  project URL/key for the planner→case-manager handoff to work. The planner's
+  CI (`deploy-pages.yml`) fails the build if the production bundle references
+  the retired Supabase project instead of the current one — see that repo's
+  CLAUDE.md.
 
 ## Structure
 
@@ -33,9 +36,18 @@ talk to a real Supabase project (prototype backend, added 2026-08-03/04).
 - `receipt-schedule.html`, `blend-case-manager.html`, `lab-procedures.html`,
   `operator-proficiency.html`, `rack-demand-forecast.html` — standalone pages
   copied from the source project. Each links back to `index.html` via a
-  `.back-link`-style anchor (or, on `blend-case-manager.html`, a plain `<a>` —
-  that file has no `.back-link` CSS rule defined, so the link is currently
-  unstyled).
+  `.back-link`-style anchor (`blend-case-manager.html` now has its own styled
+  `← Dashboard` link — `.dashboard-only` class, not `.back-link` — this was
+  previously unstyled/plain).
+- `blend-case-manager.html` (currently V8.10.2) — beyond the working case
+  view, has a dedicated `#archive` view (real `<table>`, reached via the
+  header's "Closed Blends →" button) that closed blends move to instead of
+  rendering inline; a "Closed Blends"/"Open records" toggle round-trips
+  between the two. Planner-queue rows support soft-delete
+  (`BlendRepo.updateBlendPlan(id, {status:'cancelled'})`, using the plan's
+  `dbId` uuid — not the human-readable `plan_code`). Case abandonment is
+  blocked once any truck delivery is `status:'complete'`, both client-side
+  and in `abandonBlendCase` server-side.
 - `fuels-snapshot.js`, `t4-schedule.js` — client-side parsers for the "Data Drop"
   feature on `index.html` (FuelsManager .xlsx export, T4 schedule paste). No
   network calls; state lives in the browser only.
