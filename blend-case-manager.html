@@ -916,7 +916,13 @@ async function buildStateFromSupabase(){
   return {
     plans:plans.map(mapDbPlanToAppPlan),
     cases:cases.map(mapDbCaseToAppCase),
-    compliance:freshCompliance(), // real cycle, local-only for this milestone (see follow-up notes)
+    // Local-only for this milestone (see follow-up notes) -- carry the
+    // existing gallon count forward instead of resetting it. This ran as
+    // freshCompliance() before, which zeroed gallonsSinceSample on every
+    // page load/refresh and every promotePlan() call (both call this
+    // function), even though applyComplianceGallons() was correctly
+    // accumulating and saving it to localStorage the whole time.
+    compliance:state?.compliance||freshCompliance(),
     historicLedger:[]
   };
 }
