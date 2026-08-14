@@ -61,13 +61,9 @@ button{cursor:pointer}
 .tank{font-size:20px;font-weight:900;color:var(--slate);margin-top:8px}.tank small{font-size:10.5px;color:var(--faint);font-weight:700}.meta{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0;font-size:11px;color:var(--muted);font-weight:650}.meta b{color:var(--slate)}
 .progress{display:flex;gap:3px}.progress i{height:4px;background:var(--soft);border-radius:2px;flex:1}.progress i.done{background:var(--teal)}.progress i.active{background:var(--amber)}.progress i.hold{background:var(--red)}
 .next{font-size:10.5px;color:var(--ink);font-weight:750;margin-top:8px}.next b{color:var(--teal)}
-.closed-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.closed-row{display:grid;grid-template-columns:minmax(210px,1.4fr) repeat(6,minmax(92px,1fr)) auto;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;box-shadow:0 10px 28px -26px rgba(0,60,90,.55);cursor:pointer;transition:.14s}
-.closed-row:hover{border-color:rgba(0,79,113,.4);transform:translateY(-1px)}
-.closed-row.selected{border-color:rgba(0,79,113,.48);box-shadow:0 0 0 2px rgba(0,179,152,.2),0 10px 28px -26px rgba(0,60,90,.55)}
-.closed-main{display:flex;align-items:center;gap:9px;min-width:0}.closed-title{min-width:0}.closed-title b{display:block;color:var(--slate);font-size:12.5px}.closed-title span{display:block;color:var(--faint);font-size:9.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.closed-cell{min-width:0}.closed-cell .k{font-size:7.5px;letter-spacing:.55px;text-transform:uppercase;color:var(--faint);font-weight:900}.closed-cell .v{font-size:10.5px;color:var(--slate);font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.closed-actions{display:flex;gap:6px;justify-content:flex-end}.closed-actions .btn{padding:6px 9px;font-size:10px}
+.closed-row{background:#fff;cursor:pointer;transition:.14s}
+.closed-row:hover{background:var(--soft)}
+.closed-row.selected{background:rgba(0,179,152,.08)}
 .closed-empty{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--muted);font-size:11px;font-weight:650}
 .dashboard-only{display:block}
 .archive-only{display:none}
@@ -77,9 +73,8 @@ body.archive-view .archive-only{display:block}
 .btn.subtle-danger{background:#fff;color:#b3261e;border:1px solid #f3c8c4}
 .btn.subtle-danger:hover{background:#fdeceb}
 .truck-badge-warn{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:8px;background:#fff3cd;color:#8a6100;font-size:9.5px;font-weight:800;letter-spacing:.3px}
-.closed-note{font-size:10.5px;color:var(--muted);font-weight:650;margin:-9px 2px 20px;line-height:1.5}.closed-note b{color:var(--slate)}
-@media(max-width:1050px){.closed-row{grid-template-columns:minmax(210px,1.5fr) repeat(3,minmax(90px,1fr)) auto}.closed-row .closed-cell:nth-of-type(5),.closed-row .closed-cell:nth-of-type(6){display:none}}
-@media(max-width:720px){.closed-row{grid-template-columns:1fr auto}.closed-row .closed-cell{display:none}.closed-actions .btn:last-child{display:none}}
+@media(max-width:1050px){#closedTable th:nth-child(5),#closedTable td:nth-child(5),#closedTable th:nth-child(6),#closedTable td:nth-child(6){display:none}}
+@media(max-width:720px){#closedTable th:nth-child(n+2):nth-child(-n+7),#closedTable td:nth-child(n+2):nth-child(-n+7){display:none}}
 .detail{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
 .detail-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(0,79,113,.03),rgba(0,179,152,.04))}.detail-head h2{font-size:15px;color:var(--slate)}.detail-head h2 small{font-size:10.5px;color:var(--faint);font-weight:700;margin-left:7px}.detail-head .people{margin-left:auto;font-size:10.5px;color:var(--muted);font-weight:650}.detail-head .people b{color:var(--slate)}
 .checkout{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 18px;border-bottom:1px solid var(--line);background:#fbfdfe}.lockbadge{font-size:9.5px;font-weight:850;border-radius:999px;padding:3px 9px}.lockbadge.mine{background:rgba(0,179,152,.14);color:#087c63}.lockbadge.other{background:rgba(217,101,91,.14);color:#a4362c}.lockbadge.open{background:var(--soft);color:var(--muted)}
