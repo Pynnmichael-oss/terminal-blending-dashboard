@@ -75,6 +75,23 @@ served verbatim. There is nothing to `npm install` or `npm run build`.
   `.back-link`-style anchor (`blend-case-manager.html` now has its own styled
   `← Dashboard` link — `.dashboard-only` class, not `.back-link` — this was
   previously unstyled/plain).
+- `coa-generator.html` — standalone page, NOT copied from the source project
+  (that project's `coa-review.html`/`spec-reference.html` are explicitly
+  excluded — see below; this is a different tool with no source-project
+  equivalent). Records upper/middle/lower and E10 vapor-pressure and
+  distillation test data, prints the Fort Worth terminal Certificate of
+  Analysis, and can auto-fill RVP (ASTM) and PTOT per level by photographing
+  a Grabner analyzer's "Result details" screen (client-side Tesseract.js OCR;
+  no network calls, no server-side processing). RVP/PTOT auto-fill only
+  applies when the reader's D5191/D4953/D323 readings agree with the
+  instrument's own printed conversion equations; a value the operator has
+  already typed is never overwritten. Records, including retained photo
+  images and SHA-256 digests, are stored in `localStorage` under
+  `gp_ftw_blend_records_v3` — separate key from every other page, browser/
+  device-local only, not yet wired into Supabase. Reachable from
+  `index.html`'s "Certificate of Analysis" tile in the Quality & Compliance
+  grid, and links back via the same `.back-link` pattern as
+  `receipt-schedule.html`.
 - `blend-case-manager.html` (currently V8.10.2) — beyond the working case
   view, has a dedicated `#archive` view (real `<table>`, reached via the
   header's "Closed Blends →" button) that closed blends move to instead of

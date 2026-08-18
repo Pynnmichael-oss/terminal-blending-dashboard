@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Global Partners · Fort Worth Certificate of Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --slate:#004F71;--teal:#00B398;--lime:#A9EE8A;--ulsd:#C0882E;
+  --ink:#063A52;--ink-dim:#5E7A8A;--ink-faint:#9DB0BC;
+  --line:rgba(0,79,113,.13);--white:#FFFFFF;--gray:#EEF3F6;--gray2:#E5ECF0;
+  --amber:#E0A23C;--red:#D9655B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ink);min-height:100vh;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+  background:radial-gradient(1000px 520px at 92% -14%,rgba(0,179,152,.07),transparent 60%),radial-gradient(760px 440px at -3% 114%,rgba(169,238,138,.11),transparent 60%),var(--white)}
+
+/* ---------- App bar ---------- */
+header.appbar{display:flex;align-items:center;gap:20px;padding:14px 30px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:50}
+.wm{font-weight:800;font-size:19px;letter-spacing:.5px;color:var(--slate);line-height:.96}
+.wm b{display:block;font-weight:700;font-size:10px;letter-spacing:3.5px;color:var(--teal);margin-top:2px}
+.divider{width:1px;height:30px;background:var(--line)}
+.appname{font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--slate)}
+.appname span{color:var(--ink-dim);font-weight:500}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--white);font-size:12px;font-weight:600;color:var(--ink-dim)}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.3px;padding:7px 13px;border-radius:9px;border:1px solid var(--line);background:var(--white);transition:border-color .15s,color .15s;text-decoration:none}
+.back-link:hover{border-color:var(--teal);color:var(--slate)}
+.pill b{color:var(--ink);font-weight:700}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:22px 30px 70px;display:flex;flex-direction:column;gap:26px;align-items:stretch}
+@media(max-width:1080px){.wrap{padding-left:18px;padding-right:18px}}
+
+.panel{background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(0,79,113,.04)}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.panel-hd h2{font-size:14px;font-weight:700;letter-spacing:.3px;color:var(--slate)}
+.panel-hd .sub{font-size:11.5px;color:var(--ink-dim);font-weight:500}
+
+/* ---------- Form ---------- */
+.form{padding:18px 20px}
+.grp{margin-bottom:20px}
+.grp>.lbl{font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--teal);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.grp>.lbl:before{content:"";width:16px;height:2px;background:var(--teal);border-radius:2px}
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 13px}
+.fgrid.three{grid-template-columns:repeat(3,1fr)}
+.fgrid.four{grid-template-columns:repeat(4,1fr)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;color:var(--ink-dim)}
+.field input,.field select{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);
+  padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white);width:100%;
+  font-variant-numeric:tabular-nums;transition:border-color .12s,box-shadow .12s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,179,152,.12)}
+.field input::placeholder{color:var(--ink-faint);font-weight:500}
+
+/* Level sub-block */
+.lvl{border:1px solid var(--line);border-radius:10px;padding:12px 13px 14px;margin-bottom:11px;background:linear-gradient(180deg,rgba(238,243,246,.35),transparent)}
+.lvl-hd{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--slate);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.lvl-hd .tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--white);background:var(--slate);padding:2px 7px;border-radius:5px}
+.lvl.e10 .lvl-hd .tag{background:var(--teal)}
+
+.hint{font-size:10.5px;color:var(--ink-faint);font-weight:500;margin-top:9px;line-height:1.5}
+.hint b{color:var(--ink-dim);font-weight:700}
+
+/* action bar */
+.actions{display:flex;gap:11px;align-items:center;padding:16px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:linear-gradient(180deg,rgba(255,255,255,.6),var(--white) 40%);border-radius:0 0 14px 14px;flex-wrap:wrap}
+.btn{font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.3px;padding:11px 20px;border-radius:9px;border:1px solid transparent;cursor:pointer;transition:transform .08s,filter .12s,box-shadow .12s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--slate));color:var(--white);box-shadow:0 2px 10px rgba(0,179,152,.28)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-ghost{background:var(--white);border-color:var(--line);color:var(--ink-dim)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--slate)}
+.act-note{font-size:11px;color:var(--ink-faint);font-weight:500;flex:1;min-width:160px;text-align:right}
+
+/* ---------- Certificate (preview + print) ---------- */
+.cert-panel{width:100%}
+.cert-scroll{overflow:auto;padding:18px 0 26px}
+#cert{width:816px;min-height:1056px;margin:0 auto;background:var(--white);color:#1a1a1a;
+  font-size:11px;line-height:1.42;padding:54px 60px 40px;transform-origin:top center}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px}
+.c-wm{font-weight:800;font-size:22px;letter-spacing:.5px;color:var(--slate);line-height:.94}
+.c-wm b{display:block;font-weight:700;font-size:10px;letter-spacing:4px;color:var(--teal);margin-top:3px}
+.c-wm em{display:block;font-style:normal;font-size:8px;letter-spacing:.5px;color:var(--ink-faint);font-weight:600;margin-top:5px}
+.c-brandbar{height:3px;background:linear-gradient(90deg,var(--slate),var(--teal) 55%,var(--lime));border-radius:2px;margin:4px 0 22px}
+.c-title{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--slate);text-transform:uppercase;margin-bottom:16px}
+
+.c-meta{display:flex;justify-content:space-between;gap:30px;margin-bottom:22px}
+.c-meta .blk{font-size:10.5px}
+.c-meta .who{font-weight:700;color:var(--slate);margin-bottom:2px;font-size:12px}
+.c-meta .addr{color:#3d3d3d;line-height:1.55}
+.c-meta table{border-collapse:collapse}
+.c-meta td{padding:1.5px 0;font-size:10.5px;white-space:nowrap}
+.c-meta td.k{color:#555;font-weight:600;text-align:right;padding-right:9px}
+.c-meta td.v{color:#111;font-weight:700}
+
+table.results{width:100%;border-collapse:collapse;font-size:10px}
+table.results th{font-weight:700;color:var(--slate);text-align:left;border-bottom:1.5px solid var(--slate);padding:6px 6px 5px;font-size:9.5px;letter-spacing:.2px}
+table.results th.num,table.results td.num{text-align:right}
+table.results th.spec{text-align:center}
+.lvl-row td{padding-top:11px;font-weight:800;color:var(--slate);font-size:10.5px;letter-spacing:.4px}
+.lvl-row.e10row td{color:var(--teal)}
+table.results td{padding:2.5px 6px;color:#1a1a1a;border-bottom:1px solid #f0f0f0;vertical-align:top}
+table.results td.test{padding-left:14px;color:#333}
+table.results td.sub{padding-left:24px;color:#555;font-style:italic}
+table.results td.method{color:#666;font-size:9.5px}
+td.result{font-weight:700}
+td.result.fail{color:var(--red)}
+.specmin,.specmax{text-align:center;color:#444;width:52px}
+.c-note{font-size:9.5px;color:#666;font-style:italic;margin:16px 0 30px;border-top:1px solid #eee;padding-top:8px}
+
+.c-sign{display:flex;justify-content:space-between;gap:60px;margin-top:40px}
+.c-sign .s{flex:1}
+.c-sign .sig{height:34px;border-bottom:1px solid #333;margin-bottom:4px;font-family:'Segoe Script','Brush Script MT',cursive;font-size:22px;color:var(--slate);display:flex;align-items:flex-end;padding-bottom:2px}
+.c-sign .role{font-size:9px;color:#666;font-weight:600}
+.c-sign .nm{font-size:10.5px;font-weight:700;color:#111}
+
+.c-foot{margin-top:44px;padding-top:12px;border-top:2px solid var(--slate);display:flex;justify-content:space-between;align-items:flex-end;font-size:9px;color:#666}
+.c-foot .co{font-weight:700;color:var(--slate);font-size:10px}
+.c-foot .pg{color:#999}
+
+.oos-banner{display:none;margin:14px 0 0;padding:8px 12px;border:1px solid var(--red);background:rgba(217,101,91,.06);border-radius:7px;font-size:10px;font-weight:700;color:var(--red)}
+.oos-banner.show{display:block}
+
+/* ---------- Print ---------- */
+@media print{
+  @page{size:letter;margin:0}
+  body{background:none}
+  header.appbar,.panel.form-panel,.act-note,.no-print{display:none!important}
+  .wrap{display:block;padding:0;max-width:none}
+  .panel.cert-panel{border:none;box-shadow:none;border-radius:0}
+  .panel-hd{display:none}
+  .cert-scroll{overflow:visible}
+  #cert{width:100%;min-height:auto;padding:48px 56px;margin:0}
+  #photoAppendix{width:100%;min-height:auto;padding:48px 56px;margin:0;page-break-before:always}
+  #photoAppendix.hide{display:none!important}
+}
+</style>
+<style>
+/* v2 workflow additions */
+.field input[readonly]{background:var(--gray);color:var(--ink-dim);cursor:default}
+.rulebox{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-top:11px;background:rgba(238,243,246,.35);font-size:10.5px;line-height:1.5;color:var(--ink-dim)}
+.rulebox b{color:var(--ink)}
+.rulebox.warn{border-color:rgba(224,162,60,.5);background:rgba(224,162,60,.06);color:#7b5a20}
+.vpcheck{margin-top:9px;padding:7px 9px;border-radius:7px;font-size:10px;font-weight:650;background:var(--gray);color:var(--ink-dim)}
+.vpcheck.ok{background:rgba(0,179,152,.07);color:#087d6d;border:1px solid rgba(0,179,152,.2)}
+.vpcheck.bad{background:rgba(217,101,91,.07);color:var(--red);border:1px solid rgba(217,101,91,.25)}
+.vpcheck.wait{border:1px solid var(--line)}
+.specbasis{font-size:10px;color:var(--ink-faint);margin-top:8px;line-height:1.5}
+.specbasis strong{color:var(--slate)}
+.status-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.status-mini{font-size:9.5px;font-weight:700;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--white);color:var(--ink-dim)}
+.status-mini.ok{color:#087d6d;border-color:rgba(0,179,152,.3);background:rgba(0,179,152,.06)}
+.status-mini.hold{color:#8a6220;border-color:rgba(224,162,60,.35);background:rgba(224,162,60,.07)}
+.hold-banner{display:none;margin:14px 0 0;padding:9px 12px;border:1px solid var(--amber);background:rgba(224,162,60,.08);border-radius:7px;font-size:9.8px;font-weight:700;color:#815f25;line-height:1.45}
+.hold-banner.show{display:block}
+.waiver-banner{display:none;margin:14px 0 0;padding:9px 12px;border:1px solid rgba(0,179,152,.35);background:rgba(0,179,152,.07);border-radius:7px;font-size:9.8px;font-weight:700;color:#087d6d;line-height:1.45}
+.waiver-banner.show{display:block}
+.c-status{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:4px 8px;border-radius:5px;margin-top:7px}
+.c-status.release{color:#087d6d;background:rgba(0,179,152,.08);border:1px solid rgba(0,179,152,.25)}
+.c-status.hold{color:#8a6220;background:rgba(224,162,60,.08);border:1px solid rgba(224,162,60,.3)}
+
+.photo-upload{border:1px dashed rgba(0,79,113,.25);border-radius:10px;padding:12px 13px;margin-bottom:13px;background:rgba(238,243,246,.28)}
+.photo-upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.photo-upload input[type=file]{font-family:inherit;font-size:11px;color:var(--ink-dim);max-width:100%}
+.photo-upload .ocr-status{font-size:10.5px;line-height:1.45;color:var(--ink-dim);margin-top:8px;min-height:15px}
+.photo-upload .ocr-status.working{color:#7b5a20}
+.photo-upload .ocr-status.ok{color:#087d6d}
+.photo-upload .ocr-status.bad{color:var(--red)}
+.photo-upload .ocr-preview{display:none;margin-top:10px;max-height:180px;max-width:150px;border-radius:7px;border:1px solid var(--line)}
+.photo-upload .ocr-preview.show{display:block}
+
+/* Per-level analyzer screen photo */
+.lvl .photo-upload{margin:11px 0 0;padding:10px 11px}
+.lvl .photo-upload .ocr-preview{max-height:150px;max-width:132px}
+.lvl-hd .rvp-read{margin-left:auto;font-size:8.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+  padding:2px 7px;border-radius:5px;color:#087d6d;background:rgba(0,179,152,.1);border:1px solid rgba(0,179,152,.3)}
+.lvl-hd .rvp-read.hide{display:none}
+.ocr-diag{display:none;margin-top:9px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9.5px;line-height:1.45;
+  white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;background:#10242c;color:#dbe9ee;padding:10px 11px;border-radius:7px}
+.ocr-diag.show{display:block}
+.diag-link{background:none;border:none;padding:0;margin-left:4px;font:inherit;font-weight:700;color:var(--teal);text-decoration:underline;cursor:pointer}
+.field input.ocr-filled{border-color:var(--teal);background:rgba(0,179,152,.06)}
+.appendix-toggle{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--ink-dim);cursor:pointer}
+.appendix-toggle input{width:14px;height:14px;accent-color:var(--teal)}
+
+/* ---------- Photo appendix page ---------- */
+#photoAppendix{width:816px;min-height:1056px;margin:18px auto 0;background:var(--white);color:#1a1a1a;
+  font-size:11px;line-height:1.42;padding:54px 60px 40px}
+#photoAppendix.hide{display:none}
+#photoAppendix .pa-title{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--slate);text-transform:uppercase;margin-bottom:6px}
+#photoAppendix .pa-sub{font-size:10px;color:#555;margin-bottom:18px;line-height:1.5}
+#photoAppendix .pa-item{border:1px solid #d9e0e4;border-radius:8px;padding:12px 13px;margin-bottom:13px;display:flex;gap:14px;page-break-inside:avoid}
+#photoAppendix .pa-item img{width:190px;max-height:250px;object-fit:contain;border:1px solid #d9e0e4;border-radius:6px;background:#f4f7f8}
+#photoAppendix .pa-body{flex:1;min-width:0}
+#photoAppendix .pa-lvl{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--slate);margin-bottom:6px}
+#photoAppendix table.pa-meta{border-collapse:collapse;width:100%}
+#photoAppendix table.pa-meta td{padding:2px 0;font-size:9.5px;vertical-align:top}
+#photoAppendix table.pa-meta td.k{color:#555;font-weight:600;width:150px;padding-right:10px}
+#photoAppendix table.pa-meta td.v{color:#111;font-weight:700;word-break:break-all}
+#photoAppendix .pa-flag{color:#B5433A;font-weight:800}
+#photoAppendix .pa-ok{color:#087d6d;font-weight:800}
+#photoAppendix .pa-none{font-size:10.5px;color:#777;font-style:italic}
+#photoAppendix .pa-sign{margin-top:22px;border-top:1px solid #d9e0e4;padding-top:12px;font-size:9.5px;color:#555;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="wm">GLOBAL<b>PARTNERS</b></div>
+  <div class="divider"></div>
+  <div class="appname">Terminal Operations <span>/ Blend Sample Entry + Certificate of Analysis</span></div>
+  <div class="spacer"></div>
+  <div class="pill">&#128205; <b>Fort Worth&nbsp;J117</b></div>
+  <div class="pill">&#128190; <b id="savedCount">0 saved</b></div>
+  <a href="index.html" class="back-link">&#8592; Dashboard</a>
+</header>
+
+<div class="wrap">
+  <section class="panel form-panel">
+    <div class="panel-hd">
+      <h2>Blend Sample Entry</h2>
+      <div class="sub">Measured values in &middot; limits and reported RVP derived automatically</div>
+    </div>
+
+    <div class="form">
+      <div class="grp">
+        <div class="lbl">Certificate</div>
+        <div class="fgrid">
+          <div class="field"><label>Certificate No.</label><input id="certNo" value="" readonly></div>
+          <div class="field"><label>Report Date</label><input id="reportDate" type="date"></div>
+          <div class="field"><label>Sample Date</label><input id="sampleDate" type="date"></div>
+          <div class="field"><label>Blend #</label><input id="batch" value="" placeholder="" readonly></div>
+          <div class="field"><label>Tank #</label>
+            <select id="tank"><option value="" selected></option><option value="23155">23155</option><option value="23156">23156</option><option value="27404">27404</option><option value="27405">27405</option></select>
+          </div>
+          <input id="scheduleCode" type="hidden">
+          <input id="vlClass" type="hidden">
+          <input id="vlMin" type="hidden">
+          <div class="field"><label>Product</label><input id="product" readonly></div>
+          <div class="field"><label>Volatility Grade</label>
+            <select id="grade"><option value="" selected></option><option value="AAA">Class AAA</option><option value="AA">Class AA</option><option value="A">Class A</option><option value="B">Class B</option><option value="C">Class C</option><option value="D">Class D</option><option value="E">Class E</option></select>
+          </div>
+          <div class="field"><label>Barometric Pressure (mm&nbsp;Hg)</label><input id="baro" value=""></div>
+          <div class="field"><label>RVP Reporting Basis</label><input id="rvpBasis" readonly></div>
+        </div>
+        <div id="productMapNote" class="rulebox"><b>Fort Worth tank map:</b> Tanks 23155 and 23156 = Regular Gasoline; Tanks 27404 and 27405 = Premium Gasoline.</div>
+        <div id="seasonRule" class="rulebox"></div>
+      </div>
+
+      <div class="grp">
+        <div class="lbl">Vapor Pressure &mdash; Neat Product (by level)</div>
+        <div class="lvl" data-lvl="Upper">
+          <div class="lvl-hd"><span class="tag">Upper</span><span class="rvp-read hide" data-lvl="Upper"></span></div>
+          <div class="fgrid four">
+            <div class="field"><label>API @ 60&deg;F</label><input class="api" value=""></div>
+            <div class="field"><label>Hazy</label><select class="hazy"><option value="" selected></option><option>No</option><option>Yes</option></select></div>
+            <div class="field"><label>PTOT (psi)</label><input class="ptot" inputmode="decimal" value=""></div>
+            <div class="field"><label>RVP (ASTM) (psi)</label><input class="astm-rvp" inputmode="decimal" value=""></div>
+          </div>
+          <div class="photo-upload no-print">
+            <div class="photo-upload-row">
+              <input class="lvl-photo" type="file" accept="image/*" capture="environment" data-lvl="Upper">
+              <button type="button" class="btn btn-ghost lvl-photo-btn" data-lvl="Upper">Read Upper RVP Photo</button>
+            </div>
+            <div class="lvl-ocr-status ocr-status">Photograph the analyzer screen for the <b>Upper</b> sample. The reader takes <b>D5191 DVPE</b> and <b>Ptot</b> off the result screen and fills both fields, but only when its readings agree with the instrument's own conversion equations. A PTOT you have already typed is never overwritten. The photo is retained with the data record.</div>
+            <pre class="lvl-diag ocr-diag"></pre>
+            <img class="lvl-photo-preview ocr-preview" alt="Upper analyzer screen preview">
+          </div>
+          <div class="vpcheck wait"></div>
+        </div>
+        <div class="lvl" data-lvl="Middle">
+          <div class="lvl-hd"><span class="tag">Middle</span><span class="rvp-read hide" data-lvl="Middle"></span></div>
+          <div class="fgrid four">
+            <div class="field"><label>API @ 60&deg;F</label><input class="api" value=""></div>
+            <div class="field"><label>Hazy</label><select class="hazy"><option value="" selected></option><option>No</option><option>Yes</option></select></div>
+            <div class="field"><label>PTOT (psi)</label><input class="ptot" inputmode="decimal" value=""></div>
+            <div class="field"><label>RVP (ASTM) (psi)</label><input class="astm-rvp" inputmode="decimal" value=""></div>
+          </div>
+          <div class="photo-upload no-print">
+            <div class="photo-upload-row">
+              <input class="lvl-photo" type="file" accept="image/*" capture="environment" data-lvl="Middle">
+              <button type="button" class="btn btn-ghost lvl-photo-btn" data-lvl="Middle">Read Middle RVP Photo</button>
+            </div>
+            <div class="lvl-ocr-status ocr-status">Photograph the analyzer screen for the <b>Middle</b> sample. The reader takes <b>D5191 DVPE</b> and <b>Ptot</b> off the result screen and fills both fields, but only when its readings agree with the instrument's own conversion equations. A PTOT you have already typed is never overwritten. The photo is retained with the data record.</div>
+            <pre class="lvl-diag ocr-diag"></pre>
+            <img class="lvl-photo-preview ocr-preview" alt="Middle analyzer screen preview">
+          </div>
+          <div class="vpcheck wait"></div>
+        </div>
+        <div class="lvl" data-lvl="Lower">
+          <div class="lvl-hd"><span class="tag">Lower</span><span class="rvp-read hide" data-lvl="Lower"></span></div>
+          <div class="fgrid four">
+            <div class="field"><label>API @ 60&deg;F</label><input class="api" value=""></div>
+            <div class="field"><label>Hazy</label><select class="hazy"><option value="" selected></option><option>No</option><option>Yes</option></select></div>
+            <div class="field"><label>PTOT (psi)</label><input class="ptot" inputmode="decimal" value=""></div>
+            <div class="field"><label>RVP (ASTM) (psi)</label><input class="astm-rvp" inputmode="decimal" value=""></div>
+          </div>
+          <div class="photo-upload no-print">
+            <div class="photo-upload-row">
+              <input class="lvl-photo" type="file" accept="image/*" capture="environment" data-lvl="Lower">
+              <button type="button" class="btn btn-ghost lvl-photo-btn" data-lvl="Lower">Read Lower RVP Photo</button>
+            </div>
+            <div class="lvl-ocr-status ocr-status">Photograph the analyzer screen for the <b>Lower</b> sample. The reader takes <b>D5191 DVPE</b> and <b>Ptot</b> off the result screen and fills both fields, but only when its readings agree with the instrument's own conversion equations. A PTOT you have already typed is never overwritten. The photo is retained with the data record.</div>
+            <pre class="lvl-diag ocr-diag"></pre>
+            <img class="lvl-photo-preview ocr-preview" alt="Lower analyzer screen preview">
+          </div>
+          <div class="vpcheck wait"></div>
+        </div>
+        <div class="hint"><b>Entry check only.</b> PTOT and the analyzer's ASTM RVP are either typed by the operator or read from an attached analyzer photo. The application compares the pair and blocks Save/Generate if the values do not correlate. Where both values were read from the same photo the comparison is self-confirming, and the reader's instrument-equation self-check is the meaningful verification &mdash; the photo appendix records which basis applied to each level. In an EPA RVP season, the ASTM entry is retained in the data record but the CoA reports the EPA-adjusted RVP calculated from PTOT.</div>
+      </div>
+
+      <div class="grp">
+        <div class="lbl">Finished Blend &mdash; 10% EtOH (Running)</div>
+        <div class="lvl e10" id="e10box">
+          <div class="lvl-hd"><span class="tag">E10</span> Vapor pressure</div>
+          <div class="fgrid">
+            <div class="field"><label>PTOT (psi)</label><input id="e_ptot" inputmode="decimal" value=""></div>
+            <div class="field"><label>RVP (ASTM) (psi)</label><input id="e_astm_rvp" inputmode="decimal" value=""></div>
+          </div>
+          <div class="vpcheck wait"></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="lbl">Distillation &mdash; ASTM D86 (on E10 running)</div>
+        <div class="photo-upload no-print">
+          <div class="photo-upload-row">
+            <input id="distPhoto" type="file" accept="image/*" capture="environment">
+            <button id="readDistPhotoBtn" type="button" class="btn btn-ghost" onclick="readDistillationPhoto()">Read Distillation Photo</button>
+          </div>
+          <div id="distOcrStatus" class="ocr-status">Take or upload the standard ad-7 distillation printout. <b>No highlighting is required.</b> The reader uses the fixed printout layout to capture Residue, corrected Total Recovery, corrected Loss, Barometric Pressure, and the Evap. values for IBP, 10%, 50%, 90%, 95%, and E.P CUT (FBP). Verify every populated value before release.</div>
+          <img id="distPhotoPreview" class="ocr-preview" alt="Distillation printout preview">
+        </div>
+        <div class="fgrid three">
+          <div class="field"><label>IBP (&deg;F)</label><input id="d_ibp" value=""></div>
+          <div class="field"><label>10% Evap (&deg;F)</label><input id="d_t10" value=""></div>
+          <div class="field"><label>50% Evap (&deg;F)</label><input id="d_t50" value=""></div>
+          <div class="field"><label>90% Evap (&deg;F)</label><input id="d_t90" value=""></div>
+          <div class="field"><label>95% Evap (&deg;F)</label><input id="d_t95" value=""></div>
+          <div class="field"><label>FBP (&deg;F)</label><input id="d_fbp" value=""></div>
+          <div class="field"><label>Recovery (vol %)</label><input id="d_rec" value=""></div>
+          <div class="field"><label>Residue (vol %)</label><input id="d_res" value=""></div>
+          <div class="field"><label>Loss (vol %)</label><input id="d_loss" value=""></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="lbl">Specification Limits &mdash; Auto-selected</div>
+        <div class="fgrid four">
+          <div class="field"><label>RVP neat max</label><input id="sp_rvp_neat" readonly></div>
+          <div class="field"><label>RVP E10 max</label><input id="sp_rvp_e10" readonly></div>
+          <div class="field"><label>T10 max</label><input id="sp_t10" readonly></div>
+          <div class="field"><label>T50 min</label><input id="sp_t50_min" readonly></div>
+          <div class="field"><label>T50 max</label><input id="sp_t50_max" readonly></div>
+          <div class="field"><label>T90 max</label><input id="sp_t90" readonly></div>
+          <div class="field"><label>FBP max</label><input id="sp_fbp" readonly></div>
+          <div class="field"><label>Residue max</label><input id="sp_res" readonly></div>
+        </div>
+        <div id="specBasis" class="specbasis"></div>
+        <div class="status-pills"><span id="vpEntryStatus" class="status-mini"></span><span id="releaseSeasonStatus" class="status-mini"></span><span id="photoDocStatus" class="status-mini"></span></div>
+      </div>
+
+      <div class="grp">
+        <div class="lbl">Sign-off</div>
+        <div class="fgrid" style="grid-template-columns:1fr">
+          <div class="field"><label>Prepared by (operator)</label>
+            <select id="preparedBy"><option value="" selected></option><option>S. Anderson</option><option>D. Bass</option><option>J. Gibson</option><option>N. Harris</option><option>M. Ibana</option><option>G. Sanchez</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveRecord()">Save Data Record</button>
+      <button class="btn btn-primary" onclick="generate()">Generate CoA</button>
+      <button class="btn btn-ghost no-print" onclick="exportCsv()">Export CSV</button>
+      <button class="btn btn-ghost no-print" onclick="downloadLevelPhotos()">Download Photos</button>
+      <button class="btn btn-ghost no-print" onclick="clearForm()">Clear</button>
+      <label class="appendix-toggle no-print"><input type="checkbox" id="includePhotoAppendix" checked> Include photo appendix in printout</label>
+      <span class="act-note">Records are saved only in this browser/device. Generate opens the print dialog.</span>
+    </div>
+  </section>
+
+  <section class="panel cert-panel">
+    <div class="panel-hd no-print">
+      <h2>Certificate Preview</h2>
+      <div class="sub">Live &middot; regulatory reporting basis follows sample date</div>
+    </div>
+    <div class="cert-scroll"><div id="cert"></div><div id="photoAppendix" class="hide"></div></div>
+  </section>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null;};
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const fmtDate=v=>{ if(!v) return '—'; const [y,m,d]=v.split('-'); return `${m}/${d}/${y.slice(2)}`; };
+const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
+const fmt2=n=>Number.isFinite(n)?n.toFixed(2):'—';
+const STORAGE_KEY='gp_ftw_blend_records_v3';
+
+
+let distillationOcrMeta={used:false,fileName:'',confidence:null,extractedFields:[],parserProfile:'FTW ad-7 fixed-layout receipt v2',templateVersion:'ad7-ftw-v2',ocrWarnings:[]};
+let tesseractLoadPromise=null;
+let distOcrWorkerPromise=null;
+
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(tesseractLoadPromise) return tesseractLoadPromise;
+  tesseractLoadPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.async=true;
+    script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize.'));
+    script.onerror=()=>reject(new Error('Could not load the OCR library. Check the device internet connection and try again.'));
+    document.head.appendChild(script);
+  });
+  return tesseractLoadPromise;
+}
+
+async function getDistillationOcrWorker(Tesseract){
+  if(!distOcrWorkerPromise){
+    distOcrWorkerPromise=(async()=>{
+      const oem=(Tesseract.OEM&&Tesseract.OEM.LSTM_ONLY!==undefined)?Tesseract.OEM.LSTM_ONLY:1;
+      const worker=await Tesseract.createWorker('eng',oem);
+      const psm=(Tesseract.PSM&&Tesseract.PSM.SINGLE_LINE!==undefined)?Tesseract.PSM.SINGLE_LINE:7;
+      await worker.setParameters({
+        tessedit_pageseg_mode:psm,
+        tessedit_char_whitelist:'0123456789.'
+      });
+      return worker;
+    })().catch(err=>{distOcrWorkerPromise=null;throw err;});
+  }
+  return distOcrWorkerPromise;
+}
+
+function loadPhotoImage(file){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('The selected photo could not be opened.'));};
+    img.src=url;
+  });
+}
+
+function longestTrueRun(flags){
+  let bestStart=-1,bestEnd=-1,start=-1;
+  for(let i=0;i<=flags.length;i++){
+    const on=i<flags.length&&flags[i];
+    if(on&&start<0) start=i;
+    if(!on&&start>=0){
+      if(bestStart<0 || i-start>bestEnd-bestStart){bestStart=start;bestEnd=i;}
+      start=-1;
+    }
+  }
+  return bestStart<0?null:{start:bestStart,end:bestEnd};
+}
+
+function paperLike(r,g,b){
+  // The ad-7 paper is warm white; the Fort Worth bench/background is blue.
+  // Requiring all three channels to be bright prevents the blue bench from
+  // being mistaken for receipt paper (the main source of the v14 crop error).
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  return r>105 && g>110 && b>95 && (mx-mn)<80;
+}
+
+function detectReceiptBounds(canvas){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const w=canvas.width,h=canvas.height;
+  const data=ctx.getImageData(0,0,w,h).data;
+  const step=Math.max(3,Math.round(Math.min(w,h)/500));
+  const xs=[];
+  for(let x=0;x<w;x+=step){
+    let good=0,total=0;
+    for(let y=0;y<h;y+=step){
+      const i=(y*w+x)*4;
+      if(paperLike(data[i],data[i+1],data[i+2])) good++;
+      total++;
+    }
+    xs.push(good/Math.max(1,total)>.45);
+  }
+  const xr=longestTrueRun(xs);
+  if(!xr || (xr.end-xr.start)*step<w*.15) return {x:0,y:0,w,h};
+  let x0=xr.start*step,x1=Math.min(w,xr.end*step);
+  const xPad=Math.round((x1-x0)*.03);
+  x0=Math.max(0,x0-xPad);x1=Math.min(w,x1+xPad);
+
+  const ys=[];
+  for(let y=0;y<h;y+=step){
+    let good=0,total=0;
+    for(let x=x0;x<x1;x+=step){
+      const i=(y*w+x)*4;
+      if(paperLike(data[i],data[i+1],data[i+2])) good++;
+      total++;
+    }
+    ys.push(good/Math.max(1,total)>.55);
+  }
+  const yr=longestTrueRun(ys);
+  if(!yr || (yr.end-yr.start)*step<h*.35) return {x:x0,y:0,w:x1-x0,h};
+  let y0=yr.start*step,y1=Math.min(h,yr.end*step);
+  const yPad=Math.round((y1-y0)*.01);
+  y0=Math.max(0,y0-yPad);y1=Math.min(h,y1+yPad);
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+
+async function makeReceiptCanvas(file){
+  const img=await loadPhotoImage(file);
+  const maxDim=2400;
+  const scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight));
+  const base=document.createElement('canvas');
+  base.width=Math.max(1,Math.round(img.naturalWidth*scale));
+  base.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  base.getContext('2d').drawImage(img,0,0,base.width,base.height);
+  const b=detectReceiptBounds(base);
+  const receipt=document.createElement('canvas');
+  receipt.width=Math.max(1,Math.round(b.w));
+  receipt.height=Math.max(1,Math.round(b.h));
+  receipt.getContext('2d').drawImage(base,b.x,b.y,b.w,b.h,0,0,receipt.width,receipt.height);
+  return receipt;
+}
+
+function isBlueHighlight(r,g,b,loose=false){
+  const lift=loose?5:8;
+  const floor=loose?90:105;
+  return g>floor && b>floor && g-r>lift && b-r>lift && ((g+b)/2-r)>(loose?8:12);
+}
+
+function bridgeHorizontalMask(mask,w,h,maxGap){
+  for(let y=0;y<h;y++){
+    const row=y*w;
+    let x=0;
+    while(x<w){
+      if(mask[row+x]){x++;continue;}
+      const start=x;
+      while(x<w && !mask[row+x]) x++;
+      const end=x;
+      if(start>0 && end<w && end-start<=maxGap){
+        for(let xx=start;xx<end;xx++) mask[row+xx]=1;
+      }
+    }
+  }
+}
+
+function connectedBlueComponents(mask,w,h){
+  const comps=[];
+  const queue=new Int32Array(mask.length);
+  for(let seed=0;seed<mask.length;seed++){
+    if(!mask[seed]) continue;
+    let qh=0,qt=0;
+    queue[qt++]=seed;
+    mask[seed]=0;
+    let minX=w,maxX=0,minY=h,maxY=0,area=0;
+    while(qh<qt){
+      const idx=queue[qh++];
+      const y=Math.floor(idx/w),x=idx-y*w;
+      area++;
+      if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+      for(let dy=-1;dy<=1;dy++){
+        const ny=y+dy;if(ny<0||ny>=h)continue;
+        for(let dx=-1;dx<=1;dx++){
+          if(dx===0&&dy===0)continue;
+          const nx=x+dx;if(nx<0||nx>=w)continue;
+          const ni=ny*w+nx;
+          if(mask[ni]){mask[ni]=0;queue[qt++]=ni;}
+        }
+      }
+    }
+    comps.push({x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1,area});
+  }
+  return comps;
+}
+
+function detectBlueValueComponentsPass(receipt,loose=false){
+  const ctx=receipt.getContext('2d',{willReadFrequently:true});
+  const w=receipt.width,h=receipt.height;
+  const data=ctx.getImageData(0,0,w,h).data;
+  // Only the numeric side of the trained ad-7 receipt is searched. This keeps
+  // the highlighted row labels (10, 50, 90, 95) from being treated as values.
+  const x0=Math.floor(w*.45),x1=Math.floor(w*.90);
+  const y0=Math.floor(h*.44),y1=Math.floor(h*.96);
+  const rw=x1-x0,rh=y1-y0;
+  const mask=new Uint8Array(rw*rh);
+  for(let yy=0;yy<rh;yy++){
+    const y=y0+yy;
+    for(let xx=0;xx<rw;xx++){
+      const x=x0+xx,i=(y*w+x)*4;
+      if(isBlueHighlight(data[i],data[i+1],data[i+2],loose)) mask[yy*rw+xx]=1;
+    }
+  }
+  // Close only small horizontal gaps made by the dark printed characters.
+  // Vertical rows remain separate, which is essential for Residue/Recovery/Loss.
+  bridgeHorizontalMask(mask,rw,rh,Math.max(5,Math.round(w*(loose?.035:.025))));
+  let comps=connectedBlueComponents(mask,rw,rh).map(c=>({
+    x:c.x+x0,y:c.y+y0,w:c.w,h:c.h,area:c.area,cy:c.y+y0+c.h/2
+  }));
+  const minArea=Math.max(40,Math.round(rw*rh*.00018));
+  const minW=Math.max(14,Math.round(w*.025));
+  const maxW=Math.round(w*.35);
+  const minH=Math.max(8,Math.round(h*.006));
+  const maxH=Math.round(h*.04);
+  comps=comps.filter(c=>c.area>=minArea&&c.w>=minW&&c.w<=maxW&&c.h>=minH&&c.h<=maxH);
+  if(comps.length>10){
+    comps=comps.sort((a,b)=>b.area-a.area).slice(0,10);
+  }
+  return comps.sort((a,b)=>a.cy-b.cy);
+}
+
+function detectBlueValueBands(receipt){
+  let boxes=detectBlueValueComponentsPass(receipt,false);
+  if(boxes.length!==10) boxes=detectBlueValueComponentsPass(receipt,true);
+  return boxes;
+}
+
+function otsuThreshold(hist,total){
+  let sum=0;
+  for(let i=0;i<256;i++) sum+=i*hist[i];
+  let sumB=0,wB=0,maxVar=-1,threshold=160;
+  for(let t=0;t<256;t++){
+    wB+=hist[t];
+    if(!wB) continue;
+    const wF=total-wB;
+    if(!wF) break;
+    sumB+=t*hist[t];
+    const mB=sumB/wB,mF=(sum-sumB)/wF;
+    const between=wB*wF*(mB-mF)*(mB-mF);
+    if(between>maxVar){maxVar=between;threshold=t;}
+  }
+  return threshold;
+}
+
+function preprocessValueCrop(receipt,box,profile){
+  const padX=profile.padX??2;
+  const padY=profile.padY??0;
+  const sx=Math.max(0,box.x-padX),sy=Math.max(0,box.y-padY);
+  const ex=Math.min(receipt.width,box.x+box.w+padX),ey=Math.min(receipt.height,box.y+box.h+padY);
+  const sw=Math.max(1,ex-sx),sh=Math.max(1,ey-sy);
+  const targetH=130;
+  const scale=targetH/sh;
+  const content=document.createElement('canvas');
+  content.width=Math.max(1,Math.round(sw*scale));
+  content.height=targetH;
+  const cctx=content.getContext('2d',{willReadFrequently:true});
+  cctx.imageSmoothingEnabled=true;
+  cctx.imageSmoothingQuality='high';
+  cctx.drawImage(receipt,sx,sy,sw,sh,0,0,content.width,content.height);
+
+  const im=cctx.getImageData(0,0,content.width,content.height);
+  const d=im.data,n=content.width*content.height;
+  const hist=new Uint32Array(256);
+  const vals=new Uint8Array(n);
+  for(let j=0,p=0;j<d.length;j+=4,p++){
+    let v;
+    if(profile.channel==='gray') v=Math.round(.299*d[j]+.587*d[j+1]+.114*d[j+2]);
+    else v=Math.max(d[j],d[j+1],d[j+2]); // removes cyan highlighter while preserving black print
+    vals[p]=v;hist[v]++;
+  }
+  if(profile.binary!==false){
+    const threshold=Math.max(55,Math.min(245,otsuThreshold(hist,n)+(profile.offset||0)));
+    for(let j=0,p=0;j<d.length;j+=4,p++){
+      const v=vals[p]<threshold?0:255;
+      d[j]=d[j+1]=d[j+2]=v;d[j+3]=255;
+    }
+  }else{
+    for(let j=0,p=0;j<d.length;j+=4,p++){
+      const v=vals[p];d[j]=d[j+1]=d[j+2]=v;d[j+3]=255;
+    }
+  }
+  cctx.putImageData(im,0,0);
+
+  const borderX=50,borderY=25;
+  const out=document.createElement('canvas');
+  out.width=content.width+borderX*2;
+  out.height=content.height+borderY*2;
+  const octx=out.getContext('2d');
+  octx.fillStyle='#fff';octx.fillRect(0,0,out.width,out.height);
+  octx.drawImage(content,borderX,borderY);
+  return out;
+}
+
+// These profiles are intentionally trained to the standard Fort Worth ad-7
+// printout and the blue-highlight convention supplied by Operations.
+const BLUE_VALUE_FIELDS=[
+  {key:'residue',label:'Residue',min:0,max:5,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'recovery',label:'Recovery',min:85,max:100,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'loss',label:'Loss',min:0,max:15,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'baroHpa',label:'Barometric pressure',min:850,max:1100,integer:true,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'ibp',label:'IBP',min:50,max:180,profiles:[{channel:'max',offset:0,psm:8},{channel:'max',offset:20,psm:7}]},
+  {key:'t10',label:'T10',min:70,max:220,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'t50',label:'T50',min:120,max:320,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'t90',label:'T90',min:180,max:430,profiles:[{channel:'max',offset:0,psm:7}]},
+  {key:'t95',label:'T95',min:220,max:460,profiles:[{channel:'max',binary:false,psm:6},{channel:'max',offset:20,psm:8}]},
+  {key:'fbp',label:'FBP',min:250,max:500,profiles:[{channel:'gray',offset:-20,psm:6,padX:0,padY:1},{channel:'max',binary:false,psm:7,padX:2,padY:0}]}
+];
+
+function parseNumericOcr(text,rule){
+  let s=String(text||'').replace(/,/g,'.').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1');
+  const matches=s.match(/\d{1,4}(?:\.\d{1,3})?/g)||[];
+  const vals=matches.map(x=>parseFloat(x)).filter(Number.isFinite);
+  let v=vals.find(n=>n>=rule.min&&n<=rule.max);
+  if(!Number.isFinite(v)) return null;
+  if(rule.integer) return Math.round(v);
+  return Math.round(v*10)/10;
+}
+
+async function readBlueHighlightedValues(file,status){
+  const Tesseract=await loadTesseract();
+  status.textContent='Locating the 10 blue-highlighted values…';
+  const receipt=await makeReceiptCanvas(file);
+  const boxes=detectBlueValueBands(receipt);
+  if(boxes.length!==10){
+    const err=new Error(`Found ${boxes.length} blue-highlighted numeric region${boxes.length===1?'':'s'}; expected 10. Make sure the full receipt and all highlighted values are visible.`);
+    err.highlightBandsFound=boxes.length;
+    throw err;
+  }
+  const worker=await getDistillationOcrWorker(Tesseract);
+  const result={baroMmHg:null,baroSource:'',_confidence:[],_raw:{},_bands:boxes.length};
+  for(let i=0;i<BLUE_VALUE_FIELDS.length;i++){
+    const rule=BLUE_VALUE_FIELDS[i],box=boxes[i];
+    status.textContent=`Reading highlighted ${rule.label}… ${i+1} of ${BLUE_VALUE_FIELDS.length}`;
+    let value=null,bestText='',bestConfidence=null;
+    for(const profile of rule.profiles){
+      await worker.setParameters({
+        tessedit_pageseg_mode:profile.psm,
+        tessedit_char_whitelist:'0123456789.'
+      });
+      const valueCanvas=preprocessValueCrop(receipt,box,profile);
+      const out=await worker.recognize(valueCanvas);
+      const txt=out?.data?.text||'';
+      const parsed=parseNumericOcr(txt,rule);
+      if(bestText===''){bestText=txt;bestConfidence=out?.data?.confidence;}
+      if(Number.isFinite(parsed)){value=parsed;bestText=txt;bestConfidence=out?.data?.confidence;break;}
+    }
+    result._raw[rule.key]=bestText.trim();
+    if(Number.isFinite(bestConfidence)) result._confidence.push(bestConfidence);
+    if(Number.isFinite(value)) result[rule.key]=value;
+  }
+
+  // Temperatures should progress upward through the D86 curve. If OCR returns
+  // an impossible reversal, leave that one field blank for operator review.
+  const seq=['ibp','t10','t50','t90','t95','fbp'];
+  for(let i=1;i<seq.length;i++){
+    const prev=result[seq[i-1]],cur=result[seq[i]];
+    if(Number.isFinite(prev)&&Number.isFinite(cur)&&cur<prev) result[seq[i]]=null;
+  }
+  if(Number.isFinite(result.baroHpa)){
+    result.baroMmHg=round2(result.baroHpa*0.750061683);
+    result.baroSource=`${result.baroHpa} hPa converted to mm Hg`;
+  }
+  result._avgConfidence=result._confidence.length?result._confidence.reduce((a,b)=>a+b,0)/result._confidence.length:null;
+  return result;
+}
+
+
+// Fixed-layout reader trained to the standard Fort Worth ad-7 gasoline
+// distillation printout. Coordinates are normalized to the detected receipt,
+// so the receipt may appear at different sizes/positions in the photo.
+// Highlighting is not required and is intentionally not used as a locator.
+const FIXED_LAYOUT_FIELDS=[
+  {key:'residue',label:'Residue',min:0,max:5,oneDecimal:true,region:{x1:.481,y1:.512,x2:.574,y2:.532},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'recovery',label:'Corrected Total Recovery',min:85,max:100,oneDecimal:true,region:{x1:.684,y1:.527,x2:.774,y2:.548},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'loss',label:'Corrected Loss',min:0,max:15,oneDecimal:true,region:{x1:.692,y1:.544,x2:.780,y2:.565},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'baroHpa',label:'Barometric Pressure',min:850,max:1100,integer:true,region:{x1:.493,y1:.574,x2:.595,y2:.598},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'ibp',label:'IBP',min:50,max:180,oneDecimal:true,region:{x1:.557,y1:.655,x2:.684,y2:.676},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t10',label:'T10',min:70,max:220,oneDecimal:true,region:{x1:.552,y1:.688,x2:.689,y2:.707},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t50',label:'T50',min:120,max:320,oneDecimal:true,region:{x1:.557,y1:.778,x2:.701,y2:.799},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t90',label:'T90',min:180,max:430,oneDecimal:true,region:{x1:.568,y1:.880,x2:.693,y2:.899},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t95',label:'T95',min:220,max:460,oneDecimal:true,region:{x1:.571,y1:.899,x2:.696,y2:.918},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'fbp',label:'Final Boiling Point',min:250,max:500,oneDecimal:true,region:{x1:.571,y1:.931,x2:.696,y2:.950},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]}
+];
+
+function fixedRegionBox(receipt,region){
+  const x=Math.max(0,Math.round(receipt.width*region.x1));
+  const y=Math.max(0,Math.round(receipt.height*region.y1));
+  const ex=Math.min(receipt.width,Math.round(receipt.width*region.x2));
+  const ey=Math.min(receipt.height,Math.round(receipt.height*region.y2));
+  return {x,y,w:Math.max(1,ex-x),h:Math.max(1,ey-y)};
+}
+
+function parseFixedNumericOcr(text,rule){
+  const s=String(text||'').replace(/,/g,'.').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1');
+  const matches=s.match(/\d{1,5}(?:\.\d{1,3})?/g)||[];
+  for(const token of matches){
+    let n=parseFloat(token);
+    if(!Number.isFinite(n)) continue;
+    if(rule.integer){
+      if(n>=rule.min&&n<=rule.max) return Math.round(n);
+      continue;
+    }
+    // Every ad-7 percentage and temperature target is printed to one decimal.
+    // If OCR drops the decimal (e.g. 1157), restore it before range checking.
+    if(rule.oneDecimal && !token.includes('.') && token.length>=2){
+      const d=n/10;
+      if(d>=rule.min&&d<=rule.max) return Math.round(d*10)/10;
+    }
+    if(n>=rule.min&&n<=rule.max) return Math.round(n*10)/10;
+  }
+  return null;
+}
+
+function parseFixedNumericCandidates(text,rule){
+  const s=String(text||'').replace(/,/g,'.').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1');
+  const matches=s.match(/\d{1,5}(?:\.\d{1,3})?/g)||[];
+  const vals=[];
+  for(const token of matches){
+    let n=parseFloat(token);
+    if(!Number.isFinite(n)) continue;
+    if(rule.integer){
+      n=Math.round(n);
+      if(n>=rule.min&&n<=rule.max) vals.push(n);
+      continue;
+    }
+    if(rule.oneDecimal && !token.includes('.') && token.length>=2){
+      const d=n/10;
+      if(d>=rule.min&&d<=rule.max){vals.push(Math.round(d*10)/10);continue;}
+    }
+    if(n>=rule.min&&n<=rule.max) vals.push(Math.round(n*10)/10);
+  }
+  return vals;
+}
+
+// The ad-7 E.P CUT row repeats the final corrected temperature in both the
+// Corr. and Evap. columns. Read that redundancy plus the observed endpoint so
+// a single-character OCR error (for example 380.4 -> 360.4) cannot silently
+// become the reported FBP.
+async function reconcileEndpointFbp(receipt,worker,currentFbp,result){
+  const tempRule={min:250,max:500,oneDecimal:true};
+  const regions={
+    observed:{x1:.19,y1:.928,x2:.38,y2:.953},
+    corrected:{x1:.39,y1:.928,x2:.55,y2:.953},
+    pair:{x1:.36,y1:.928,x2:.73,y2:.953}
+  };
+
+  async function readOne(region,psm=7){
+    await worker.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:'0123456789.'});
+    const box=fixedRegionBox(receipt,region);
+    const canvas=preprocessValueCrop(receipt,box,{channel:'gray',binary:false,psm,padX:2,padY:1});
+    const out=await worker.recognize(canvas);
+    return {text:(out?.data?.text||'').trim(),confidence:out?.data?.confidence,candidates:parseFixedNumericCandidates(out?.data?.text||'',tempRule)};
+  }
+
+  const obs=await readOne(regions.observed,7);
+  const corr=await readOne(regions.corrected,7);
+  const pair=await readOne(regions.pair,6);
+  result._raw.fbpEndpointObserved=obs.text;
+  result._raw.fbpEndpointCorrected=corr.text;
+  result._raw.fbpEndpointPair=pair.text;
+  [obs.confidence,corr.confidence,pair.confidence].forEach(c=>{if(Number.isFinite(c)) result._confidence.push(c);});
+
+  const observed=obs.candidates[0]??null;
+  const corrected=corr.candidates[0]??null;
+  const votes=[];
+  if(Number.isFinite(currentFbp)) votes.push({value:currentFbp,source:'evap'});
+  if(Number.isFinite(corrected)) votes.push({value:corrected,source:'corrected'});
+  pair.candidates.forEach(v=>votes.push({value:v,source:'pair'}));
+  if(!votes.length) return currentFbp;
+
+  const groups=new Map();
+  for(const vote of votes){
+    const key=vote.value.toFixed(1);
+    if(!groups.has(key)) groups.set(key,{value:vote.value,count:0,sources:new Set()});
+    const g=groups.get(key);g.count++;g.sources.add(vote.source);
+  }
+
+  let best=null,bestScore=-Infinity;
+  for(const g of groups.values()){
+    let score=g.count*10;
+    if(g.sources.has('corrected')) score+=4;
+    if(g.sources.has('evap')) score+=2;
+    if(Number.isFinite(observed)){
+      const delta=Math.abs(g.value-observed);
+      // Endpoint pressure correction at Fort Worth should be small; reward the
+      // candidate that remains physically close to the observed endpoint.
+      if(delta<=8) score+=Math.max(0,8-delta);
+      else score-=Math.min(12,delta-8);
+    }
+    if(score>bestScore){bestScore=score;best=g;}
+  }
+  return best?Math.round(best.value*10)/10:currentFbp;
+}
+
+async function readFixedLayoutValues(file,status){
+  const Tesseract=await loadTesseract();
+  status.textContent='Locating the standard ad-7 receipt…';
+  const receipt=await makeReceiptCanvas(file);
+  const aspect=receipt.height/Math.max(1,receipt.width);
+  if(aspect<2.35 || aspect>3.65){
+    throw new Error('The receipt could not be isolated reliably. Retake the photo with the full ad-7 printout visible and approximately upright.');
+  }
+  const worker=await getDistillationOcrWorker(Tesseract);
+  const result={baroMmHg:null,baroSource:'',_confidence:[],_raw:{},_warnings:[],_templateVersion:'ad7-ftw-v2'};
+  for(let i=0;i<FIXED_LAYOUT_FIELDS.length;i++){
+    const rule=FIXED_LAYOUT_FIELDS[i];
+    status.textContent=`Reading ${rule.label}… ${i+1} of ${FIXED_LAYOUT_FIELDS.length}`;
+    const box=fixedRegionBox(receipt,rule.region);
+    let value=null,bestText='',bestConfidence=null;
+    for(const profile of rule.profiles){
+      await worker.setParameters({
+        tessedit_pageseg_mode:profile.psm,
+        tessedit_char_whitelist:'0123456789.'
+      });
+      const valueCanvas=preprocessValueCrop(receipt,box,profile);
+      const out=await worker.recognize(valueCanvas);
+      const txt=out?.data?.text||'';
+      const parsed=parseFixedNumericOcr(txt,rule);
+      const conf=out?.data?.confidence;
+      if(bestText===''){bestText=txt;bestConfidence=conf;}
+      if(Number.isFinite(parsed)){
+        value=parsed;bestText=txt;bestConfidence=conf;
+        break;
+      }
+    }
+    result._raw[rule.key]=bestText.trim();
+    if(Number.isFinite(bestConfidence)) result._confidence.push(bestConfidence);
+    if(Number.isFinite(value)) result[rule.key]=value;
+  }
+
+  // Reconcile the E.P CUT final boiling point using the duplicated corrected
+  // and Evap. endpoint temperatures on the standard ad-7 printout.
+  result.fbp=await reconcileEndpointFbp(receipt,worker,result.fbp,result);
+
+  const seq=['ibp','t10','t50','t90','t95','fbp'];
+  for(let i=1;i<seq.length;i++){
+    const prev=result[seq[i-1]],cur=result[seq[i]];
+    if(Number.isFinite(prev)&&Number.isFinite(cur)&&cur<prev){
+      result._warnings.push(`${seq[i].toUpperCase()} is lower than the preceding distillation point`);
+    }
+  }
+  if(Number.isFinite(result.recovery)&&Number.isFinite(result.loss)&&Math.abs((result.recovery+result.loss)-100)>.6){
+    result._warnings.push('Corrected Total Recovery plus corrected Loss does not equal approximately 100%');
+  }
+  if(Number.isFinite(result.baroHpa)){
+    result.baroMmHg=round2(result.baroHpa*0.750061683);
+    result.baroSource=`${result.baroHpa} hPa converted to mm Hg`;
+  }
+  result._avgConfidence=result._confidence.length?result._confidence.reduce((a,b)=>a+b,0)/result._confidence.length:null;
+  return result;
+}
+
+function applyDistillationOcr(result){
+  const map={
+    d_ibp:result.ibp,d_t10:result.t10,d_t50:result.t50,d_t90:result.t90,d_t95:result.t95,
+    d_fbp:result.fbp,d_rec:result.recovery,d_res:result.residue,d_loss:result.loss,baro:result.baroMmHg
+  };
+  const extracted=[];
+  Object.entries(map).forEach(([id,value])=>{
+    if(Number.isFinite(value)){
+      $(id).value=String(value);
+      extracted.push(id);
+    }
+  });
+  distillationOcrMeta.extractedFields=extracted;
+  render();
+  return extracted;
+}
+
+async function readDistillationPhoto(){
+  const input=$('distPhoto');
+  const status=$('distOcrStatus');
+  const btn=$('readDistPhotoBtn');
+  const file=input.files&&input.files[0];
+  if(!file){
+    status.className='ocr-status bad';
+    status.textContent='Choose or take a photo first.';
+    return;
+  }
+  btn.disabled=true;
+  status.className='ocr-status working';
+  status.textContent='Preparing fixed-layout ad-7 reader…';
+  try{
+    const parsed=await readFixedLayoutValues(file,status);
+    const extracted=applyDistillationOcr(parsed);
+    distillationOcrMeta={
+      used:true,fileName:file.name||'',confidence:Number.isFinite(parsed._avgConfidence)?round2(parsed._avgConfidence):null,
+      extractedFields:extracted,parserProfile:'FTW ad-7 fixed-layout receipt v2',templateVersion:parsed._templateVersion||'ad7-ftw-v2',ocrWarnings:[...(parsed._warnings||[])]
+    };
+    const missing=[];
+    const required=[['d_res','Residue'],['d_rec','Recovery'],['d_loss','Loss'],['baro','Barometric pressure'],['d_ibp','IBP'],['d_t10','T10'],['d_t50','T50'],['d_t90','T90'],['d_t95','T95'],['d_fbp','FBP']];
+    required.forEach(([id,label])=>{if(!extracted.includes(id)) missing.push(label);});
+    const warnings=parsed._warnings||[];
+    if(extracted.length){
+      status.className=(missing.length||warnings.length)?'ocr-status working':'ocr-status ok';
+      status.innerHTML=`Fixed-layout reader: <b>${extracted.length} of 10 fields populated.</b> No highlighting required. ${parsed.baroSource?esc(parsed.baroSource)+'. ':''}${missing.length?'Review/enter missing: '+esc(missing.join(', '))+'. ':''}${warnings.length?'Check: '+esc(warnings.join('; '))+'. ':''}<b>Verify every populated value against the printout before release.</b>`;
+    } else {
+      status.className='ocr-status bad';
+      status.textContent='The receipt was found, but the fixed-layout values could not be read reliably. Retake the photo closer, with the entire ad-7 printout visible and approximately upright.';
+    }
+  } catch(err){
+    console.error(err);
+    status.className='ocr-status bad';
+    status.textContent=err?.message||'The photo could not be read. Enter the distillation values manually.';
+    distillationOcrMeta={used:false,fileName:file.name||'',confidence:null,extractedFields:[],parserProfile:'FTW ad-7 fixed-layout receipt v2',templateVersion:'ad7-ftw-v2',ocrWarnings:[]};
+  } finally {
+    btn.disabled=false;
+  }
+}
+
+function resetDistillationPhoto(){
+  const input=$('distPhoto');
+  const preview=$('distPhotoPreview');
+  const status=$('distOcrStatus');
+  if(input) input.value='';
+  if(preview){preview.removeAttribute('src');preview.classList.remove('show');}
+  if(status){status.className='ocr-status';status.innerHTML='Take or upload the standard ad-7 distillation printout. <b>No highlighting is required.</b> The reader uses the fixed printout layout to capture Residue, corrected Total Recovery, corrected Loss, Barometric Pressure, and the Evap. values for IBP, 10%, 50%, 90%, 95%, and E.P CUT (FBP).';}
+  distillationOcrMeta={used:false,fileName:'',confidence:null,extractedFields:[],parserProfile:'FTW ad-7 fixed-layout receipt v2',templateVersion:'ad7-ftw-v2',ocrWarnings:[]};
+}
+
+function showDistillationPreview(){
+  const input=$('distPhoto');
+  const preview=$('distPhotoPreview');
+  const file=input.files&&input.files[0];
+  if(!file){preview.removeAttribute('src');preview.classList.remove('show');return;}
+  const reader=new FileReader();
+  reader.onload=()=>{preview.src=reader.result;preview.classList.add('show');};
+  reader.readAsDataURL(file);
+}
+
+/* =====================================================================
+   Per-level analyzer screen photo — RVP (ASTM) capture + documentation
+   ---------------------------------------------------------------------
+   Scope note: the reader populates RVP (ASTM) ONLY. PTOT stays a manual
+   operator entry so the existing PTOT/RVP correlation check keeps testing
+   two independently sourced values. Reading both from one photo would make
+   that check self-confirming and remove the control.
+   ===================================================================== */
+const LEVEL_NAMES=['Upper','Middle','Lower'];
+const VP_PHOTO_PROFILE='Grabner result-details screen v1';
+const RVP_READ_MIN=2.0, RVP_READ_MAX=20.0;
+
+function freshLevelPhotoMeta(){
+  return {used:false,fileName:'',byteSize:0,sha256:'',hashAlgo:'',capturedAt:'',fileModifiedAt:'',
+    confidence:null,rvpRead:null,applied:false,ptotSeen:null,ptotApplied:false,ptotConflict:null,candidates:[],warnings:[],
+    rawText:'',parserProfile:VP_PHOTO_PROFILE,imageDataUrl:'',instrument:null,selfChecks:[],sampleId:'',standard:'',instrumentStamp:'',diagnostics:null};
+}
+let levelPhotoMeta={};
+LEVEL_NAMES.forEach(n=>{levelPhotoMeta[n]=freshLevelPhotoMeta();});
+
+function levelBox(level){return document.querySelector(`.lvl[data-lvl="${level}"]`);}
+function levelPhotoEls(level){
+  const box=levelBox(level); if(!box) return null;
+  return {box,input:box.querySelector('.lvl-photo'),btn:box.querySelector('.lvl-photo-btn'),
+    status:box.querySelector('.lvl-ocr-status'),preview:box.querySelector('.lvl-photo-preview'),diag:box.querySelector('.lvl-diag'),
+    badge:box.querySelector('.rvp-read'),astm:box.querySelector('.astm-rvp'),ptot:box.querySelector('.ptot')};
+}
+
+/* ---------- screen OCR worker ----------
+   PSM 6 (single uniform block) validated against the Grabner "Result details"
+   screen; SPARSE_TEXT and SINGLE_COLUMN both fragment the label/value columns. */
+let screenOcrWorkerPromise=null;
+async function getScreenOcrWorker(Tesseract){
+  if(!screenOcrWorkerPromise){
+    screenOcrWorkerPromise=(async()=>{
+      const oem=(Tesseract.OEM&&Tesseract.OEM.LSTM_ONLY!==undefined)?Tesseract.OEM.LSTM_ONLY:1;
+      const worker=await Tesseract.createWorker('eng',oem);
+      const psm=(Tesseract.PSM&&Tesseract.PSM.SINGLE_BLOCK!==undefined)?Tesseract.PSM.SINGLE_BLOCK:6;
+      await worker.setParameters({tessedit_pageseg_mode:psm});
+      return worker;
+    })().catch(err=>{screenOcrWorkerPromise=null;throw err;});
+  }
+  return screenOcrWorkerPromise;
+}
+
+/* ---------- image preparation ----------
+   The analyzer display photographs with strong horizontal refresh banding.
+   Sharpening or upscaling amplifies that banding and the OCR collapses into
+   noise; a Gaussian blur applied BEFORE the downscale removes it. Canvas
+   filters operate in destination space, so the blur is applied at an
+   intermediate resolution and the result is then downscaled. */
+function proxyCanvas(img,maxEdge){
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const scale=Math.min(1,maxEdge/Math.max(iw,ih));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(iw*scale));
+  c.height=Math.max(1,Math.round(ih*scale));
+  const pctx=c.getContext('2d',{willReadFrequently:true});
+  pctx.imageSmoothingEnabled=true;pctx.imageSmoothingQuality='high';
+  pctx.drawImage(img,0,0,c.width,c.height);
+  return c;
+}
+
+function detectPanelBox(img){
+  // Bounds are found on a small proxy and scaled back up, so a 12 MP photo
+  // never has to be materialised as a full-size canvas.
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const proxy=proxyCanvas(img,900);
+  const b=detectReceiptBounds(proxy);
+  const k=iw/proxy.width;
+  const box={x:Math.round(b.x*k),y:Math.round(b.y*k),w:Math.round(b.w*k),h:Math.round(b.h*k)};
+  if(box.w<iw*0.2||box.h<ih*0.2) return {x:0,y:0,w:iw,h:ih,detected:false};
+  // Trim the edge of the detected panel. Bezel left in the crop costs the Ptot
+  // line; 3% clears it without touching the value column.
+  const inset=0.03;
+  const dx=Math.round(box.w*inset), dy=Math.round(box.h*inset);
+  box.x+=dx;box.y+=dy;box.w-=dx*2;box.h-=dy*2;
+  box.detected=true;
+  return box;
+}
+
+function toneMap(canvas,invert){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
+  for(let i=0;i<d.length;i+=4){
+    const g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0;
+    d[i]=d[i+1]=d[i+2]=g;
+  }
+  // The histogram is built from the middle of the frame only. Any surviving
+  // sliver of dark tablet bezel pins the low percentile near zero, the stretch
+  // then does almost nothing, and the washed-out result loses most of its
+  // lines in OCR — measured as 250 characters recovered instead of 534.
+  const cx0=Math.floor(canvas.width*0.2),cx1=Math.max(cx0+1,Math.ceil(canvas.width*0.8));
+  const cy0=Math.floor(canvas.height*0.2),cy1=Math.max(cy0+1,Math.ceil(canvas.height*0.8));
+  const hist=new Uint32Array(256);let cSum=0,cN=0;
+  for(let y=cy0;y<cy1;y++){
+    for(let x=cx0;x<cx1;x++){
+      const g=d[(y*canvas.width+x)*4];
+      hist[g]++;cSum+=g;cN++;
+    }
+  }
+  const total=Math.max(1,cN);
+  let lo=0,hi=255,acc=0;
+  for(let v=0;v<256;v++){acc+=hist[v];if(acc>total*0.02){lo=v;break;}}
+  acc=0;
+  for(let v=255;v>=0;v--){acc+=hist[v];if(acc>total*0.02){hi=v;break;}}
+  if(hi-lo<25){lo=0;hi=255;}
+  const span=Math.max(1,hi-lo);
+  const mean=cSum/total;
+  const doInvert=(invert===undefined)?(mean<95):invert;
+  canvas.__mean=round2(mean);canvas.__lo=lo;canvas.__hi=hi;
+  for(let i=0;i<d.length;i+=4){
+    let g=Math.round((d[i]-lo)*255/span);
+    g=g<0?0:(g>255?255:g);
+    if(doInvert) g=255-g;
+    d[i]=d[i+1]=d[i+2]=g;
+  }
+  ctx.putImageData(id,0,0);
+  return canvas;
+}
+
+function preparePass(img,box,targetWidth){
+  // Intermediate resolution: cap for memory, but allow a modest upscale so a
+  // re-encoded/downscaled upload still presents readable glyph heights.
+  let interW=Math.min(Math.round(box.w),2400);
+  if(interW<900) interW=Math.min(1400,Math.round(box.w*1.6));
+  interW=Math.max(1,interW);
+  const interH=Math.max(1,Math.round(box.h*interW/box.w));
+  const inter=document.createElement('canvas');
+  inter.width=interW;inter.height=interH;
+  const ictx=inter.getContext('2d');
+  ictx.imageSmoothingEnabled=true;ictx.imageSmoothingQuality='high';
+  ictx.drawImage(img,box.x,box.y,box.w,box.h,0,0,interW,interH);
+
+  // Blur only when a real downscale follows. Blurring without one just
+  // destroys small text on an already-downscaled photo.
+  const ratio=interW/Math.max(1,targetWidth);
+  let radius=0;
+  let source=inter;
+  if(ratio>=1.25){
+    radius=Math.max(0.9,2.0*interW/2500);
+    const blurred=document.createElement('canvas');
+    blurred.width=interW;blurred.height=interH;
+    const bctx=blurred.getContext('2d');
+    try{bctx.filter=`blur(${radius.toFixed(2)}px)`;}catch(_){radius=0;}
+    bctx.drawImage(inter,0,0);
+    source=blurred;
+  }
+
+  const out=document.createElement('canvas');
+  const sc=Math.min(1,targetWidth/interW);
+  out.width=Math.max(1,Math.round(interW*sc));
+  out.height=Math.max(1,Math.round(interH*sc));
+  const octx=out.getContext('2d',{willReadFrequently:true});
+  octx.imageSmoothingEnabled=true;octx.imageSmoothingQuality='high';
+  octx.drawImage(source,0,0,out.width,out.height);
+  const mapped=toneMap(out);
+  mapped.__prep={interW,targetWidth:out.width,blur:round2(radius),ratio:round2(ratio)};
+  return mapped;
+}
+
+/* ---------- Grabner "Result details" parser ----------
+   Field detection is anchored on tokens that survive OCR reliably. The model
+   number itself does not: D5191 comes back as "5191"/"SI91"/"15191" and
+   D323 as "D823", so CARB/EPA/5191 are matched rather than exact model text. */
+const G_EQUATION_RE=/P\s*[rtn]ot/i;
+const G_FIELD_SPECS=[
+  {key:'ambient', re:/ambient/i,                 label:'Ambient pressure',  min:8,  max:20},
+  {key:'pgas',    re:/\bP\s*gas\b/i,             label:'Pgas',              min:0,  max:8},
+  {key:'pabs',    re:/\bP\s*a\s*bs\b/i,          label:'Pabs',              min:1,  max:40},
+  {key:'ptot',    re:/\bP\s*[rtn]\s*o\s*t\b/i,   label:'Ptot',              min:1,  max:40},
+  {key:'d323',    re:/CARB|RVPE/i,               label:'D323 (CARB) RVPE',  min:1,  max:30},
+  {key:'d4953',   re:/EPA|4953/i,                label:'D4953 (EPA) DVPE',  min:1,  max:30},
+  {key:'d5191',   re:/5191|SI91|S191/i,          label:'D5191 DVPE',        min:1,  max:30}
+];
+// The instrument prints its own conversion equations; the app uses the same
+// coefficients, so these double as an OCR self-check.
+const G_EQUATIONS=[
+  {key:'d5191', m:0.965, b:0.5482, label:'D5191 DVPE'},
+  {key:'d4953', m:0.956, b:0.3466, label:'D4953 (EPA) DVPE'},
+  {key:'d323',  m:0.972, b:0.7150, label:'D323 (CARB) RVPE'}
+];
+
+function isEquationLine(line){
+  // "0.965 Ptot - 0.000 Pgas - 0.5482 psi" — coefficients, not readings.
+  return G_EQUATION_RE.test(line)&&/P\s*gas/i.test(line);
+}
+
+function valueTokensOnLine(line){
+  // Numbers followed by "psi" are the strongest signal, but requiring "psi"
+  // makes the whole read fail whenever OCR mangles that one word. Any number
+  // on a label-matched line is accepted; the psi flag is kept because decimal
+  // recovery is only safe when the unit confirms it is a reading.
+  const cleaned=String(line||'').replace(/[OoQ]/g,'0').replace(/[lI|]/g,'1').replace(/(\d)\s*,\s*(\d)/g,'$1.$2');
+  const re=/(\d[\d.]*)\s*(ps[il1]|psl)?/gi;
+  const out=[];let m;
+  while((m=re.exec(cleaned))!==null){
+    const raw=(m[1]||'').replace(/\.+$/,'');
+    if(raw) out.push({raw,psi:!!m[2]});
+  }
+  return out;
+}
+function psiValuesOnLine(line){return valueTokensOnLine(line).filter(t=>t.psi).map(t=>t.raw);}
+
+function interpretPsiToken(raw,min,max,unitConfirmed){
+  const hasDot=raw.indexOf('.')>=0;
+  const v=parseFloat(raw);
+  if(!Number.isFinite(v)) return null;
+  if(v>=min&&v<=max) return {value:v,warn:null};
+  if(!hasDot&&unitConfirmed){
+    // The instrument prints three decimals; a dropped point gives "14440".
+    const digits=raw.replace(/\D/g,'');
+    for(const div of [1000,100,10]){
+      const c=Number(digits)/div;
+      if(c>=min&&c<=max) return {value:c,warn:`decimal point not resolved in "${raw}" — read as ${c.toFixed(3)}`};
+    }
+  }
+  return null;
+}
+
+function parseGrabnerScreen(texts){
+  const votes={},warnings=[];
+  let sampleId='',standard='',instrumentStamp='';
+  (texts||[]).forEach(text=>{
+    String(text||'').split(/\r?\n/).forEach(rawLine=>{
+      const line=rawLine.trim();
+      if(!line) return;
+      const stamp=line.match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+      if(stamp&&!instrumentStamp) instrumentStamp=`${stamp[3]}-${stamp[2]}-${stamp[1]} ${stamp[4].padStart(2,'0')}:${stamp[5]}:${stamp[6]||'00'}`;
+      const sid=line.match(/Sample\s*[I1l]D\s*[:\-]?\s*(\S.*)$/i);
+      if(sid&&!sampleId) sampleId=sid[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
+      const std=line.match(/Standard\s*[:\-]?\s*(\S.*)$/i);
+      if(std&&!standard) standard=std[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
+      if(isEquationLine(line)) return;
+      // Settings rows carry model numbers and IDs, never readings.
+      if(/standard|sample\s*[I1l]D/i.test(line)) return;
+      const spec=G_FIELD_SPECS.find(f=>f.re.test(line));
+      if(!spec) return;
+      const tokens=valueTokensOnLine(line);
+      if(!tokens.length) return;
+      const withUnit=tokens.filter(t=>t.psi);
+      const tok=(withUnit.length?withUnit:tokens)[(withUnit.length?withUnit:tokens).length-1];
+      const hit=interpretPsiToken(tok.raw,spec.min,spec.max,tok.psi);
+      if(!hit) return;
+      if(hit.warn&&warnings.indexOf(hit.warn)<0) warnings.push(hit.warn);
+      const bucket=votes[spec.key]||(votes[spec.key]=[]);
+      bucket.push(round2(hit.value*1000)/1000);
+    });
+  });
+
+  const fields={};
+  Object.keys(votes).forEach(k=>{
+    const counts={};
+    votes[k].forEach(v=>{counts[v]=(counts[v]||0)+1;});
+    let bestVal=null,bestN=0;
+    Object.keys(counts).forEach(v=>{if(counts[v]>bestN){bestN=counts[v];bestVal=Number(v);}});
+    fields[k]={value:bestVal,agreement:bestN,reads:votes[k].length};
+  });
+
+  // Self-check the read against the instrument's own equations.
+  const checks=[];
+  if(fields.ptot){
+    G_EQUATIONS.forEach(eq=>{
+      if(!fields[eq.key]) return;
+      const expected=eq.m*fields.ptot.value-eq.b;
+      const delta=Math.abs(fields[eq.key].value-expected);
+      checks.push({label:eq.label,expected,actual:fields[eq.key].value,delta,ok:delta<=0.06});
+    });
+  }
+  const checked=checks.length>0;
+  const selfCheckPassed=checked&&checks.every(c=>c.ok);
+  return {fields,checks,checked,selfCheckPassed,sampleId,standard,instrumentStamp,warnings,
+    isGrabner:!!(fields.d5191||fields.ptot||fields.d4953||fields.d323)};
+}
+
+/* ---------- generic fallback for other analyzers ---------- */
+const RVP_LABEL_RE=/(R\s*\.?\s*V\s*\.?\s*P|DVPE|RVPE|VAPOU?R\s*PRESS|\bVP\b)/i;
+const PTOT_LABEL_RE=/(P\s*[rtn]ot|P\s*abs|TOTAL\s*PRESS)/i;
+function parseGenericRvp(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const candidates=[];
+  lines.forEach((line,i)=>{
+    const labeled=RVP_LABEL_RE.test(line);
+    if(PTOT_LABEL_RE.test(line)&&!labeled) return;
+    const src=[line];
+    if(labeled&&!psiValuesOnLine(line).length&&lines[i+1]) src.push(lines[i+1]);
+    src.forEach(l=>{
+      const kpa=/\bKPA\b/i.test(l);
+      psiValuesOnLine(l).concat(kpa?(l.match(/\d+(?:\.\d+)?/g)||[]):[]).forEach(tok=>{
+        let v=parseFloat(tok);
+        if(!Number.isFinite(v)) return;
+        let warn=null;
+        if(kpa&&v>=13&&v<=140){warn=`${tok} kPa converted to psi`;v=v/6.89476;}
+        if(v>=RVP_READ_MIN&&v<=RVP_READ_MAX) candidates.push({value:v,labeled,warn,score:(labeled?100:50)+(tok.indexOf('.')>=0?10:0)});
+      });
+    });
+  });
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0]||null;
+  const ambiguous=!!best&&candidates.some(c=>c!==best&&c.score>=best.score-6&&Math.abs(c.value-best.value)>0.05);
+  return {best,ambiguous,candidates:candidates.slice(0,5)};
+}
+
+function findInstrumentStamp(text){
+  const m=String(text||'').match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  return m?`${m[3]}-${m[2]}-${m[1]} ${m[4].padStart(2,'0')}:${m[5]}:${m[6]||'00'}`:'';
+}
+
+/* ---------- photo retention ---------- */
+async function sha256Hex(buffer){
+  try{
+    if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+      const h=await crypto.subtle.digest('SHA-256',buffer);
+      return {hash:[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join(''),algo:'SHA-256'};
+    }
+  }catch(_){}
+  const bytes=new Uint8Array(buffer);let h1=0x811c9dc5;
+  for(let i=0;i<bytes.length;i++){h1^=bytes[i];h1=Math.imul(h1,0x01000193)>>>0;}
+  return {hash:h1.toString(16).padStart(8,'0'),algo:'FNV-1a (32-bit fallback — SHA-256 unavailable in this browser context)'};
+}
+function retainedJpeg(img){
+  const c=proxyCanvas(img,1400);
+  try{return c.toDataURL('image/jpeg',0.72);}catch(_){return '';}
+}
+
+/* ---------- main read action ---------- */
+function textOf(res){return (res&&res.data&&res.data.text)||'';}
+function confOf(res){return (res&&res.data&&Number.isFinite(res.data.confidence))?res.data.confidence:null;}
+
+async function readLevelPhoto(level){
+  const els=levelPhotoEls(level); if(!els) return;
+  const {input,btn,status,astm,ptot}=els;
+  const file=input.files&&input.files[0];
+  if(!file){
+    status.className='lvl-ocr-status ocr-status bad';
+    status.textContent='Choose or take a photo of the analyzer screen first.';
+    return;
+  }
+  btn.disabled=true;
+  status.className='lvl-ocr-status ocr-status working';
+  status.textContent='Preparing the analyzer screen reader…';
+  const meta=freshLevelPhotoMeta();
+  meta.fileName=file.name||`${level}-analyzer-screen.jpg`;
+  meta.byteSize=file.size||0;
+  meta.capturedAt=new Date().toISOString();
+  meta.fileModifiedAt=file.lastModified?new Date(file.lastModified).toISOString():'';
+
+  try{
+    const img=await loadPhotoImage(file);
+    meta.imageDataUrl=retainedJpeg(img);
+    try{
+      const buf=await file.arrayBuffer();
+      const h=await sha256Hex(buf);
+      meta.sha256=h.hash;meta.hashAlgo=h.algo;
+    }catch(_){meta.sha256='';meta.hashAlgo='unavailable';}
+
+    const Tesseract=await loadTesseract();
+    const worker=await getScreenOcrWorker(Tesseract);
+    const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+    const box=detectPanelBox(img);
+    const confs=[];const texts=[];const passLog=[];
+
+    const runPass=async(label,region,width)=>{
+      const canvas=preparePass(img,region,width);
+      const res=await worker.recognize(canvas);
+      const text=textOf(res);
+      texts.push(text);confs.push(confOf(res));
+      passLog.push({label,width:canvas.width,height:canvas.height,mean:canvas.__mean,
+        lo:canvas.__lo,hi:canvas.__hi,
+        blur:(canvas.__prep||{}).blur,conf:confOf(res),chars:text.replace(/\s+/g,'').length});
+      return text;
+    };
+
+    status.textContent='Reading the analyzer screen…';
+    await runPass('panel@1300',box,1300);
+    let read=parseGrabnerScreen(texts);
+
+    // Second look at the results block when the first pass is incomplete or
+    // fails the instrument's own equations.
+    if(!read.fields.d5191||!read.selfCheckPassed){
+      status.textContent='Re-reading the results block…';
+      const topBox={x:box.x,y:box.y,w:box.w,h:Math.max(1,Math.round(box.h*0.42))};
+      await runPass('results-block@950',topBox,950);
+      await runPass('results-block@1250',topBox,1250);
+      read=parseGrabnerScreen(texts);
+    }
+
+    // Last resort: read the uncropped frame, in case panel detection cropped
+    // to the wrong region entirely.
+    if(!read.fields.d5191&&!read.fields.ptot){
+      status.textContent='Reading the full frame…';
+      await runPass('full-frame@1500',{x:0,y:0,w:iw,h:ih},1500);
+      read=parseGrabnerScreen(texts);
+    }
+
+    // Instrument clock lives on the dark header above the bright panel.
+    if(box.detected&&box.y>(img.naturalHeight||img.height)*0.03){
+      try{
+        const hdrBox={x:0,y:0,w:(img.naturalWidth||img.width),h:box.y};
+        const hp=await worker.recognize(preparePass(img,hdrBox,1400));
+        const stamp=findInstrumentStamp(textOf(hp));
+        if(stamp) read.instrumentStamp=stamp;
+      }catch(_){}
+    }
+
+    const valid=confs.filter(c=>Number.isFinite(c));
+    meta.diagnostics={image:{w:iw,h:ih},panel:{x:box.x,y:box.y,w:box.w,h:box.h,detected:!!box.detected},passes:passLog};
+    meta.used=true;
+    meta.confidence=valid.length?round2(valid.reduce((a,b)=>a+b,0)/valid.length):null;
+    meta.rawText=texts.join('\n').slice(0,900);
+    meta.instrument={};
+    Object.keys(read.fields).forEach(k=>{meta.instrument[k]=read.fields[k].value;});
+    meta.selfChecks=read.checks.map(c=>({label:c.label,expected:round2(c.expected*100)/100,actual:c.actual,ok:c.ok}));
+    meta.sampleId=read.sampleId||'';
+    meta.standard=read.standard||'';
+    meta.instrumentStamp=read.instrumentStamp||'';
+    read.warnings.forEach(w=>meta.warnings.push(w));
+    if(read.fields.ptot) meta.ptotSeen=read.fields.ptot.value;
+
+    const d5191=read.fields.d5191?read.fields.d5191.value:null;
+    const failed=read.checks.filter(c=>!c.ok);
+
+    if(d5191!==null&&(!read.checked||read.selfCheckPassed)){
+      meta.rvpRead=d5191;meta.applied=true;
+      astm.value=String(d5191);
+      astm.classList.add('ocr-filled');
+      astm.dispatchEvent(new Event('input',{bubbles:true}));
+      const bits=[];
+      bits.push(`Read <b>D5191 DVPE ${d5191.toFixed(3)} psi</b> into RVP (ASTM)`);
+      if(meta.confidence!==null) bits.push(`OCR confidence ${meta.confidence.toFixed(0)}%`);
+      if(read.selfCheckPassed) bits.push(`reader self-check passed against the instrument's own Ptot equation (Ptot ${read.fields.ptot.value.toFixed(3)} psi)`);
+      else bits.push('Ptot not readable, so the reader self-check could not run');
+      let tail='';
+      if(read.fields.ptot&&read.selfCheckPassed){
+        const pv=read.fields.ptot.value;
+        const typed=num(ptot.value);
+        if(typed===null||Math.abs(typed-pv)<=0.005){
+          ptot.value=String(pv);
+          ptot.classList.add('ocr-filled');
+          ptot.dispatchEvent(new Event('input',{bubbles:true}));
+          meta.ptotApplied=true;
+          tail=` PTOT filled with <b>${pv.toFixed(3)} psi</b> from the same screen.`;
+        } else {
+          // An operator entry that disagrees with the screen is a real finding.
+          // Overwriting it would erase exactly the discrepancy worth seeing.
+          meta.ptotConflict={typed,screen:pv};
+          meta.warnings.push(`entered PTOT ${typed} differs from screen Ptot ${pv.toFixed(3)} — operator entry left in place`);
+          tail=` <b>The PTOT already entered (${typed}) does not match the Ptot on this screen (${pv.toFixed(3)}), so it was left as you typed it.</b> Resolve the difference before release.`;
+        }
+      } else if(read.fields.ptot){
+        tail=` Ptot on screen reads ${read.fields.ptot.value.toFixed(3)} psi, but the reader self-check did not run — enter PTOT manually.`;
+      }
+      const provenance=meta.ptotApplied
+        ? ' Both values came off this one photo, so the PTOT/RVP entry check can only confirm itself here — the instrument-equation self-check is the verification of record.'
+        : '';
+      status.className='lvl-ocr-status ocr-status ok';
+      status.innerHTML=`${bits.join('; ')}.${tail} ${meta.warnings.length?esc(meta.warnings.join('; '))+'. ':''}<b>Verify both numbers against the analyzer before release.</b>${provenance}`;
+    } else if(d5191!==null&&failed.length){
+      failed.forEach(c=>meta.warnings.push(`${c.label} read ${c.actual} but Ptot implies ${c.expected.toFixed(3)}`));
+      status.className='lvl-ocr-status ocr-status bad';
+      status.innerHTML=`<b>Nothing was filled in.</b> The reader got D5191 DVPE ${d5191.toFixed(3)} psi, but that disagrees with the Ptot on the same screen (${read.fields.ptot?read.fields.ptot.value.toFixed(3):'—'} psi implies ${failed[0].expected.toFixed(3)} psi), so a digit was almost certainly misread. Enter RVP (ASTM) and PTOT manually for ${esc(level)}. The photo is retained.`;
+    } else if(read.fields.ptot){
+      const expected=0.965*read.fields.ptot.value-0.5482;
+      meta.warnings.push('D5191 DVPE line not readable');
+      status.className='lvl-ocr-status ocr-status bad';
+      status.innerHTML=`The D5191 DVPE line could not be read, so <b>nothing was filled in.</b> Ptot read as ${read.fields.ptot.value.toFixed(3)} psi, which corresponds to ${expected.toFixed(2)} psi — that is a calculated hint, <b>not</b> a reading. Enter both values from the screen. The photo is retained.`;
+    } else {
+      const generic=parseGenericRvp(texts.join('\n'));
+      if(generic.best&&!generic.ambiguous&&!read.isGrabner){
+        meta.rvpRead=round2(generic.best.value);meta.applied=true;
+        meta.warnings.push('Non-Grabner screen — generic reader used, no instrument self-check available');
+        astm.value=meta.rvpRead.toFixed(2);
+        astm.classList.add('ocr-filled');
+        astm.dispatchEvent(new Event('input',{bubbles:true}));
+        status.className='lvl-ocr-status ocr-status working';
+        status.innerHTML=`This does not look like the Grabner result screen. A generic read found <b>${meta.rvpRead.toFixed(2)} psi</b> with <b>no instrument cross-check</b>. Confirm the value digit by digit before release.`;
+      } else {
+        status.className='lvl-ocr-status ocr-status bad';
+        status.innerHTML=`No vapor-pressure values could be read from the ${esc(level)} photo. The photo is retained; <b>enter the values manually.</b> Retake with the whole result list in frame, square to the screen, and avoid glare across the value column.`;
+      }
+    }
+
+    // Instrument clock vs. sample date — a photo from the wrong run is the
+    // failure mode this catches.
+    if(meta.instrumentStamp&&$('sampleDate').value){
+      const inst=new Date(meta.instrumentStamp.slice(0,10)+'T00:00:00');
+      const samp=new Date($('sampleDate').value+'T00:00:00');
+      const days=Math.abs((inst-samp)/86400000);
+      if(Number.isFinite(days)&&days>1) meta.warnings.push(`instrument timestamp ${meta.instrumentStamp} is ${Math.round(days)} days from the sample date`);
+    }
+  }catch(err){
+    console.error(err);
+    status.className='lvl-ocr-status ocr-status bad';
+    status.textContent=(err&&err.message)?err.message:'The photo could not be read. Enter the values manually.';
+    meta.used=!!meta.imageDataUrl;
+    meta.warnings.push((err&&err.message)||'reader error');
+  }finally{
+    levelPhotoMeta[level]=meta;
+    if(meta.diagnostics||meta.rawText){
+      status.innerHTML+=` <button type="button" class="diag-link" onclick="toggleLevelDiag('${level}')">Show what the reader saw</button>`;
+    }
+    btn.disabled=false;
+    updateLevelPhotoBadge(level);
+    updatePhotoDocStatus();
+    render();
+  }
+}
+
+function levelDiagnosticsText(level){
+  const m=levelPhotoMeta[level]||{};
+  const d=m.diagnostics||{};
+  const lines=[];
+  lines.push(`level: ${level}`);
+  lines.push(`profile: ${m.parserProfile||'—'}`);
+  lines.push(`file: ${m.fileName||'—'} (${m.byteSize?Math.round(m.byteSize/1024)+' KB':'size n/a'})`);
+  if(d.image) lines.push(`image: ${d.image.w} x ${d.image.h}`);
+  if(d.panel) lines.push(`panel crop: ${d.panel.detected?'detected':'NOT DETECTED (full frame used)'} x=${d.panel.x} y=${d.panel.y} w=${d.panel.w} h=${d.panel.h}`);
+  (d.passes||[]).forEach(p=>lines.push(`pass ${p.label}: ${p.width}x${p.height} blur=${p.blur} stretch=${p.lo}-${p.hi} mean=${p.mean} conf=${p.conf===null?'—':Math.round(p.conf)} chars=${p.chars}`));
+  if(m.instrument&&Object.keys(m.instrument).length){
+    lines.push('fields: '+Object.keys(m.instrument).map(k=>`${k}=${m.instrument[k]}`).join(' '));
+  } else {
+    lines.push('fields: none matched');
+  }
+  if((m.selfChecks||[]).length) lines.push('self-check: '+m.selfChecks.map(c=>`${c.label} ${c.ok?'ok':'FAIL(expected '+c.expected+')'}`).join(' | '));
+  if((m.warnings||[]).length) lines.push('warnings: '+m.warnings.join(' | '));
+  lines.push('');
+  lines.push('--- raw OCR text ---');
+  lines.push(m.rawText||'(no text returned)');
+  return lines.join('\n');
+}
+
+function toggleLevelDiag(level){
+  const els=levelPhotoEls(level); if(!els||!els.diag) return;
+  const open=els.diag.classList.contains('show');
+  if(open){els.diag.classList.remove('show');return;}
+  els.diag.textContent=levelDiagnosticsText(level);
+  els.diag.classList.add('show');
+}
+
+function updateLevelPhotoBadge(level){
+  const els=levelPhotoEls(level); if(!els||!els.badge) return;
+  const m=levelPhotoMeta[level];
+  if(m&&m.applied&&Number.isFinite(m.rvpRead)){
+    els.badge.classList.remove('hide');
+    els.badge.textContent=m.ptotApplied?`Photo · RVP ${m.rvpRead.toFixed(2)} · PTOT ${m.ptotSeen.toFixed(2)}`:`Photo ${m.rvpRead.toFixed(2)} psi`;
+  } else if(m&&m.used){
+    els.badge.classList.remove('hide');
+    els.badge.textContent='Photo attached';
+  } else {
+    els.badge.classList.add('hide');
+    els.badge.textContent='';
+  }
+}
+
+function showLevelPreview(level){
+  const els=levelPhotoEls(level); if(!els) return;
+  const file=els.input.files&&els.input.files[0];
+  if(!file){els.preview.removeAttribute('src');els.preview.classList.remove('show');return;}
+  const reader=new FileReader();
+  reader.onload=()=>{els.preview.src=reader.result;els.preview.classList.add('show');};
+  reader.readAsDataURL(file);
+}
+
+function resetLevelPhoto(level,clearInput){
+  const els=levelPhotoEls(level);
+  levelPhotoMeta[level]=freshLevelPhotoMeta();
+  if(els){
+    if(els.input&&clearInput!==false) els.input.value='';
+    if(els.preview&&clearInput!==false){els.preview.removeAttribute('src');els.preview.classList.remove('show');}
+    if(els.astm) els.astm.classList.remove('ocr-filled');
+    if(els.ptot) els.ptot.classList.remove('ocr-filled');
+    if(els.diag){els.diag.classList.remove('show');els.diag.textContent='';}
+    if(els.status){
+      els.status.className='lvl-ocr-status ocr-status';
+      els.status.innerHTML=`Photograph the analyzer screen for the <b>${esc(level)}</b> sample. The reader takes <b>D5191 DVPE</b> and <b>Ptot</b> off the result screen and fills both fields, but only when its readings agree with the instrument's own conversion equations. A PTOT you have already typed is never overwritten. The photo is retained with the data record.`;
+    }
+  }
+  updateLevelPhotoBadge(level);
+}
+function resetAllLevelPhotos(){LEVEL_NAMES.forEach(n=>resetLevelPhoto(n,true));updatePhotoDocStatus();}
+
+function attachedPhotoLevels(){return LEVEL_NAMES.filter(n=>levelPhotoMeta[n]&&levelPhotoMeta[n].used&&levelPhotoMeta[n].imageDataUrl);}
+
+function updatePhotoDocStatus(){
+  const el=$('photoDocStatus'); if(!el) return;
+  const attached=attachedPhotoLevels().length;
+  const applied=LEVEL_NAMES.filter(n=>levelPhotoMeta[n].applied).length;
+  el.className=attached===3?'status-mini ok':'status-mini';
+  el.textContent=`Analyzer photos: ${attached} of 3 attached${applied?` · ${applied} auto-read`:''}`;
+}
+
+/* ---------- photo export ---------- */
+function dataUrlToBlob(dataUrl){
+  const parts=String(dataUrl).split(',');
+  const mime=(parts[0].match(/:(.*?);/)||[,'image/jpeg'])[1];
+  const bin=atob(parts[1]||'');
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime});
+}
+function downloadLevelPhotos(){
+  const levels=attachedPhotoLevels();
+  if(!levels.length){alert('No analyzer photos are attached yet. Take or upload a photo on the Upper, Middle, or Lower level first.');return;}
+  const cert=($('certNo').value||'CoA').replace(/[^\w.-]+/g,'-');
+  levels.forEach((level,i)=>{
+    setTimeout(()=>{
+      const blob=dataUrlToBlob(levelPhotoMeta[level].imageDataUrl);
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=`${cert}-${level}-analyzer-screen.jpg`;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+    },i*350);
+  });
+}
+
+/* ---------- printable photo appendix ---------- */
+function renderPhotoAppendix(){
+  const host=$('photoAppendix'); if(!host) return;
+  const include=$('includePhotoAppendix')?$('includePhotoAppendix').checked:true;
+  const levels=attachedPhotoLevels();
+  if(!include||!levels.length){host.classList.add('hide');host.innerHTML='';return;}
+  host.classList.remove('hide');
+  const items=levels.map(level=>{
+    const m=levelPhotoMeta[level];
+    const entered=num(levelBox(level).querySelector('.astm-rvp').value);
+    const iv=m.instrument||{};
+    const inst={standard:m.standard,sampleId:m.sampleId,stamp:m.instrumentStamp};
+    const instLabels={d5191:'D5191 DVPE',d4953:'D4953 (EPA) DVPE',d323:'D323 (CARB) RVPE',pabs:'Pabs',ptot:'Ptot',pgas:'Pgas',ambient:'Ambient pressure'};
+    const instRows=Object.keys(instLabels).filter(k=>Number.isFinite(iv[k]))
+      .map(k=>`${instLabels[k]} ${iv[k].toFixed(3)} psi`).join(' &middot; ');
+    const selfRows=(m.selfChecks||[]).map(c=>
+      `${esc(c.label)} ${c.ok?'<span class="pa-ok">consistent with Ptot</span>':`<span class="pa-flag">inconsistent — Ptot implies ${c.expected}</span>`}`).join('<br>');
+    const match=(m.applied&&Number.isFinite(m.rvpRead)&&entered!==null)?Math.abs(entered-m.rvpRead)<0.005:null;
+    return `<div class="pa-item">
+      <img src="${m.imageDataUrl}" alt="${esc(level)} analyzer screen">
+      <div class="pa-body">
+        <div class="pa-lvl">${esc(level)} — vapor pressure analyzer screen</div>
+        <table class="pa-meta">
+          <tr><td class="k">Reader result (RVP ASTM)</td><td class="v">${m.applied&&Number.isFinite(m.rvpRead)?m.rvpRead.toFixed(2)+' psi':'not read — entered manually'}</td></tr>
+          <tr><td class="k">Value on certificate</td><td class="v">${entered===null?'—':entered.toFixed(2)+' psi'} ${match===null?'':(match?'<span class="pa-ok">(matches reader)</span>':'<span class="pa-flag">(operator-corrected)</span>')}</td></tr>
+          <tr><td class="k">OCR confidence</td><td class="v">${m.confidence===null?'—':m.confidence.toFixed(0)+'%'}</td></tr>
+          <tr><td class="k">Image file</td><td class="v">${esc(m.fileName)} (${m.byteSize?Math.round(m.byteSize/1024)+' KB':'size n/a'})</td></tr>
+          <tr><td class="k">Attached</td><td class="v">${esc((m.capturedAt||'').replace('T',' ').slice(0,19))} UTC${m.fileModifiedAt?` · file timestamp ${esc(m.fileModifiedAt.replace('T',' ').slice(0,19))}`:''}</td></tr>
+          <tr><td class="k">Image digest</td><td class="v">${esc(m.hashAlgo||'—')}${m.sha256?'<br>'+esc(m.sha256):''}</td></tr>
+          ${inst.standard?`<tr><td class="k">Instrument standard</td><td class="v">${esc(inst.standard)}</td></tr>`:''}
+          ${inst.sampleId?`<tr><td class="k">Instrument sample ID</td><td class="v">${esc(inst.sampleId)}</td></tr>`:''}
+          ${inst.stamp?`<tr><td class="k">Instrument timestamp</td><td class="v">${esc(inst.stamp)}</td></tr>`:''}
+          ${instRows?`<tr><td class="k">Screen readings</td><td class="v">${instRows}</td></tr>`:''}
+          ${m.ptotSeen!==null?`<tr><td class="k">Ptot on screen</td><td class="v">${m.ptotSeen.toFixed(3)} psi &mdash; ${m.ptotApplied?'machine-read into the PTOT field':(m.ptotConflict?`<span class="pa-flag">operator entered ${m.ptotConflict.typed} psi instead</span>`:'entered manually by the operator')}</td></tr>`:''}
+          ${m.ptotApplied?`<tr><td class="k">Entry check basis</td><td class="v">PTOT and RVP both machine-read from this image; the PTOT/RVP correlation check is self-confirming for this level. Verification of record is the instrument-equation self-check above.</td></tr>`:''}
+          ${selfRows?`<tr><td class="k">Reader self-check</td><td class="v">${selfRows}</td></tr>`:''}
+          ${m.warnings.length?`<tr><td class="k">Reader notes</td><td class="v pa-flag">${esc(m.warnings.join('; '))}</td></tr>`:''}
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+  host.innerHTML=`
+    <div class="c-top">
+      <div class="c-wm">GLOBAL<b>PARTNERS</b><em>Fort Worth Terminal J117</em></div>
+      <div style="text-align:right;font-size:9.5px;color:#555">Certificate ${esc($('certNo').value||'—')}<br>Tank ${esc($('tank').value||'—')} &middot; Blend ${esc($('batch').value||'—')}<br>Sample date ${fmtDate($('sampleDate').value)}</div>
+    </div>
+    <div class="c-brandbar"></div>
+    <div class="pa-title">Appendix A — Analyzer Screen Documentation</div>
+    <div class="pa-sub">Photographic record of the vapor-pressure analyzer display for each neat-product sample level. Images are retained with the electronic data record. Where a value was machine-read, the reader result and the value reported on the certificate are shown side by side; any difference is an operator correction and must be explainable from the image. RVP (ASTM) is taken from the instrument's D5191 DVPE result and PTOT from the Ptot result on the same screen. Where both were machine-read, the PTOT/RVP correlation check is self-confirming and is not independent evidence; the verification of record for those levels is the reader self-check, which tests the D5191, D4953 and D323 readings against the instrument's own published conversion equations. Each level below records which basis applied.</div>
+    ${items}
+    ${levels.length<3?`<div class="pa-none">No photo attached for: ${esc(LEVEL_NAMES.filter(n=>levels.indexOf(n)<0).join(', '))}. Those levels were entered manually.</div>`:''}
+    <div class="pa-sign">Reviewed and verified against the analyzer display by ${esc($('preparedBy').value||'________________')} — Terminal Operator.<br>Reader profile: ${esc(VP_PHOTO_PROFILE)}. Machine-read values are an entry aid only and do not replace operator verification.</div>`;
+}
+
+// Fort Worth terminal tank/product map confirmed by Operations.
+const TANK_PRODUCTS={
+  '23155':'Regular Gasoline',
+  '23156':'Regular Gasoline',
+  '27404':'Premium Gasoline',
+  '27405':'Premium Gasoline'
+};
+
+// EPA 2026 Summer RVP waiver periods specifically incorporated into this release tool.
+// Primary authority: https://www.epa.gov/gasoline-standards/fuel-waivers
+const WAIVER_WINDOWS=[
+  {start:'2026-07-20',end:'2026-08-08',name:'2026 Summer RVP Waiver',letter:'EPA July 17, 2026 extension'},
+  {start:'2026-08-09',end:'2026-08-28',name:'2026 Summer RVP Waiver',letter:'EPA July 30, 2026 extension'}
+];
+
+// ASTM D4814-24b class-limit table reproduced in the supplied primary-authority workbook.
+const CLASS_LIMITS={
+  AAA:{rvp:7.4,t10:158,t50Finished:150,t50Max:250,t90:374,fbp:437,di:1250},
+  AA:{rvp:7.8,t10:158,t50Finished:150,t50Max:250,t90:374,fbp:437,di:1250},
+  A:{rvp:9.0,t10:158,t50Finished:150,t50Max:250,t90:374,fbp:437,di:1250},
+  B:{rvp:10.0,t10:149,t50Finished:150,t50Max:245,t90:374,fbp:437,di:1240},
+  C:{rvp:11.5,t10:140,t50Finished:150,t50Max:240,t90:365,fbp:437,di:1230},
+  D:{rvp:13.5,t10:131,t50Finished:145,t50Max:235,t90:365,fbp:437,di:1220},
+  E:{rvp:15.0,t10:122,t50Finished:145,t50Max:230,t90:365,fbp:437,di:1200}
+};
+
+// ASTM D4814 vapor-lock protection classes. Texas waives V/L=20, but the
+// class association is retained with each record so the selected transition
+// option remains internally consistent and auditable.
+const VL_LIMITS={1:129,2:122,3:116,4:107,5:102,6:95};
+
+let gradeManual=false;
+let suppressGradeEvent=false;
+
+function localDateValue(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+
+function generateCertificateNo(){
+  // Human-readable, practically unique identifier without requiring a server/database.
+  // Example: FTW-COA-20260813-181742-9C3F
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0');
+  const mm=String(d.getMinutes()).padStart(2,'0');
+  const ss=String(d.getSeconds()).padStart(2,'0');
+  let suffix='';
+  if(window.crypto && crypto.getRandomValues){
+    const a=new Uint16Array(1); crypto.getRandomValues(a); suffix=a[0].toString(16).toUpperCase().padStart(4,'0');
+  } else {
+    suffix=Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0');
+  }
+  return `FTW-COA-${y}${m}${day}-${hh}${mm}${ss}-${suffix}`;
+}
+
+function updateBlendNumber(){
+  const tank=$('tank').value;
+  const sampleDate=$('sampleDate').value;
+  if(!tank || !sampleDate){ $('batch').value=''; return; }
+  const p=dateParts(sampleDate);
+  if(!p){ $('batch').value=''; return; }
+  const shortTank=tank.slice(-2);
+  const mm=String(p.m).padStart(2,'0');
+  const dd=String(p.d).padStart(2,'0');
+  const yy=String(p.y).slice(-2);
+  $('batch').value=`FTW${shortTank}${mm}${dd}${yy}`;
+}
+
+function dateParts(v){
+  if(!v) return null;
+  const [y,m,d]=v.split('-').map(Number);
+  if(!y||!m||!d) return null;
+  return {y,m,d};
+}
+
+function scheduleFor(v){
+  const p=dateParts(v);
+  if(!p) return {code:'',options:[],allowed:[],defaultGrade:'',defaultVlClass:'',transition:false};
+  const {m,d}=p;
+  let options;
+  if(m===1) options=[{grade:'D',vlClass:4}];
+  else if(m===2) options=[{grade:'D',vlClass:4},{grade:'C',vlClass:3}];
+  else if(m===3) options=[{grade:'C',vlClass:3}];
+  else if(m===4) options=[{grade:'C',vlClass:3},{grade:'A',vlClass:2}];
+  else if(m===5 || m===6 || m===7 || m===8) options=[{grade:'A',vlClass:2}];
+  else if(m===9 && d<=15) options=[{grade:'A',vlClass:2}];
+  else if(m===9) options=[{grade:'A',vlClass:2},{grade:'B',vlClass:2}];
+  else if(m===10) options=[{grade:'B',vlClass:2},{grade:'C',vlClass:3}];
+  else if(m===11) options=[{grade:'C',vlClass:3},{grade:'D',vlClass:4}];
+  else options=[{grade:'D',vlClass:4}];
+
+  // ASTM transition cells mean either listed class may be used. For this
+  // Fort Worth production workflow, default to the option with the higher
+  // allowable RVP, and carry the vapor-lock class associated with that same
+  // option. The alternate remains operator-selectable when needed.
+  const selected=options.reduce((best,o)=>
+    !best || CLASS_LIMITS[o.grade].rvp>CLASS_LIMITS[best.grade].rvp ? o : best, null);
+  const code=options.map(o=>`${o.grade}-${o.vlClass}`).join(' / ');
+  return {
+    code, options, allowed:options.map(o=>o.grade),
+    defaultGrade:selected.grade, defaultVlClass:selected.vlClass,
+    transition:options.length>1
+  };
+}
+
+function scheduleOptionForGrade(sched,grade){
+  return (sched.options||[]).find(o=>o.grade===grade)||null;
+}
+
+function isEpaSummer(v){
+  const p=dateParts(v); if(!p) return false;
+  return (p.m>5 && p.m<9) || p.m===5 || (p.m===9 && p.d<=15);
+}
+
+// Texas Occupations Code 2310.2031(c): gasoline blended with up to 15 vol% ethanol
+// receives a +1.0 psi vapor-pressure tolerance except May 1 through October 1
+// (inclusive) in counties subject to low-emissions motor-fuel standards.
+function texasLowEmissionEthanolExclusion(v){
+  const p=dateParts(v); if(!p) return false;
+  if(p.m>5 && p.m<10) return true;       // June through September
+  if(p.m===5) return true;               // May 1-31
+  if(p.m===10 && p.d<=1) return true;    // October 1
+  return false;
+}
+
+function texasEthanolTolerancePsi(v){
+  return v && !texasLowEmissionEthanolExclusion(v) ? 1.0 : 0.0;
+}
+
+function waiverFor(v){
+  if(!v) return null;
+  return WAIVER_WINDOWS.find(w=>v>=w.start && v<=w.end)||null;
+}
+
+// ASTM-entry cross-check used by the analyzer values in the supplied design.
+function astmRvpFromPtot(ptot){ return 0.965*ptot-0.548; }
+// Federal/Texas regulatory correction for measured total vapor pressure.
+function epaRvpFromPtot(ptot){ return 0.956*ptot-0.347; }
+
+function applyTankProduct(){
+  $('product').value=TANK_PRODUCTS[$('tank').value]||'';
+  updateBlendNumber();
+}
+
+function applyDateRules(resetGrade=false){
+  updateBlendNumber();
+  const sampleDate=$('sampleDate').value;
+  const sched=scheduleFor(sampleDate);
+  $('scheduleCode').value=sched.code;
+  if(!sampleDate){
+    suppressGradeEvent=true;
+    $('grade').value='';
+    suppressGradeEvent=false;
+    gradeManual=false;
+    $('rvpBasis').value='';
+    $('vlClass').value='';
+    $('vlMin').value='';
+    $('seasonRule').innerHTML='';
+    applySpecs();
+    return;
+  }
+  if(resetGrade || !gradeManual){
+    suppressGradeEvent=true;
+    $('grade').value=sched.defaultGrade;
+    suppressGradeEvent=false;
+    gradeManual=false;
+  }
+  const summer=isEpaSummer(sampleDate);
+  const waiver=waiverFor(sampleDate);
+  const txEtOHtol=texasEthanolTolerancePsi(sampleDate);
+  $('rvpBasis').value=waiver?'EPA RVP from PTOT — 2026 Summer RVP Waiver':(summer?'EPA RVP from PTOT':(txEtOHtol?`ASTM RVP entry — E10 +${txEtOHtol.toFixed(1)} psi Texas tolerance`:'ASTM RVP entry'));
+  let msg=sched.transition?`<b>Volatility transition period:</b> the form defaults to the permitted class with the higher RVP allowance and carries the vapor-lock class associated with that same option; the alternate permitted grade remains selectable when needed. `:`<b>Volatility requirements:</b> grade and specification limits were selected automatically from the sample date. `;
+  if(waiver){
+    msg+=`<b>2026 Summer RVP Waiver active (${fmtDate(waiver.start)}–${fmtDate(waiver.end)}):</b> use 9.0 psi RVP max for neat E0 and 10.0 psi RVP max for E10/E15. The federal butane/pentane blending relief is active for this sample date, with Texas TCEQ/TDLR enforcement discretion aligned to the national waiver. `;
+    msg+=`This tool continues to require the terminal tank-sample test and per-batch CoA; it does not use the waiver's conditional relief from testing/per-batch RVP reporting. `;
+  } else if(txEtOHtol){
+    msg+=`<b>E10 vapor-pressure tolerance:</b> Texas +${txEtOHtol.toFixed(1)} psi applies to the finished ethanol blend for this date. The neat gasoline remains at the selected class RVP limit. `;
+  } else if(texasLowEmissionEthanolExclusion(sampleDate)){
+    msg+=`<b>E10 vapor-pressure tolerance:</b> the normal Texas +1.0 psi tolerance is not applied during the May 1–October 1 low-emission exclusion period. `;
+  }
+  msg+=`Texas waives V/L=20 for covered gasoline; T50/distillation and other applicable D4814 requirements remain.`;
+  $('seasonRule').innerHTML=msg;
+  applySpecs();
+}
+
+function applySpecs(){
+  const grade=$('grade').value;
+  if(!grade){
+    ['sp_rvp_neat','sp_rvp_e10','sp_t10','sp_t50_min','sp_t50_max','sp_t90','sp_fbp','sp_res'].forEach(id=>$(id).value='');
+    $('specBasis').innerHTML='';
+    $('vlClass').value='';
+    $('vlMin').value='';
+    const seasonStatus=$('releaseSeasonStatus');
+    seasonStatus.className='status-mini';
+    seasonStatus.textContent='Select a sample date';
+    updateValidationUI();
+    render();
+    return;
+  }
+  const cls=CLASS_LIMITS[grade];
+  const sampleDate=$('sampleDate').value;
+  const summer=isEpaSummer(sampleDate);
+  const waiver=waiverFor(sampleDate);
+  const txEtOHtol=texasEthanolTolerancePsi(sampleDate);
+  const rvpNeatMax=waiver?9.0:(summer?7.4:cls.rvp);
+  // Waiver limits take precedence. Otherwise, apply the Texas +1.0 psi E10
+  // tolerance only outside the May 1-October 1 low-emission exclusion period.
+  const rvpE10Max=waiver?10.0:(summer?7.4:(cls.rvp+txEtOHtol));
+  $('sp_rvp_neat').value=rvpNeatMax.toFixed(1);
+  $('sp_rvp_e10').value=rvpE10Max.toFixed(1);
+  $('sp_t10').value=cls.t10;
+  $('sp_t50_min').value=cls.t50Finished;
+  $('sp_t50_max').value=cls.t50Max;
+  $('sp_t90').value=cls.t90;
+  $('sp_fbp').value=cls.fbp;
+  $('sp_res').value=2;
+  const sched=scheduleFor($('sampleDate').value);
+  const override=!sched.allowed.includes($('grade').value);
+  const schedOpt=scheduleOptionForGrade(sched,$('grade').value);
+  $('vlClass').value=schedOpt?schedOpt.vlClass:'';
+  $('vlMin').value=schedOpt?VL_LIMITS[schedOpt.vlClass]:'';
+  const rvpBasisText=waiver?' + 2026 Summer RVP Waiver (9.0 psi E0 / 10.0 psi E10-E15)':(summer?' + Fort Worth RFG summer 7.4 psi EPA overlay':` + class RVP limit${txEtOHtol?`; E10 receives +${txEtOHtol.toFixed(1)} psi Texas tolerance`:''}`);
+  $('specBasis').innerHTML=`<strong>Basis:</strong> Class ${esc($('grade').value)} non-RVP limits${rvpBasisText}. ${schedOpt?`Associated V/L Class ${schedOpt.vlClass} (${VL_LIMITS[schedOpt.vlClass]}&deg;F) retained for reference; Texas V/L is waived. `:''}${gradeManual?'Grade manually selected. ':''}${override?'<b style="color:#D9655B">Selected grade is outside the date-schedule choices; document the reason before release.</b>':''}`;
+  const seasonStatus=$('releaseSeasonStatus');
+  if(waiver){seasonStatus.className='status-mini ok';seasonStatus.textContent=`2026 waiver active through ${fmtDate(waiver.end)}`;}
+  else if(summer){seasonStatus.className='status-mini hold';seasonStatus.textContent='Summer RFG: no baked-in waiver';}
+  else {seasonStatus.className='status-mini ok';seasonStatus.textContent='Butane season: standard workflow';}
+  updateValidationUI();
+  render();
+}
+
+function checkPair(ptotValue,astmValue){
+  const p=num(ptotValue), a=num(astmValue);
+  if(p===null || a===null) return {complete:false,ok:false,expected:null,epa:null};
+  const expected=astmRvpFromPtot(p);
+  const ok=Number(a).toFixed(2)===Number(expected).toFixed(2);
+  return {complete:true,ok,expected,epa:epaRvpFromPtot(p)};
+}
+
+function vaporBoxes(){
+  const arr=[...document.querySelectorAll('.lvl[data-lvl]')].map(box=>({
+    box, name:box.dataset.lvl, ptot:box.querySelector('.ptot'), astm:box.querySelector('.astm-rvp'), check:box.querySelector('.vpcheck')
+  }));
+  arr.push({box:$('e10box'),name:'E10 Running',ptot:$('e_ptot'),astm:$('e_astm_rvp'),check:$('e10box').querySelector('.vpcheck')});
+  return arr;
+}
+
+function updateValidationUI(){
+  let okCount=0, completeCount=0;
+  vaporBoxes().forEach(v=>{
+    const r=checkPair(v.ptot.value,v.astm.value);
+    if(!r.complete){v.check.className='vpcheck wait';v.check.textContent='Enter both PTOT and RVP (ASTM) to verify the pair.';return;}
+    completeCount++;
+    if(r.ok){okCount++;v.check.className='vpcheck ok';v.check.textContent=`✓ Entry check passed — expected ASTM RVP ${fmt2(r.expected)} psi from PTOT.`;}
+    else {v.check.className='vpcheck bad';v.check.textContent=`⚠ Re-enter PTOT / RVP (ASTM) — PTOT corresponds to ${fmt2(r.expected)} psi ASTM RVP, not ${Number(num(v.astm.value)).toFixed(2)} psi.`;}
+  });
+  const s=$('vpEntryStatus');
+  if(okCount===4){s.className='status-mini ok';s.textContent='PTOT/RVP checks: 4 of 4 passed';}
+  else {s.className='status-mini';s.textContent=`PTOT/RVP checks: ${okCount} passed / ${completeCount} entered`;}
+  updatePhotoDocStatus();
+}
+
+function validateAllVaporPairs(showPrompt=true){
+  const bad=vaporBoxes().filter(v=>{const r=checkPair(v.ptot.value,v.astm.value);return !r.complete||!r.ok;});
+  if(bad.length && showPrompt){
+    const names=bad.map(v=>v.name).join(', ');
+    alert(`PTOT / RVP (ASTM) verification failed or is incomplete for: ${names}. Re-enter both instrument values before saving or generating the CoA.`);
+    bad[0].ptot.focus();
+  }
+  return bad.length===0;
+}
+
+function requiredReleaseState(){
+  const missing=[];
+  const invalidVaporPairs=[];
+  const requireValue=(id,label)=>{
+    const value=String($(id).value??'').trim();
+    if(!value) missing.push(label);
+  };
+
+  // Required certificate / sample metadata.
+  requireValue('certNo','Certificate No.');
+  requireValue('reportDate','Report Date');
+  requireValue('sampleDate','Sample Date');
+  requireValue('tank','Tank #');
+  requireValue('batch','Blend #');
+  requireValue('grade','Volatility Grade');
+  requireValue('preparedBy','Prepared By');
+
+  // Upper/Middle/Lower fields remain part of the reported neat-product test and are required.
+  readLevels().forEach(level=>{
+    if(!String(level.api??'').trim()) missing.push(`${level.name} API`);
+    if(!String(level.hazy??'').trim()) missing.push(`${level.name} Hazy`);
+  });
+
+  // Every expected D86 output must be present; blank values are INCOMPLETE, never passing.
+  [
+    ['baro','Barometric Pressure'],['d_ibp','IBP'],['d_t10','T10'],['d_t50','T50'],
+    ['d_t90','T90'],['d_t95','T95'],['d_fbp','FBP'],['d_rec','Recovery'],
+    ['d_res','Residue'],['d_loss','Loss']
+  ].forEach(([id,label])=>requireValue(id,label));
+
+  // Include pair validity in live release readiness so a mismatch can never display RELEASE.
+  vaporBoxes().forEach(v=>{
+    const check=checkPair(v.ptot.value,v.astm.value);
+    if(!check.complete) invalidVaporPairs.push(`${v.name} (incomplete)`);
+    else if(!check.ok) invalidVaporPairs.push(v.name);
+  });
+
+  return {complete:missing.length===0&&invalidVaporPairs.length===0,missing,invalidVaporPairs};
+}
+
+function validateRequiredReleaseFields(showPrompt=true){
+  const state=requiredReleaseState();
+  if(state.complete) return true;
+  if(showPrompt){
+    if(state.missing.length){
+      alert(`Required release data is incomplete: ${state.missing.join(', ')}. Complete all expected test results and required metadata before saving or generating the CoA.`);
+    } else if(state.invalidVaporPairs.length){
+      alert(`PTOT / RVP (ASTM) verification is incomplete or invalid for: ${state.invalidVaporPairs.join(', ')}.`);
+    }
+  }
+  return false;
+}
+
+function readLevels(){
+  return [...document.querySelectorAll('.lvl[data-lvl]')].map(box=>{
+    const ptot=box.querySelector('.ptot').value.trim();
+    const astm=box.querySelector('.astm-rvp').value.trim();
+    const p=num(ptot);
+    return {name:box.dataset.lvl,api:box.querySelector('.api').value.trim(),hazy:box.querySelector('.hazy').value,ptot,astmRvp:astm,epaRvp:p===null?null:epaRvpFromPtot(p)};
+  });
+}
+
+function reportedRvp(ptot,astm){
+  const summer=isEpaSummer($('sampleDate').value);
+  const p=num(ptot), a=num(astm);
+  return summer?(p===null?null:epaRvpFromPtot(p)):a;
+}
+
+function vpBlock(level,rvpMax,summer){
+  const rep=reportedRvp(level.ptot,level.astmRvp);
+  const fail=rep!==null&&rep>rvpMax;
+  const label=summer?'RVP, EPA equation':'RVP, ASTM equation';
+  return `
+    <tr class="lvl-row"><td colspan="6">${esc(level.name)}</td></tr>
+    <tr><td class="test">API Gravity @ 60&deg;F</td><td class="result">${esc(level.api||'—')}</td><td>&deg;API</td><td class="method">ASTM D4052</td><td class="specmin"></td><td class="specmax"></td></tr>
+    <tr><td class="test">Vapor Pressure</td><td></td><td></td><td class="method">ASTM D5191</td><td class="specmin"></td><td class="specmax"></td></tr>
+    <tr><td class="sub">Hazy</td><td class="result">${esc(level.hazy)}</td><td></td><td></td><td class="specmin"></td><td class="specmax"></td></tr>
+    <tr><td class="sub">PTOT</td><td class="result">${esc(level.ptot||'—')}</td><td>psi</td><td></td><td class="specmin"></td><td class="specmax"></td></tr>
+    <tr><td class="sub">${label}</td><td class="result ${fail?'fail':''}">${rep===null?'—':fmt2(rep)}</td><td>psi</td><td class="method">${summer?'40 CFR 1090.1355':''}</td><td class="specmin"></td><td class="specmax">${Number.isFinite(rvpMax)?rvpMax.toFixed(1):''}</td></tr>`;
+}
+
+function releaseAssessment(){
+  const levels=readLevels();
+  const rvpMax=num($('sp_rvp_neat').value)??Infinity;
+  const summer=isEpaSummer($('sampleDate').value);
+  const waiver=waiverFor($('sampleDate').value);
+  const rvpFail=levels.some(l=>{const v=reportedRvp(l.ptot,l.astmRvp);return v!==null&&v>rvpMax;});
+  const eRep=reportedRvp($('e_ptot').value,$('e_astm_rvp').value);
+  const eFail=eRep!==null&&eRep>(num($('sp_rvp_e10').value)??Infinity);
+  const t10=num($('d_t10').value),t50=num($('d_t50').value),t90=num($('d_t90').value),fbp=num($('d_fbp').value),res=num($('d_res').value);
+  const t10max=num($('sp_t10').value),t50min=num($('sp_t50_min').value),t50max=num($('sp_t50_max').value),t90max=num($('sp_t90').value),fbpmax=num($('sp_fbp').value),resmax=num($('sp_res').value);
+  const fails={
+    rvp:rvpFail||eFail,
+    t10:t10!==null&&t10max!==null&&t10>t10max,
+    t50:t50!==null&&((t50min!==null&&t50<t50min)||(t50max!==null&&t50>t50max)),
+    t90:t90!==null&&t90max!==null&&t90>t90max,
+    fbp:fbp!==null&&fbpmax!==null&&fbp>fbpmax,
+    residue:res!==null&&resmax!==null&&res>resmax
+  };
+  return {summer,waiver,waiverActive:!!waiver,summerHold:summer&&!waiver,anyFail:Object.values(fails).some(Boolean),fails,eRep};
+}
+
+function render(){
+  if(!$('cert')) return;
+  updateValidationUI();
+  const levels=readLevels();
+  const assess=releaseAssessment();
+  const summer=assess.summer;
+  const rvpMax=num($('sp_rvp_neat').value)??Infinity;
+  const spT10=num($('sp_t10').value),spT50Min=num($('sp_t50_min').value),spT50Max=num($('sp_t50_max').value),spT90=num($('sp_t90').value),spFbp=num($('sp_fbp').value),spRes=num($('sp_res').value);
+  const f=assess.fails;
+  const readiness=requiredReleaseState();
+  const formReady=readiness.complete;
+  const status=!formReady?'INCOMPLETE':((assess.anyFail||assess.summerHold)?'HOLD':(assess.waiverActive?'WAIVER RELEASE CRITERIA MET':'RELEASE CRITERIA MET'));
+  const eRpt=reportedRvp($('e_ptot').value,$('e_astm_rvp').value);
+  const eRvpFail=eRpt!==null&&eRpt>(num($('sp_rvp_e10').value)??Infinity);
+  const rvpLabel=summer?'RVP, EPA equation':'RVP, ASTM equation';
+  const html=`
+  <div class="c-top">
+    <div class="c-wm">GLOBAL<b>PARTNERS</b><em>FORT WORTH TERMINAL &middot; J117</em></div>
+    <div style="text-align:right;font-size:9px;color:#888;font-weight:600;line-height:1.6">Terminal Self-Certified Analysis<br>Global Partners LP<br><span class="c-status ${(!formReady||assess.anyFail||assess.summerHold)?'hold':'release'}">${status}</span></div>
+  </div>
+  <div class="c-brandbar"></div><div class="c-title">Certificate of Analysis</div>
+  <div class="c-meta">
+    <div class="blk"><div class="who">Global Partners LP</div><div class="addr">Fort Worth Terminal J117<br>3200 North Sylvania Ave<br>Fort Worth, TX 76111<br>SouthSupplyOps@globalp.com</div></div>
+    <div class="blk"><table>
+      <tr><td class="k">Report Date:</td><td class="v">${fmtDate($('reportDate').value)}</td></tr>
+      <tr><td class="k">Certificate No.:</td><td class="v">${esc($('certNo').value)}</td></tr>
+      <tr><td class="k">Tank #:</td><td class="v">${esc($('tank').value)}</td></tr>
+      <tr><td class="k">Sample Date:</td><td class="v">${fmtDate($('sampleDate').value)}</td></tr>
+      <tr><td class="k">Volatility Grade:</td><td class="v">${$('grade').value?`Class ${esc($('grade').value)}${gradeManual?' (manual)':''}`:''}</td></tr>
+      <tr><td class="k">Product:</td><td class="v">${esc($('product').value||'—')}</td></tr>
+      ${assess.waiverActive?`<tr><td class="k">Release Basis:</td><td class="v">2026 Summer RVP Waiver</td></tr>`:''}
+      <tr><td class="k">Blend #:</td><td class="v">${esc($('batch').value)}</td></tr>
+    </table></div>
+  </div>
+  <table class="results"><thead><tr><th>Sample Level / Test</th><th class="num">Results</th><th>Units</th><th>Test Method</th><th class="spec">Spec Min</th><th class="spec">Spec Max</th></tr></thead><tbody>
+    ${levels.map(l=>vpBlock(l,rvpMax,summer)).join('')}
+    <tr class="lvl-row e10row"><td colspan="6">Running — blended with 10% EtOH</td></tr>
+    <tr><td class="test">Vapor Pressure</td><td></td><td></td><td class="method">ASTM D5191</td><td></td><td></td></tr>
+    <tr><td class="sub">PTOT</td><td class="result">${esc($('e_ptot').value||'—')}</td><td>psi</td><td></td><td></td><td></td></tr>
+    <tr><td class="sub">${rvpLabel}</td><td class="result ${eRvpFail?'fail':''}">${eRpt===null?'—':fmt2(eRpt)}</td><td>psi</td><td class="method">${summer?'40 CFR 1090.1355':''}</td><td></td><td class="specmax">${esc($('sp_rvp_e10').value)}</td></tr>
+    <tr class="lvl-row e10row"><td colspan="6">Distillation — ASTM D86</td></tr>
+    <tr><td class="test">Barometric Pressure</td><td class="result">${esc($('baro').value||'—')}</td><td>mm Hg</td><td></td><td></td><td></td></tr>
+    <tr><td class="test">Initial Boiling Point</td><td class="result">${esc($('d_ibp').value||'—')}</td><td>&deg;F</td><td></td><td></td><td></td></tr>
+    <tr><td class="test">10% Evaporated</td><td class="result ${f.t10?'fail':''}">${esc($('d_t10').value||'—')}</td><td>&deg;F</td><td></td><td></td><td>${spT10??''}</td></tr>
+    <tr><td class="test">50% Evaporated</td><td class="result ${f.t50?'fail':''}">${esc($('d_t50').value||'—')}</td><td>&deg;F</td><td></td><td>${spT50Min??''}</td><td>${spT50Max??''}</td></tr>
+    <tr><td class="test">90% Evaporated</td><td class="result ${f.t90?'fail':''}">${esc($('d_t90').value||'—')}</td><td>&deg;F</td><td></td><td></td><td>${spT90??''}</td></tr>
+    <tr><td class="test">95% Evaporated</td><td class="result">${esc($('d_t95').value||'—')}</td><td>&deg;F</td><td></td><td></td><td></td></tr>
+    <tr><td class="test">Final Boiling Point</td><td class="result ${f.fbp?'fail':''}">${esc($('d_fbp').value||'—')}</td><td>&deg;F</td><td></td><td></td><td>${spFbp??''}</td></tr>
+    <tr><td class="test">Recovery</td><td class="result">${esc($('d_rec').value||'—')}</td><td>Vol %</td><td></td><td></td><td></td></tr>
+    <tr><td class="test">Residue</td><td class="result ${f.residue?'fail':''}">${esc($('d_res').value||'—')}</td><td>Vol %</td><td></td><td></td><td>${spRes??''}</td></tr>
+    <tr><td class="test">Loss</td><td class="result">${esc($('d_loss').value||'—')}</td><td>Vol %</td><td></td><td></td><td></td></tr>
+  </tbody></table>
+  <div class="hold-banner ${!formReady?'show':''}">&#9888; INCOMPLETE TEST RECORD — Required data is missing or a PTOT/RVP entry check has not passed. This blend is not release-ready. ${readiness.missing.length?`Missing: ${esc(readiness.missing.join(', '))}. `:''}${readiness.invalidVaporPairs.length?`PTOT/RVP check: ${esc(readiness.invalidVaporPairs.join(', '))}.`:''}</div>
+  <div class="oos-banner ${assess.anyFail?'show':''}">&#9888; One or more reported results are outside the automatically selected specification. Do not release — route to review.</div>
+  <div class="waiver-banner ${assess.waiverActive?'show':''}">&#10003; 2026 SUMMER RVP WAIVER — EPA waiver limits applied for this sample date: 9.0 psi maximum for neat E0 and 10.0 psi maximum for E10/E15. Release remains subject to all other applicable Part 1090 and terminal compliance requirements.</div>
+  <div class="hold-banner ${assess.summerHold?'show':''}">&#9888; REGULATORY HOLD — Sample date is in the Fort Worth summer RFG control period but outside the waiver periods currently baked into this tool. Route to Compliance before butane-blend release.</div>
+  <div class="c-note">RVP reporting basis: <b>${!$('sampleDate').value?'—':(summer?'EPA equation (40 CFR 1090.1355)':'ASTM D5191 entry')}</b>. ${summer?'The operator-entered ASTM RVP is retained in the electronic data record only as a PTOT cross-check. ':''}${assess.waiverActive?`Release specification basis: <b>${esc(assess.waiver.name)}</b>, ${esc(assess.waiver.letter)} (${fmtDate(assess.waiver.start)}–${fmtDate(assess.waiver.end)}). `:''}${(!assess.waiverActive && texasEthanolTolerancePsi($('sampleDate').value))?`Finished E10 RVP specification includes the Texas +${texasEthanolTolerancePsi($('sampleDate').value).toFixed(1)} psi ethanol-blend tolerance; the neat-product limit is unchanged. `:''}Non-RVP specification limits are selected automatically from the Fort Worth volatility decision rules.</div>
+  <div class="c-sign"><div class="s"><div class="sig">${initials($('preparedBy').value)}</div><div class="role">Report Prepared by,</div><div class="nm">${esc($('preparedBy').value)} — Terminal Operator</div></div></div>
+  <div class="c-foot"><div><div class="co">Global Partners LP</div>Fort Worth Terminal J117 &middot; 3200 North Sylvania Ave, Fort Worth, TX 76111</div><div class="pg">Page 1 of 1</div></div>`;
+  $('cert').innerHTML=html;
+  renderPhotoAppendix();
+}
+
+function collectRecord(){
+  const levels=readLevels();
+  const pE=num($('e_ptot').value);
+  const sched=scheduleFor($('sampleDate').value);
+  const assess=releaseAssessment();
+  return {
+    savedAt:new Date().toISOString(),certificateNo:$('certNo').value,reportDate:$('reportDate').value,tank:$('tank').value,product:$('product').value,batchId:$('batch').value,sampleDate:$('sampleDate').value,
+    volatilityGrade:$('grade').value,gradeManual,gradeOutsideSchedule:!sched.allowed.includes($('grade').value),
+    vaporLockClass:$('vlClass').value,vaporLockMinF:$('vlMin').value,texasVlWaived:true,rvpBasis:$('rvpBasis').value,
+    texasEthanolTolerancePsi:(!assess.waiverActive?texasEthanolTolerancePsi($('sampleDate').value):0),texasEthanolToleranceApplied:(!assess.waiverActive&&texasEthanolTolerancePsi($('sampleDate').value)>0),
+    spec:{rvpNeatMax:$('sp_rvp_neat').value,rvpE10Max:$('sp_rvp_e10').value,t10Max:$('sp_t10').value,t50Min:$('sp_t50_min').value,t50Max:$('sp_t50_max').value,t90Max:$('sp_t90').value,fbpMax:$('sp_fbp').value,residueMax:$('sp_res').value},
+    levels:levels.map(l=>({...l,reportedRvp:reportedRvp(l.ptot,l.astmRvp),entryCheck:checkPair(l.ptot,l.astmRvp).ok})),
+    e10:{ptot:$('e_ptot').value,astmRvp:$('e_astm_rvp').value,epaRvp:pE===null?null:epaRvpFromPtot(pE),reportedRvp:reportedRvp($('e_ptot').value,$('e_astm_rvp').value),entryCheck:checkPair($('e_ptot').value,$('e_astm_rvp').value).ok},
+    distillation:{baro:$('baro').value,ibp:$('d_ibp').value,t10:$('d_t10').value,t50:$('d_t50').value,t90:$('d_t90').value,t95:$('d_t95').value,fbp:$('d_fbp').value,recovery:$('d_rec').value,residue:$('d_res').value,loss:$('d_loss').value},
+    distillationOcr:{...distillationOcrMeta},
+    levelPhotos:LEVEL_NAMES.map(n=>({level:n,...levelPhotoMeta[n]})),
+    preparedBy:$('preparedBy').value,waiverActive:assess.waiverActive,waiverName:assess.waiver?.name||'',waiverLetter:assess.waiver?.letter||'',waiverStart:assess.waiver?.start||'',waiverEnd:assess.waiver?.end||'',summerRegulatoryHold:assess.summerHold,outOfSpec:assess.anyFail
+  };
+}
+
+function getRecords(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(_){return[];}}
+function updateSavedCount(){const n=getRecords().length;$('savedCount').textContent=`${n} saved`;}
+function stripPhotoImages(records){
+  return records.map(r=>({...r,levelPhotos:(r.levelPhotos||[]).map(p=>({...p,imageDataUrl:'',imageDropped:!!p.imageDataUrl||p.imageDropped}))}));
+}
+function persistRecords(records){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(records));
+    return {ok:true,imagesKept:true};
+  }catch(err){
+    // localStorage is ~5 MB per origin; retained photos hit that first.
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(stripPhotoImages(records)));
+      return {ok:true,imagesKept:false,err};
+    }catch(err2){
+      return {ok:false,err:err2};
+    }
+  }
+}
+function saveRecord(){
+  if(!validateAllVaporPairs(true)) return;
+  if(!validateRequiredReleaseFields(true)) return;
+  const records=getRecords();
+  records.push(collectRecord());
+  const res=persistRecords(records);
+  if(!res.ok){
+    alert('The data record could NOT be saved — this browser\'s local storage is full.\n\nExport the existing records to CSV and download the analyzer photos, then clear saved records before saving again. Nothing has been written.');
+    return;
+  }
+  updateSavedCount();
+  if(res.imagesKept){
+    alert(`Data record saved locally with ${attachedPhotoLevels().length} analyzer photo(s). Saved records: ${records.length}.`);
+  }else{
+    alert(`Data record saved locally, but browser storage is full, so the retained photo IMAGES were dropped from saved records. Photo metadata and digests were kept.\n\nUse "Download Photos" to keep the images with the blend packet. Saved records: ${records.length}.`);
+  }
+}
+
+function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"';}
+function exportCsv(){
+  const records=getRecords(); if(!records.length){alert('No saved records to export. Save at least one data record first.');return;}
+  const headers=['saved_at','certificate_no','report_date','tank','product','batch_id','sample_date','volatility_grade','grade_manual','vapor_lock_class','vapor_lock_min_f','texas_vl_waived','rvp_basis','texas_ethanol_tolerance_psi','texas_ethanol_tolerance_applied','rvp_neat_spec_max','rvp_e10_spec_max','waiver_active','waiver_name','waiver_letter','waiver_start','waiver_end','upper_ptot','upper_rvp_astm','upper_rvp_reported','middle_ptot','middle_rvp_astm','middle_rvp_reported','lower_ptot','lower_rvp_astm','lower_rvp_reported','e10_ptot','e10_rvp_astm','e10_rvp_reported','t10','t50','t90','fbp','residue','out_of_spec','summer_regulatory_hold','distillation_ocr_used','distillation_ocr_file','distillation_ocr_confidence','upper_photo_attached','upper_photo_rvp_read','upper_photo_ptot_seen','upper_photo_ptot_source','upper_photo_selfcheck','upper_photo_confidence','upper_photo_file','upper_photo_digest','middle_photo_attached','middle_photo_rvp_read','middle_photo_ptot_seen','middle_photo_ptot_source','middle_photo_selfcheck','middle_photo_confidence','middle_photo_file','middle_photo_digest','lower_photo_attached','lower_photo_rvp_read','lower_photo_ptot_seen','lower_photo_ptot_source','lower_photo_selfcheck','lower_photo_confidence','lower_photo_file','lower_photo_digest','prepared_by'];
+  const rows=records.map(r=>{const byName=Object.fromEntries((r.levels||[]).map(x=>[x.name,x]));const ph=Object.fromEntries((r.levelPhotos||[]).map(x=>[x.level,x]));const phSelf=n=>{const c=ph[n]?.selfChecks||[];return c.length?(c.every(x=>x.ok)?'pass':'fail'):'';};const phPtotSrc=n=>{const x=ph[n];if(!x||!x.used)return '';return x.ptotApplied?'photo':(x.ptotConflict?'operator (conflicts with photo)':'operator');};const phCols=n=>[ph[n]?.used?'yes':'no',ph[n]?.rvpRead??'',ph[n]?.ptotSeen??'',phPtotSrc(n),phSelf(n),ph[n]?.confidence??'',ph[n]?.fileName??'',ph[n]?.sha256??''];return [r.savedAt,r.certificateNo,r.reportDate,r.tank,r.product,r.batchId,r.sampleDate,r.volatilityGrade,r.gradeManual,r.vaporLockClass,r.vaporLockMinF,r.texasVlWaived,r.rvpBasis,r.texasEthanolTolerancePsi,r.texasEthanolToleranceApplied,r.spec?.rvpNeatMax,r.spec?.rvpE10Max,r.waiverActive,r.waiverName,r.waiverLetter,r.waiverStart,r.waiverEnd,byName.Upper?.ptot,byName.Upper?.astmRvp,byName.Upper?.reportedRvp,byName.Middle?.ptot,byName.Middle?.astmRvp,byName.Middle?.reportedRvp,byName.Lower?.ptot,byName.Lower?.astmRvp,byName.Lower?.reportedRvp,r.e10?.ptot,r.e10?.astmRvp,r.e10?.reportedRvp,r.distillation?.t10,r.distillation?.t50,r.distillation?.t90,r.distillation?.fbp,r.distillation?.residue,r.outOfSpec,r.summerRegulatoryHold,r.distillationOcr?.used,r.distillationOcr?.fileName,r.distillationOcr?.confidence,...phCols('Upper'),...phCols('Middle'),...phCols('Lower'),r.preparedBy];});
+  const csv=[headers.map(csvCell).join(','),...rows.map(row=>row.map(csvCell).join(','))].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Fort-Worth-Blend-Sample-Records.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+
+function initials(name){const clean=(name||'').split('—')[0].trim();return clean.replace('.','').split(/\s+/).map(p=>p[0]||'').join('').slice(0,3);}
+function generate(){if(!validateAllVaporPairs(true)) return;if(!validateRequiredReleaseFields(true)) return;render();setTimeout(()=>window.print(),80);}
+function clearForm(){
+  document.querySelectorAll('.form input').forEach(i=>{
+    if(i.id==='certNo' || i.id==='batch') return;
+    if(i.readOnly) return;
+    if(i.type==='file') return;
+    i.value='';
+  });
+  document.querySelectorAll('.form select').forEach(sel=>sel.value='');
+  gradeManual=false;
+  $('certNo').value=generateCertificateNo();
+  $('batch').value='';
+  resetDistillationPhoto();
+  resetAllLevelPhotos();
+  applyTankProduct();
+  applyDateRules(true);
+  render();
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  $('certNo').value=generateCertificateNo();
+  updateBlendNumber();
+  applyTankProduct();applyDateRules(true);updateSavedCount();
+  $('tank').addEventListener('change',()=>{applyTankProduct();render();});
+  $('sampleDate').addEventListener('change',()=>applyDateRules(true));
+  $('grade').addEventListener('change',()=>{if(!suppressGradeEvent)gradeManual=true;applySpecs();});
+  $('distPhoto').addEventListener('change',showDistillationPreview);
+  document.querySelectorAll('.lvl-photo').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const lvl=inp.dataset.lvl;
+      resetLevelPhoto(lvl,false);
+      if(inp.files&&inp.files[0]) showLevelPreview(lvl);
+      updatePhotoDocStatus();
+    });
+  });
+  document.querySelectorAll('.lvl-photo-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>readLevelPhoto(btn.dataset.lvl));
+  });
+  $('includePhotoAppendix').addEventListener('change',renderPhotoAppendix);
+  LEVEL_NAMES.forEach(updateLevelPhotoBadge);
+  updatePhotoDocStatus();
+  document.querySelectorAll('.form input,.form select').forEach(el=>{
+    if(['tank','sampleDate','grade'].includes(el.id)) return;
+    el.addEventListener('input',()=>{updateValidationUI();render();});
+    el.addEventListener('change',()=>{updateValidationUI();render();});
+  });
+  updateValidationUI();render();
+});
+</script>
+</body>
+</html>
