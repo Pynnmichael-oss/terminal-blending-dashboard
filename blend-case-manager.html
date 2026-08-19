@@ -1708,6 +1708,105 @@ function tankVolumeFromGauge(tankNo,gaugeText){const chart=STRAPPING_CHARTS[Stri
 // hardcoded 'close'/other check to match this file's prefix convention).
 function refreshGaugeDerived(kind){const c=currentCase(),prefix=kind==='close'?'cg':'og',height=document.getElementById(prefix+'-height')?.value||'',el=document.getElementById(prefix+'-derived');if(!el||!c)return;const v=tankVolumeFromGauge(c.tankNo,height);el.className='gate'+(v.ok?'':' warn');el.innerHTML=v.ok?`<b>Derived tank volume:</b> ${fmt(v.gallons)} gal &middot; ${f1(v.bbl)} bbl`:`<b>Derived tank volume:</b> ${esc(v.error)}`}
 
+/* =====================================================================
+   v5 merge batch 3: Header Sample + Tentative Preorder (purely additive
+   -- new functions only, nothing in the live stage flow calls any of
+   these yet; wiring into real stage routing is the isolated stage-graph
+   batch). Reuses this file's existing canonicalTerminalOperator()/
+   toLocalDateTimeInput()/isoFromLocalInput()/truckPlanForVolume()/
+   caseTarget()/round1()/idSuffix()/log()/checkPair() rather than
+   duplicating the prototype's parallel versions of the same concepts.
+   ===================================================================== */
+
+// Reusable editable-operator / editable-actual-time event pattern (brief:
+// "Every meaningful event stores: actual event time (editable, defaults
+// to now)... operator..."). Built once here, as the first new event
+// type, so every later v5 batch reuses it instead of a separate retrofit.
+function lastKnownOperator(c){const last=(c?.log||[]).filter(x=>x.who).at(-1);return canonicalTerminalOperator(last?.who||c?.operator||'')}
+function eventTimeInput(id,value){return `<input id="${esc(id)}" type="datetime-local" value="${toLocalDateTimeInput(value||iso())}">`}
+function resolveOperatorEvent(c,operatorRaw,eventAtRaw){const by=canonicalTerminalOperator(operatorRaw||lastKnownOperator(c));if(!by)throw new Error('Operator is required.');const eventIso=isoFromLocalInput(eventAtRaw)||(eventAtRaw?null:iso());if(!eventIso)throw new Error('Enter a valid event time.');return{by,eventAt:eventIso,recordedAt:iso()}}
+
+// Calculation snapshot shared by the header estimate and the later
+// official static calculation -- both must use identical math so
+// "confirmed vs revised" (batch 4) is a meaningful comparison rather
+// than two formulas coincidentally agreeing.
+function makeCalculationSnapshot(source,rvp,tovBbl,target){const tov=Number(tovBbl)||0,base=Number(rvp)||0,t=Number(target),butaneBbl=tov>0&&Number.isFinite(t)?Math.max(0,CONFIG.coeff*tov*(t-base)):0,plan=truckPlanForVolume(butaneBbl).recommended;return{id:`calc-${source}-${Date.now()}-${idSuffix()}`,source,rvp:base,tovBbl:tov,targetRvp:t,butaneBbl:round1(butaneBbl),trucks:plan.trucks,loads:plan.loads.slice(),plannedTruckBbl:plan.total,generatedAt:iso()}}
+
+// Header Sample: PTOT/ASTM capture -> controlling RVP -> preliminary
+// snapshot. Pure data function -- validated, throws on a bad or
+// non-correlating pair, returns the sample + its snapshot without
+// mutating the case, so it's unit-testable without a DOM.
+function recordHeaderSampleData(c,ptot,astm,operatorRaw,eventAtRaw){
+  const check=checkPair(ptot,astm);
+  if(!check.complete||!check.ok)throw new Error(`PTOT / RVP (ASTM) pair does not match the Grabner relationship. Expected ASTM RVP ${check.expected==null?'—':f2(check.expected)} psi.`);
+  const grade=volatilityGradeForDate(String(c.sourcePlan?.start||c.window?.truckStart||localDateIso()).slice(0,10),c.volatilityGrade),
+        control=controllingRvp(grade,ptot,astm);
+  if(!control.valid)throw new Error('Controlling RVP could not be determined from this PTOT/ASTM pair.');
+  const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
+        sample={position:'Header',ptot:Number(ptot),astmRvp:Number(astm),expectedAstmRvp:check.expected,volatilityGrade:grade,controllingBasis:control.basis,controllingRvp:control.value,epaRvp:control.epa,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by},
+        snapshot=makeCalculationSnapshot('header',control.value,Number(c.est?.vol)||0,caseTarget(c));
+  return{sample,snapshot};
+}
+
+// Render fragment -- not yet reachable from stageHtml()'s routing table.
+// Compact green/red validation only, per the brief ("no explanatory
+// paragraphs under the fields").
+function headerSampleStage(c){
+  if(!c.headerSample){
+    return `<h3>Header Sample &amp; Tentative Trucks <span class="tag warn">Required</span></h3><p class="lead">Before the tank goes static, record the Grabner header sample.</p><div class="formbox"><h4>Header sample</h4><div class="formrow"><div class="field"><label>PTOT (psi)</label><input id="hs-ptot" type="number" step="0.001" oninput="refreshHeaderPairCheck()"></div><div class="field"><label>RVP (ASTM) (psi)</label><input id="hs-astm" type="number" step="0.01" oninput="refreshHeaderPairCheck()"></div><div class="field"><label>Operator</label><select id="hs-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')"><option>S. Anderson</option><option>D. Bass</option><option>G. Sanchez</option><option>M. Ibana</option><option>J. Gibson</option><option>N. Harris</option><option value="__other__">Other...</option></select></div><div class="field"><label>Actual sample time</label>${eventTimeInput('hs-at')}</div></div><div id="hs-pair-check" class="gate">Enter PTOT and RVP (ASTM).</div><div class="actionbar"><button class="btn primary" onclick="recordHeaderSample()" ${editable(c)?'':'disabled'}>Record header sample</button></div></div>`;
+  }
+  const hs=c.headerSample,snap=c.headerCalcSnapshot;
+  return `<h3>Header Sample &amp; Tentative Trucks <span class="tag ok">Recorded</span></h3><div class="grid"><div class="box"><div class="k">PTOT / ASTM</div><div class="v" style="font-size:12px">${f2(hs.ptot)} / ${f2(hs.astmRvp)} psi</div></div><div class="box"><div class="k">Controlling (Class ${esc(hs.volatilityGrade)})</div><div class="v">${hs.controllingBasis} ${f2(hs.controllingRvp)} <small>psi</small></div></div><div class="box"><div class="k">Preliminary butane</div><div class="v">${fmt(snap?.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Preliminary trucks</div><div class="v">${snap?.trucks??'—'}</div></div></div><div class="actionbar"><button class="btn" onclick="openTentativeOrderModal()" ${editable(c)?'':'disabled'}>Preorder Butane Trucks (Tentative)</button></div>`;
+}
+function refreshHeaderPairCheck(){const el=document.getElementById('hs-pair-check');if(!el)return;const ptotRaw=val('hs-ptot'),astmRaw=val('hs-astm'),check=checkPair(ptotRaw,astmRaw);if(!num(ptotRaw)||!num(astmRaw)){el.className='gate';el.textContent='Enter PTOT and RVP (ASTM).';return}el.className='gate '+(check.ok?'ok':'warn');el.innerHTML=check.ok?`✓ Pair checks out — expected ASTM ${f2(check.expected)} psi.`:`⚠ Does not correlate — PTOT ${f2(num(ptotRaw))} expects ASTM ${f2(check.expected)} psi.`}
+async function recordHeaderSample(){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return;
+  try{
+    const {sample,snapshot}=recordHeaderSampleData(c,val('hs-ptot'),val('hs-astm'),val('hs-op'),val('hs-at'));
+    c.headerSample=sample;c.headerCalcSnapshot=snapshot;
+    log(c,sample.operator,`Header sample recorded: PTOT ${f2(sample.ptot)} / ASTM ${f2(sample.astmRvp)} psi; controlling ${sample.controllingBasis} ${f2(sample.controllingRvp)} psi; preliminary calc ${f1(snapshot.butaneBbl)} bbl / ${snapshot.trucks} truck(s)`,'header-sample');
+    render();
+  }catch(e){alert(e.message)}
+}
+
+// Tentative preorder email: clearly TENTATIVE/PLANNING-ONLY, built from
+// the header snapshot. Modeled on buildOrderEmail()'s tone/fields (the
+// official-order template, preserved byte-for-byte untouched -- see the
+// Official Truck Order batch) rather than invented independently.
+function buildTentativeOrderEmail(c,snapshot,f){
+  const window=truckArrivalWindowValues(c),
+        loads=(snapshot.loads||[]).length?snapshot.loads.map((x,i)=>`Truck ${i+1}: ${f1(x)} bbl`).join('\n'):'Load split to be confirmed',
+        blendTime=c.sourcePlan?.start||window.start||'TBD',
+        truckWindow=(window.start&&window.stop)?`${window.start} to ${window.stop}`:'TBD';
+  return{subject:`Fort Worth Certified Butane Nomination · Global Batch ID# ${c.id} · TENTATIVE`,body:`${f?.supplier||'Martin'},\n\nTENTATIVE / PLANNING ONLY — this is an initial Fort Worth certified butane nomination based on the header sample. It is not the official truck order and will be confirmed or revised after the tank is static and the Upper / Middle / Lower samples are tested.\n\nGlobal Batch ID#: ${c.id}\nDestination tank: ${c.tank} / ${c.tankNo}\nProjected blend time: ${blendTime}\nProjected truck window: ${truckWindow}\nPreliminary butane calculation: ${f1(snapshot.butaneBbl)} bbl\nEstimated trucks: ${snapshot.trucks}\nPreliminary load plan:\n${loads}\n\nPlease use this only for planning until the official nomination is sent.\n\nThank you.`};
+}
+// Persists the tentative email as its own case-history record, distinct
+// from (and never promoted into) the official order -- brief: "never
+// auto-promoted to the official order even if the final count matches."
+function recordTentativeTruckPlan(c,email,operatorRaw,eventAtRaw){
+  const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
+        message={id:`tentative-${Date.now()}-${idSuffix()}`,type:'tentative',subject:email.subject,body:email.body,snapshotId:c.headerCalcSnapshot?.id||null,trucks:c.headerCalcSnapshot?.trucks??null,butaneBbl:c.headerCalcSnapshot?.butaneBbl??null,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by};
+  c.tentativeOrders=c.tentativeOrders||[];
+  c.tentativeOrders.push(message);
+  log(c,resolved.by,`Tentative Martin truck email recorded from the header estimate: ${message.trucks??'—'} truck(s) / ${message.butaneBbl==null?'—':f1(message.butaneBbl)} bbl`,'tentative-truck-plan');
+  return message;
+}
+// No modal markup exists yet (no reachable button until the stage-graph
+// batch), so this records immediately with a sensible default rather
+// than stubbing a fake review step. Batch 9 adds a real editable modal
+// in front of these same two functions -- their signatures don't change.
+function openTentativeOrderModal(){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return null;
+  if(!c.headerCalcSnapshot){alert('Record a valid header sample first.');return null}
+  const email=buildTentativeOrderEmail(c,c.headerCalcSnapshot,{supplier:'Martin'}),
+        message=recordTentativeTruckPlan(c,email,c.operator,iso());
+  render();
+  return message;
+}
+
+
 
 function vaporBoxes(){
   return LEVEL_NAMES.map(name=>{
