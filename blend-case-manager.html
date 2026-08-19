@@ -1945,6 +1945,127 @@ function draftOfficialTruckOrder(){
   return record;
 }
 
+/* =====================================================================
+   v5 merge batch 7a: Self-Certification (U/M/L + E10 + D86 manual entry,
+   PASS/HOLD release assessment, generated CoA). Purely additive under a
+   new c.selfCert field, same status as batches 1/3/4 -- not reachable
+   from live stage routing yet.
+
+   Deliberately scoped to MANUAL entry of every field this batch's PASS/
+   HOLD decision depends on. The fixed-layout distillation-photo reader
+   (coa-generator.html's applyDistillationOcr/detectBlueValueBands/
+   connectedBlueComponents/otsuThreshold/... pixel-analysis pipeline,
+   ~20 functions) is a self-contained convenience layer on top of these
+   same fields -- exactly the same relationship the existing Grabner OCR
+   already has to the U/M/L PTOT/ASTM fields it fills (patches 0002-0006:
+   an aid, never the only path, never required to pass). Deferred to a
+   follow-up batch rather than ported now; nothing about the data model
+   or PASS/HOLD logic below changes when it's added. The U/M/L PTOT/ASTM
+   photo capture that DOES already exist in this file (from patches
+   0002-0006) is reused as-is for this stage once wired (batch 9) --
+   not re-implemented here.
+
+   Deliberately reuses controllingRvp()/checkPair()/volatilityGradeForDate()
+   (batches 1/3) rather than porting coa-generator.html's simpler
+   reportedRvp()/isEpaSummer() -- the brief requires keeping the
+   Grabner-ASTM / Class-A-EPA / non-Class-A-ASTM separation intact, and
+   this file's existing controllingRvp() is the one place that's already
+   correct and tested (increment 1). RVP pass/fail ceilings use this
+   file's own CONFIG.ftwBlendstockLimit/ftwE10Limit (9.00/10.00 psi,
+   already live in the certify modal's gate text -- Fort Worth's own
+   fixed compliance-managed limit) rather than CLASS_LIMITS[grade].rvp
+   (the generic EPA class ceiling, which varies 7.4-15.0 by class and is
+   a different concept). D86 limits DO come from CLASS_LIMITS[grade]
+   (increment 1) since distillation curve targets genuinely are
+   class-dependent.
+   ===================================================================== */
+
+function specLimitsForGrade(grade){
+  const g=CLASS_LIMITS[String(grade||'').toUpperCase()]||CLASS_LIMITS.A;
+  return{rvpNeatMax:CONFIG.ftwBlendstockLimit,rvpE10Max:CONFIG.ftwE10Limit,t10Max:g.t10,t50Min:g.t50Finished,t50Max:g.t50Max,t90Max:g.t90,fbpMax:g.fbp};
+}
+
+// Pure PASS/HOLD assessment. A T50 outside [t50Min,t50Max] forces HOLD
+// (brief: "Failing T50 forces HOLD"), same as every other spec fail --
+// no field is treated as advisory-only.
+function selfCertAssessment(entry,limits){
+  const rvpFail=entry.levels.some(l=>l.controllingRvp!=null&&l.controllingRvp>limits.rvpNeatMax),
+        e10Fail=entry.e10.controllingRvp!=null&&entry.e10.controllingRvp>limits.rvpE10Max,
+        d=entry.distillation,
+        t10=num(d.t10),t50=num(d.t50),t90=num(d.t90),fbp=num(d.fbp),
+        fails={
+          rvp:rvpFail||e10Fail,
+          t10:t10!=null&&t10>limits.t10Max,
+          t50:t50!=null&&(t50<limits.t50Min||t50>limits.t50Max),
+          t90:t90!=null&&t90>limits.t90Max,
+          fbp:fbp!=null&&fbp>limits.fbpMax
+        },
+        anyFail=Object.values(fails).some(Boolean);
+  return{fails,anyFail,outcome:anyFail?'HOLD':'PASS'};
+}
+
+// Completeness gate. Blank required values never pass, regardless of
+// what selfCertAssessment() would otherwise conclude from what IS
+// present -- brief: "Blank required values must never pass."
+function selfCertRequiredState(entry){
+  const missing=[],invalid=[];
+  const need=(v,label)=>{if(!String(v??'').trim())missing.push(label)};
+  need(entry.metadata.certNo,'Certificate No.');need(entry.metadata.sampleDate,'Sample Date');
+  need(entry.metadata.tank,'Tank');need(entry.metadata.batch,'Blend #');
+  need(entry.metadata.grade,'Volatility Grade');need(entry.metadata.preparedBy,'Prepared By');
+  entry.levels.forEach(l=>{
+    need(l.api,`${l.position} API`);need(l.hazy,`${l.position} Hazy`);
+    const check=checkPair(l.ptot,l.astmRvp);
+    if(!check.complete)invalid.push(`${l.position} (incomplete)`);else if(!check.ok)invalid.push(l.position);
+  });
+  const eCheck=checkPair(entry.e10.ptot,entry.e10.astmRvp);
+  if(!eCheck.complete)invalid.push('E10 (incomplete)');else if(!eCheck.ok)invalid.push('E10');
+  [['baro','Barometric Pressure'],['ibp','IBP'],['t10','T10'],['t50','T50'],['t90','T90'],['t95','T95'],['fbp','FBP'],['recovery','Recovery'],['residue','Residue'],['loss','Loss']]
+    .forEach(([key,label])=>need(entry.distillation[key],label));
+  return{complete:missing.length===0&&invalid.length===0,missing,invalid};
+}
+
+function selfCertLevelData(prefix){
+  const grade=val('sc-grade'),ptot=val(`${prefix}-ptot`),astm=val(`${prefix}-astm`),check=checkPair(ptot,astm),control=controllingRvp(grade,ptot,astm);
+  return{ptot,astmRvp:astm,expectedAstmRvp:check.expected,controllingBasis:control.basis,controllingRvp:control.value,epaRvp:control.epa};
+}
+function recordSelfCertification(operatorRaw,eventAtRaw){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return null;
+  const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
+        grade=val('sc-grade')||volatilityGradeForDate(val('sc-sample-date')||localDateIso()),
+        entry={
+          levels:['up','mid','low'].map((prefix,i)=>({position:['Upper','Middle','Lower'][i],api:val(`sc-${prefix}-api`),hazy:val(`sc-${prefix}-hazy`),...selfCertLevelData(`sc-${prefix}`)})),
+          e10:selfCertLevelData('sc-e'),
+          distillation:{baro:val('sc-baro'),ibp:val('sc-ibp'),t10:val('sc-t10'),t50:val('sc-t50'),t90:val('sc-t90'),t95:val('sc-t95'),fbp:val('sc-fbp'),recovery:val('sc-recovery'),residue:val('sc-residue'),loss:val('sc-loss')},
+          metadata:{certNo:val('sc-cert-no')||generateSelfCertNo(),sampleDate:val('sc-sample-date'),tank:c.tank,batch:c.id,grade,preparedBy:resolved.by}
+        },
+        state=selfCertRequiredState(entry);
+  if(!state.complete){
+    alert(state.missing.length?`Required release data is incomplete: ${state.missing.join(', ')}.`:`PTOT / RVP (ASTM) verification is incomplete or invalid for: ${state.invalid.join(', ')}.`);
+    return null;
+  }
+  const limits=specLimitsForGrade(grade),assessment=selfCertAssessment(entry,limits),
+        record={...entry,limits,assessment,outcome:assessment.outcome,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,generatedAt:iso(),generatedBy:resolved.by};
+  c.selfCert=record;
+  log(c,resolved.by,`Self-certification recorded: ${record.outcome}${assessment.anyFail?' -- '+Object.entries(assessment.fails).filter(([,v])=>v).map(([k])=>k).join(', ')+' out of spec':''}`,assessment.anyFail?'error':'self-cert-results');
+  render();
+  return record;
+}
+function generateSelfCertNo(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `FTW-COA-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0')}`}
+
+function selfCertLevelFieldsHtml(prefix,label){
+  return `<div class="formrow"><div class="field"><label>${label} PTOT (psi)</label><input id="${prefix}-ptot" type="number" step="0.001"></div><div class="field"><label>${label} RVP (ASTM) (psi)</label><input id="${prefix}-astm" type="number" step="0.01"></div>${label!=='E10'?`<div class="field"><label>${label} API</label><input id="sc-${prefix.replace('sc-','')}-api" type="number" step="0.1"></div><div class="field"><label>${label} Hazy</label><select id="sc-${prefix.replace('sc-','')}-hazy"><option value="">—</option><option>Clear</option><option>Hazy</option></select></div>`:''}</div>`;
+}
+function selfCertStage(c){
+  if(c.selfCert){
+    const s=c.selfCert;
+    return `<h3>Self-Certification <span class="tag ${s.outcome==='PASS'?'ok':'warn'}">${s.outcome}</span></h3><div class="grid"><div class="box"><div class="k">Certificate</div><div class="v" style="font-size:12px">${esc(s.metadata.certNo)}</div></div><div class="box"><div class="k">Grade</div><div class="v">${esc(s.metadata.grade)}</div></div><div class="box"><div class="k">Prepared by</div><div class="v" style="font-size:12px">${esc(s.metadata.preparedBy)}</div></div><div class="box"><div class="k">Outcome</div><div class="v ${s.outcome==='PASS'?'recon-good':'recon-bad'}">${s.outcome}</div></div></div>${s.assessment.anyFail?`<div class="gate warn"><b>Out of spec:</b> ${Object.entries(s.assessment.fails).filter(([,v])=>v).map(([k])=>k.toUpperCase()).join(', ')}</div>`:''}`;
+  }
+  const op=lastKnownOperator(c);
+  return `<h3>Self-Certification <span class="tag warn">Required</span></h3><p class="lead">Record Upper/Middle/Lower and finished E10 vapor pressure, D86 distillation, and certificate metadata. Blank required values cannot pass.</p><div class="formbox"><h4>Certificate</h4><div class="formrow"><div class="field"><label>Certificate No.</label><input id="sc-cert-no" placeholder="auto-generated if blank"></div><div class="field"><label>Sample date</label><input id="sc-sample-date" type="date" value="${localDateIso()}"></div><div class="field"><label>Volatility grade</label><select id="sc-grade">${Object.keys(CLASS_LIMITS).map(g=>`<option ${g==='A'?'selected':''}>${g}</option>`).join('')}</select></div><div class="field"><label>Prepared by</label><select id="sc-prep-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div></div></div><div class="formbox"><h4>Upper / Middle / Lower</h4>${selfCertLevelFieldsHtml('sc-up','Upper')}${selfCertLevelFieldsHtml('sc-mid','Middle')}${selfCertLevelFieldsHtml('sc-low','Lower')}</div><div class="formbox"><h4>Finished E10</h4>${selfCertLevelFieldsHtml('sc-e','E10')}</div><div class="formbox"><h4>D86 Distillation</h4><div class="formrow">${['baro','ibp','t10','t50','t90','t95','fbp','recovery','residue','loss'].map(k=>`<div class="field"><label>${k.toUpperCase()}</label><input id="sc-${k}" type="number" step="0.1"></div>`).join('')}</div></div><div class="actionbar"><button class="btn primary" onclick="recordSelfCertification(val('sc-prep-op'),null)" ${editable(c)?'':'disabled'}>Record self-certification</button></div>`;
+}
+
 
 
 function vaporBoxes(){
