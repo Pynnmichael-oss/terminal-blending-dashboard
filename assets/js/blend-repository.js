@@ -43,7 +43,17 @@ async function saveBlendCaseResults(id,_v,p){const r=await change(id,(_r,s)=>{s.
 async function setBlendCaseDecision(id,_v,decision){return shaped(await change(id,()=>({decision}),'save blend decision'))}
 async function recordBlendCaseActualVolume(id,_v,bbl){return shaped(await change(id,()=>({actual_tov_bbl:Number(bbl)}),'save actual volume'))}
 async function addNote(id,actor,message){let e;await change(id,(_r,s)=>{e={id:uid('event'),event_type:'note',message,created_by:actor||'system',created_at:iso()};s.log.push(e)},'save note');return event(e)}
+// Generic case-file storage against the existing 'blend-case-files' bucket
+// (already created with prototype-wide RLS policies -- see the storage
+// migration; no bucket or policy change needed to use this). `path` is
+// caller-supplied and should be namespaced per case, e.g.
+// `${caseId}/vp-photos/up.jpg`, so files from different cases/features
+// never collide. Kept generic rather than vp-photo-specific so the same
+// two functions can back the AmSpec/SPL CoA uploads later without a new
+// repository function.
+async function uploadCaseFile(path,blob,contentType){const{error}=await supabase.storage.from('blend-case-files').upload(path,blob,{contentType:contentType||blob.type||'application/octet-stream',upsert:true});if(error)throw new Error(`upload case file: ${error.message}`);return{path}}
+async function downloadCaseFile(path){const{data,error}=await supabase.storage.from('blend-case-files').download(path);if(error)throw new Error(`download case file: ${error.message}`);return data}
 function labels(){document.querySelectorAll?.('.plan-status').forEach(e=>{if(e.textContent.trim().toLowerCase()==='proposed')e.textContent='Planned'})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{labels();new MutationObserver(labels).observe(document.body,{childList:true,subtree:true})},{once:true});else{labels();new MutationObserver(labels).observe(document.body,{childList:true,subtree:true})}
-window.BlendRepo={listBlendPlans,listBlendCases,getBlendCase,createBlendCase,promoteBlendPlan,updateBlendPlan,advanceBlendCaseStage,placeBlendCaseOnHold,releaseBlendCaseHold,closeBlendCase,abandonBlendCase,checkoutBlendCase,renewBlendCaseCheckout,releaseBlendCaseCheckout,forceReleaseBlendCaseCheckout,startDelivery,completeDelivery,refuseDelivery,correctCompletedDelivery,updateBlendCaseData,saveBlendCaseResults,setBlendCaseDecision,recordBlendCaseActualVolume,addNote,recordButaneDeliveryVolume,getButaneComplianceStatus};
+window.BlendRepo={listBlendPlans,listBlendCases,getBlendCase,createBlendCase,promoteBlendPlan,updateBlendPlan,advanceBlendCaseStage,placeBlendCaseOnHold,releaseBlendCaseHold,closeBlendCase,abandonBlendCase,checkoutBlendCase,renewBlendCaseCheckout,releaseBlendCaseCheckout,forceReleaseBlendCaseCheckout,startDelivery,completeDelivery,refuseDelivery,correctCompletedDelivery,updateBlendCaseData,saveBlendCaseResults,setBlendCaseDecision,recordBlendCaseActualVolume,addNote,recordButaneDeliveryVolume,getButaneComplianceStatus,uploadCaseFile,downloadCaseFile};
 window.dispatchEvent(new Event('blend-repo-ready'));

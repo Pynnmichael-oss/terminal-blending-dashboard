@@ -128,6 +128,8 @@ body.archive-view .archive-only{display:block}
 .vp-photo-status.working{color:var(--teal)}
 .vp-photo-badge{font-size:8.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(0,179,152,.14);color:#087c63}
 .vp-photo-badge.hide{display:none}
+.vp-photo-preview{flex-basis:100%;max-width:220px;max-height:280px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.vp-photo-preview.hide{display:none}
 
 @media print{.bol-packet-grid{display:block}.bol-packet-item{break-before:page;border:0;padding:0}.bol-packet-item img{max-height:none;width:100%}.bol-demo{font-size:10px}}
 
@@ -265,9 +267,9 @@ body.archive-view .archive-only{display:block}
   </tbody></table></div><div id="s-calc-summary" class="authority-mini" style="margin-top:7px">Enter all four Ptot values.</div></div>
   <div class="formbox vp-photo-box"><h4>Upper / middle / lower — analyzer screen photo (optional)</h4><div class="authority-mini">Photograph the Grabner "Result details" screen for a position and the reader fills its Ptot and Reported DVPE. It only fills a field when its D5191/D4953/D323 readings agree with the instrument's own printed conversion equations, and it never overwrites a value you've already typed. The Fort Worth release decision still runs on the Internal EPA DVPE column above, recalculated independently from Ptot &mdash; the reader is an entry aid, not the release check. E10 runner stays manual for now. Photos are kept in this browser only; database storage is planned.</div>
   <div class="vp-photo-rows">
-    <div class="vp-photo-row" data-pos="up"><b>Upper</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="up"><button type="button" class="btn vp-photo-btn" data-pos="up">Read photo</button><span class="vp-photo-badge hide" data-pos="up"></span><div class="vp-photo-status" data-pos="up"></div></div>
-    <div class="vp-photo-row" data-pos="mid"><b>Middle</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="mid"><button type="button" class="btn vp-photo-btn" data-pos="mid">Read photo</button><span class="vp-photo-badge hide" data-pos="mid"></span><div class="vp-photo-status" data-pos="mid"></div></div>
-    <div class="vp-photo-row" data-pos="low"><b>Lower</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="low"><button type="button" class="btn vp-photo-btn" data-pos="low">Read photo</button><span class="vp-photo-badge hide" data-pos="low"></span><div class="vp-photo-status" data-pos="low"></div></div>
+    <div class="vp-photo-row" data-pos="up"><b>Upper</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="up"><button type="button" class="btn vp-photo-btn" data-pos="up">Read photo</button><button type="button" class="btn ghost vp-photo-view hide" data-pos="up">View</button><span class="vp-photo-badge hide" data-pos="up"></span><div class="vp-photo-status" data-pos="up"></div><img class="vp-photo-preview hide" data-pos="up" alt="Upper analyzer screen"></div>
+    <div class="vp-photo-row" data-pos="mid"><b>Middle</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="mid"><button type="button" class="btn vp-photo-btn" data-pos="mid">Read photo</button><button type="button" class="btn ghost vp-photo-view hide" data-pos="mid">View</button><span class="vp-photo-badge hide" data-pos="mid"></span><div class="vp-photo-status" data-pos="mid"></div><img class="vp-photo-preview hide" data-pos="mid" alt="Middle analyzer screen"></div>
+    <div class="vp-photo-row" data-pos="low"><b>Lower</b><input type="file" accept="image/*" capture="environment" class="vp-photo-input" data-pos="low"><button type="button" class="btn vp-photo-btn" data-pos="low">Read photo</button><button type="button" class="btn ghost vp-photo-view hide" data-pos="low">View</button><span class="vp-photo-badge hide" data-pos="low"></span><div class="vp-photo-status" data-pos="low"></div><img class="vp-photo-preview hide" data-pos="low" alt="Lower analyzer screen"></div>
   </div></div>
   <div class="formbox"><h4>Evidence</h4><div class="formrow"><div class="field"><label>Appearance</label><select id="s-haze"><option value="clear">Clear and bright</option><option value="hazy">Hazy</option></select></div><div class="field"><label>Results source</label><select id="s-source"><option>Manual entry</option><option>Instrument export</option><option>Laboratory certificate</option></select></div><div class="field"><label>Laboratory specification shown</label><input id="s-lab-spec" value="Not applicable — terminal test"></div><div class="field"><label>SPL reported disposition</label><select id="s-lab-disposition"><option>Not applicable — terminal test</option><option>Pass / no failure shown</option><option>Fail / not approved</option><option>Not stated</option></select></div></div><div id="s-coa-wrap" class="coa-upload" style="display:none"><b>SPL Certificate of Analysis</b><div class="authority-mini">Upload the returned SPL CoA. The original report is retained with the case. SPL’s printed specification and disposition are advisory; Global Partners independently evaluates SPL’s measured Ptot values using the Fort Worth limits and current EPA equation.</div><input id="s-coa-file" type="file" accept="application/pdf,image/*" onchange="handleCertificationCoa(this)"><div id="s-coa-status" class="coa-file-status">No CoA attached.</div></div></div>
   <div class="gate"><b>Decision posture:</b> Fort Worth is fixed to the DFW RFG profile. The Compliance-managed Fort Worth release profile requires every upper, middle, and lower internal EPA DVPE result to be ≤ 9.00 psi and the E10 runner to be ≤ 10.00 psi. The upper/middle/lower spread is a Fort Worth tank-homogeneity check; never duplicate a missing position to satisfy it. No precision allowance is applied and results exactly at the limit pass. <b>SPL’s printed limits and Pass/Fail disposition are advisory; Global Partners’ release determination on SPL’s measured results controls the case.</b></div>
@@ -456,7 +458,7 @@ function defaultDocs(){return {
 function makePlan(x){return Object.assign({id:'PLAN-2026-W31-'+idSuffix(),label:'Planned blend',grade:'REGULAR',tank:'TK 55',tankNo:'23155',start:'2026-07-28 06:00',end:'2026-07-28 23:59',estPumpable:0,estTov:0,incomingRvp:0,targetRvp:8.85,butane:0,trucks:0,blendedRvp:0,truckStart:'',truckFinish:'',status:'proposed',reason:null,sourceWeek:'07/28/2026',assumption:'Based on planned receipts, rack liftings, and estimated incoming-batch RVP.'},x||{})}
 function formatBlendNumber(tankNo,tank,dateValue){const labelMatch=String(tank||'').match(/(\d{1,2})\s*$/),digits=String(tankNo||'').replace(/\D/g,''),tankCode=(labelMatch?labelMatch[1]:digits.slice(-2)||'00').padStart(2,'0').slice(-2),raw=/^\d{4}-\d{2}-\d{2}/.test(String(dateValue||''))?String(dateValue).slice(0,10):localDateIso(),parts=raw.split('-');return `FTW${tankCode}${parts[1]}${parts[2]}${parts[0].slice(-2)}`}
 function nextBlendNumber(plan){const base=formatBlendNumber(plan?.tankNo,plan?.tank),used=new Set((state?.cases||[]).map(c=>c.id));if(!used.has(base))return base;for(const suffix of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')if(!used.has(base+suffix))return base+suffix;return base+Date.now().toString().slice(-2)}
-function makeCase(x){return Object.assign({id:'FTW55073026',plannerId:null,globalBatchId:null,sourcePlan:null,grade:'REGULAR',tank:'TK 55',tankNo:'23155',row:'Regular blend',operator:'D. Bass',pq:'R. Lawrence',receipt:{bol:'DEMO'},est:{vol:40000,rvp:7.85},act:{tov:null,s:[]},preBlendResults:null,openGauge:null,isolation:null,window:{truckStart:'',truckStop:'',lastTruck:''},circulation:{targetMinutes:120,startedAt:null,firstTruckAt:null,preMinutes:null,preWarning:null,finalTruckAt:null,butaneClosedAt:null,stoppedAt:null,postMinutes:null,postWarning:null},stage:1,status:'open',checkout:null,decision:null,ordered:0,deliveries:[],order:null,closeGauge:null,reconciliation:null,valveAlignment:null,timestamps:{},iterations:[{seq:1,reason:'initial',outcome:'open',measurements:[]}],certification:{route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},marginReview:{reviewedAt:null,reviewedBy:null},complianceSupplier:null,complianceContributionGal:0,hold:null,closed:null,summaryGenerated:null,documents:defaultDocs(),log:[event('system','Execution case created from a Blend Planner snapshot')]},x||{})}
+function makeCase(x){return Object.assign({id:'FTW55073026',plannerId:null,globalBatchId:null,sourcePlan:null,grade:'REGULAR',tank:'TK 55',tankNo:'23155',row:'Regular blend',operator:'D. Bass',pq:'R. Lawrence',receipt:{bol:'DEMO'},est:{vol:40000,rvp:7.85},act:{tov:null,s:[]},preBlendResults:null,openGauge:null,isolation:null,window:{truckStart:'',truckStop:'',lastTruck:''},circulation:{targetMinutes:120,startedAt:null,firstTruckAt:null,preMinutes:null,preWarning:null,finalTruckAt:null,butaneClosedAt:null,stoppedAt:null,postMinutes:null,postWarning:null},stage:1,status:'open',checkout:null,decision:null,ordered:0,deliveries:[],order:null,closeGauge:null,reconciliation:null,valveAlignment:null,timestamps:{},iterations:[{seq:1,reason:'initial',outcome:'open',measurements:[]}],certification:{route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},marginReview:{reviewedAt:null,reviewedBy:null},complianceSupplier:null,complianceContributionGal:0,hold:null,closed:null,summaryGenerated:null,vpPhotos:{},documents:defaultDocs(),log:[event('system','Execution case created from a Blend Planner snapshot')]},x||{})}
 function defaultFtwAuthority(){return{terminal:'Fort Worth J117',county:'Tarrant County',program:'DFW federal RFG',waiver:{effectiveStart:'2026-05-01',verifiedThrough:'2026-08-08',source:'EPA National Fuel Waiver renewed July 17, 2026; TCEQ enforcement discretion follows the National Fuel Waiver',updatedBy:'Compliance',updatedAt:'2026-07-17T12:00:00-05:00'}}}
 function localDateIso(){const d=new Date(),off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,10)}
 function dateOnlyValue(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''))?String(v):localDateIso()}
@@ -475,7 +477,7 @@ function seed(){
  const h=makeCase({id:'FTW56071726',plannerId:hp.id,sourcePlan:deepClone(hp),grade:'REGULAR',tank:'TK 56',tankNo:'23156',row:'Completed regular blend',est:{vol:34520,rvp:8.18},act:{tov:34520,s:hDvpe},preBlendResults:{method:'EPA',equation:'DVPE = 0.956 × Ptot − 0.347',tolerance:CONFIG.dvpeTolerance,samples:['Upper','Middle','Lower'].map((position,i)=>({position,ptot:hPtot[i],dvpe:hDvpe[i],calculatedDvpe:dvpeFromPtot(hPtot[i]),valid:true}))},openGauge:{at:'2026-07-17T10:45:00Z',height:'31-4-8',temperature:78.1,api:64.8,netBbl:openBbl,operator:'D. Bass'},isolation:{at:'2026-07-17T10:50:00Z',by:'D. Bass',confirmed:true},window:{truckStart:'2026-07-17 07:00',truckStop:'2026-07-17 12:00',lastTruck:'2026-07-17 12:00'},stage:10,status:'closed',decision:'exact-load',ordered:2,orderedVolume:380,truckPlan:{mode:'exact',trucks:2,total:380,loads:[190,190]},order:{ref:'BO-2026-0308',at:'2026-07-17T11:00:00Z',supplier:'Martin',hauler:'Devon',subject:'Fort Worth Certified Butane Nomination · Global Batch ID# FTW56071726',emailStatus:'sent'},complianceSupplier:'Martin',deliveries:[{n:1,plannedBbl:190,netBbl:189.6,bol:'88211-A',driver:'Driver A',operator:'D. Bass',status:'complete',startedAt:'2026-07-17T07:05:00Z',completedAt:'2026-07-17T08:00:00Z',worksheet:{allChecked:true}},{n:2,plannedBbl:190,netBbl:190.2,bol:'88212-B',driver:'Driver B',operator:'D. Bass',status:'complete',startedAt:'2026-07-17T10:45:00Z',completedAt:'2026-07-17T12:05:00Z',worksheet:{allChecked:true}}],closeGauge:{at:'2026-07-17T14:55:00Z',height:'31-8-2',temperature:78.0,api:65.0,netBbl:closeBbl,operator:'D. Bass'},reconciliation:{expectedBbl:openBbl+receivedBbl,actualBbl:closeBbl,varianceBbl:-6,toleranceBbl:CONFIG.reconToleranceBbl,withinTolerance:true,reason:'Within configured tolerance',approvedBy:'D. Bass'},timestamps:{blendStartAt:'2026-07-17T15:05:00Z',blendStopAt:'2026-07-17T15:42:00Z',settleEligibleAt:'2026-07-17T16:42:00Z',settleCompleteAt:'2026-07-17T16:50:00Z'},mixing:{method:'Recirculation',note:'Standard terminal route'},iterations:[{seq:1,reason:'initial',outcome:'released',releasedAt:'2026-07-17T17:15:00Z',measurements:[{at:'2026-07-17T17:00:00Z',route:'terminal',analyst:'D. Bass',qualification:'qualified',avg:8.74,e10:9.47,releaseAllowed:true,rules:[]}]}],certification:{route:'terminal',labOrder:null,release:{at:'2026-07-17T17:15:00Z',by:'D. Bass',basis:'Qualified terminal self-certification · average DVPE 8.74 psi'}},closed:{at:'2026-07-17T17:30:00Z',by:'S. Anderson'},summaryGenerated:{at:'2026-07-17T17:30:00Z',by:'S. Anderson',version:'V8.7.8'},log:[event('system','Plan promoted from Blend Planner'),event('D. Bass','Open and close gauges reconciled within tolerance'),event('D. Bass','Qualified terminal self-certification released the tank'),event('S. Anderson','Case closed and blend packet archived')]});h.circulation={targetMinutes:120,startedAt:'2026-07-17T05:00:00Z',firstTruckAt:'2026-07-17T07:05:00Z',preMinutes:125,preWarning:null,finalTruckAt:'2026-07-17T12:05:00Z',butaneClosedAt:'2026-07-17T12:10:00Z',stoppedAt:'2026-07-17T14:15:00Z',postMinutes:125,postWarning:null};h.timestamps.blendStartAt=h.circulation.startedAt;h.timestamps.blendStopAt=h.circulation.stoppedAt;h.timestamps.settleEligibleAt='2026-07-17T15:15:00Z';const hv=ensureValveAlignment(h);hv.opening.steps=hv.opening.steps.map(()=>true);hv.opening.initials=hv.opening.initials.map(()=>operatorInitials(h.operator));hv.opening.completedAt=h.timestamps.blendStartAt;hv.opening.by=h.operator;hv.closing.steps=hv.closing.steps.map(()=>true);hv.closing.initials=hv.closing.initials.map(()=>operatorInitials(h.operator));hv.closing.completedAt=h.timestamps.blendStopAt;hv.closing.by=h.operator;hv.attestations={completed:true,jobAid:true,signature:h.operator,date:'2026-07-17'};Object.values(h.documents).forEach(d=>{if(d.status!=='not-required')d.status='generated'});h.documents.labOrder.status='not-required';h.documents.signed.status='generated';h.documents.summary.status='generated';h.certification.generatedCoa={documentType:'Global Partners Terminal Certificate of Analysis',certificateId:'FTW-COA-2026-0308',terminal:'Fort Worth J117',address:'3200 North Sylvania Avenue, Fort Worth, TX 76111',tank:h.tank,tankNo:h.tankNo,blendCase:h.id,sampleDate:'2026-07-17',method:'ASTM D5191 · DVPE',analyst:'D. Bass',qualification:'qualified',results:[{sample:'Upper',dvpe:8.73},{sample:'Middle',dvpe:8.74},{sample:'Lower',dvpe:8.75},{sample:'E10 runner',dvpe:9.47}],average:8.74,spread:.02,limits:{blendstock:9,e10:10},authority:'Fort Worth J117 · DFW RFG · 2026 waiver',outcome:'Meets Fort Worth waiver profile',generatedAt:'2026-07-17T17:15:00Z'};
  return {plans:[p2],cases:[a,b,h],ftwAuthority:defaultFtwAuthority(),blendTarget:defaultBlendTarget(),compliance:{threshold:CONFIG.complianceGallons,warningThreshold:CONFIG.complianceWarningGallons,maxDays:CONFIG.complianceDays,warningDays:CONFIG.complianceWarningDays,suppliers:{'certified-butane':{product:'Certified butane',gallonsSinceSample:350000,lastSampleAt:'2026-06-17T18:00:00Z',lastSample:{id:'FTW-CB-2026-0617',at:'2026-06-17T18:00:00Z',path:'AmSpec oversight laboratory',result:'Acceptable'},firstDeliverySampled:true,firstDeliveryReceived:true,samples:[]}}}};
 }
-function normalize(){if(!state.plans)state.plans=[];state.ftwAuthority=Object.assign(defaultFtwAuthority(),state.ftwAuthority||{});state.ftwAuthority.waiver=Object.assign(defaultFtwAuthority().waiver,state.ftwAuthority.waiver||{});delete state.ftwAuthority.conditions;state.blendTarget=Object.assign(defaultBlendTarget(),state.blendTarget||{});if(!state.compliance)state.compliance=seed().compliance;state.compliance.suppliers=state.compliance.suppliers||seed().compliance.suppliers;state.cases.forEach(c=>{c.documents=Object.assign(defaultDocs(),c.documents||{});c.preBlendResults=c.preBlendResults||null;c.certification=Object.assign({route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},c.certification||{});c.marginReview=Object.assign({reviewedAt:null,reviewedBy:null},c.marginReview||{});delete c.marginReview['net'+'MarginPerGal'];delete c.marginReview.updatedAt;delete c.marginReview.updatedBy;c.iterations=c.iterations||[{seq:1,reason:'initial',outcome:'open',measurements:[]}];c.timestamps=c.timestamps||{};if(c.stage===5)c.stage=6;c.deliveries=c.deliveries||[];const timingCirc=ensureCirculation(c);if(!c.timestamps.blendStartAt&&timingCirc.startedAt)c.timestamps.blendStartAt=timingCirc.startedAt;const timingMeasurement=latestMeasurement(c);if(!c.timestamps.blendCompleteAt&&timingMeasurement?.at)c.timestamps.blendCompleteAt=timingMeasurement.at;c.log=c.log||[];c.window=Object.assign({truckStart:'',truckStop:'',lastTruck:''},c.window||{});c.window.truckStart=c.window.truckStart||c.sourcePlan?.truckStart||'';c.window.truckStop=c.window.truckStop||c.sourcePlan?.truckFinish||c.window.lastTruck||'';c.window.lastTruck=c.window.truckStop||c.window.lastTruck||'';if(c.closed&&c.stage===9)c.stage=10;delete c.caseAdjustmentsBbl;delete c.mixing;c.complianceContributionGal=Number(c.complianceContributionGal||0);delete c.complianceSupplier;ensureValveAlignment(c);if(c.closed&&!c.summaryGenerated)c.summaryGenerated={at:c.closed.at,by:c.closed.by,version:'migrated'};})}
+function normalize(){if(!state.plans)state.plans=[];state.ftwAuthority=Object.assign(defaultFtwAuthority(),state.ftwAuthority||{});state.ftwAuthority.waiver=Object.assign(defaultFtwAuthority().waiver,state.ftwAuthority.waiver||{});delete state.ftwAuthority.conditions;state.blendTarget=Object.assign(defaultBlendTarget(),state.blendTarget||{});if(!state.compliance)state.compliance=seed().compliance;state.compliance.suppliers=state.compliance.suppliers||seed().compliance.suppliers;state.cases.forEach(c=>{c.documents=Object.assign(defaultDocs(),c.documents||{});c.preBlendResults=c.preBlendResults||null;c.certification=Object.assign({route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},c.certification||{});c.marginReview=Object.assign({reviewedAt:null,reviewedBy:null},c.marginReview||{});delete c.marginReview['net'+'MarginPerGal'];delete c.marginReview.updatedAt;delete c.marginReview.updatedBy;c.iterations=c.iterations||[{seq:1,reason:'initial',outcome:'open',measurements:[]}];c.timestamps=c.timestamps||{};c.vpPhotos=c.vpPhotos&&typeof c.vpPhotos==='object'?c.vpPhotos:{};if(c.stage===5)c.stage=6;c.deliveries=c.deliveries||[];const timingCirc=ensureCirculation(c);if(!c.timestamps.blendStartAt&&timingCirc.startedAt)c.timestamps.blendStartAt=timingCirc.startedAt;const timingMeasurement=latestMeasurement(c);if(!c.timestamps.blendCompleteAt&&timingMeasurement?.at)c.timestamps.blendCompleteAt=timingMeasurement.at;c.log=c.log||[];c.window=Object.assign({truckStart:'',truckStop:'',lastTruck:''},c.window||{});c.window.truckStart=c.window.truckStart||c.sourcePlan?.truckStart||'';c.window.truckStop=c.window.truckStop||c.sourcePlan?.truckFinish||c.window.lastTruck||'';c.window.lastTruck=c.window.truckStop||c.window.lastTruck||'';if(c.closed&&c.stage===9)c.stage=10;delete c.caseAdjustmentsBbl;delete c.mixing;c.complianceContributionGal=Number(c.complianceContributionGal||0);delete c.complianceSupplier;ensureValveAlignment(c);if(c.closed&&!c.summaryGenerated)c.summaryGenerated={at:c.closed.at,by:c.closed.by,version:'migrated'};})}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):seed()}catch(e){return seed()}}
 function updateStorageStatus(bytes,error){const box=document.getElementById('storageStatus');if(!box)return;if(error){box.className='storage-status error';box.innerHTML=`<b>Save failed on this device.</b> ${esc(error)} Export the case JSON/PDF now; attachments or recent entries may not survive a refresh. The 8090 terminal server is required for shared-device testing.`;return}box.className='storage-status';box.innerHTML=`<b>Saved locally on this device</b> · ${(bytes/1024).toFixed(0)} KB · not shared with other tablets or workstations. Confirm this status after attaching BOLs or CoAs.`}
 function saveState(){let payload='';try{payload=JSON.stringify(state);localStorage.setItem(STORAGE_KEY,payload);lastSaveError='';updateStorageStatus(new Blob([payload]).size,'');return true}catch(e){lastSaveError=e&&e.message?e.message:'Browser storage unavailable or quota exceeded';console.warn(e);updateStorageStatus(payload?new Blob([payload]).size:0,lastSaveError);return false}}
@@ -1543,15 +1545,17 @@ function retainedJpeg(img){
    ===================================================================== */
 const VP_DB='ftw_bcm_vp_photos',VP_STORE='photos';
 function openVpPhotoDb(){return new Promise((resolve,reject)=>{if(!window.indexedDB){reject(new Error('Photo storage is unavailable in this browser.'));return}const req=indexedDB.open(VP_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(VP_STORE))db.createObjectStore(VP_STORE,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Could not open photo storage.'))})}
-async function saveVpPhoto(id,blob,meta){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readwrite');tx.objectStore(VP_STORE).put({id,blob,meta,savedAt:iso()});tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{const e=tx.error||new Error('Could not save the photo.');db.close();reject(e)}})}
-async function loadVpPhoto(id){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readonly'),req=tx.objectStore(VP_STORE).get(id);req.onsuccess=()=>{db.close();resolve(req.result||null)};req.onerror=()=>{const e=req.error||new Error('Could not load the photo.');db.close();reject(e)}})}
-function vpPhotoId(c,pos){return c?`${c.id}::${pos}`:null}
+async function saveVpPhotoLocal(id,blob,meta){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readwrite');tx.objectStore(VP_STORE).put({id,blob,meta,savedAt:iso()});tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{const e=tx.error||new Error('Could not save the photo.');db.close();reject(e)}})}
+async function loadVpPhotoLocal(id){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readonly'),req=tx.objectStore(VP_STORE).get(id);req.onsuccess=()=>{db.close();resolve(req.result||null)};req.onerror=()=>{const e=req.error||new Error('Could not load the photo.');db.close();reject(e)}})}
+function vpPhotoLocalId(c,pos){return c?`${c.id}::${pos}`:null}
+function vpPhotoRemotePath(c,pos){return c&&c.dbId?`${c.dbId}/vp-photos/${pos}.jpg`:null}
 function retainedVpJpeg(img){const c=proxyCanvas(img,1400);return new Promise(resolve=>{try{c.toBlob(b=>resolve(b),'image/jpeg',0.72)}catch(_){resolve(null)}})}
 
 function vpPhotoEls(pos){
   const row=document.querySelector(`.vp-photo-row[data-pos="${pos}"]`); if(!row) return null;
   return {row,input:row.querySelector('.vp-photo-input'),btn:row.querySelector('.vp-photo-btn'),
-    badge:row.querySelector('.vp-photo-badge'),status:row.querySelector('.vp-photo-status')};
+    view:row.querySelector('.vp-photo-view'),badge:row.querySelector('.vp-photo-badge'),
+    status:row.querySelector('.vp-photo-status'),preview:row.querySelector('.vp-photo-preview')};
 }
 
 async function resetVpPhotoUi(c){
@@ -1559,21 +1563,50 @@ async function resetVpPhotoUi(c){
     const els=vpPhotoEls(pos); if(!els) return;
     if(els.input) els.input.value='';
     els.badge.classList.add('hide');els.badge.textContent='';
+    els.view.classList.add('hide');delete els.view.dataset.path;
+    els.preview.classList.add('hide');els.preview.removeAttribute('src');
     els.status.className='vp-photo-status';els.status.textContent='';
   });
   if(!c) return;
   for(const pos of ['up','mid','low']){
+    const els=vpPhotoEls(pos); if(!els) continue;
+    const synced=c.vpPhotos&&c.vpPhotos[pos];
+    if(synced){
+      els.badge.classList.remove('hide');
+      els.badge.textContent='Saved photo on file';
+      els.status.innerHTML=`A photo was already read for this case &mdash; ${synced.selfCheckPassed?'self-check passed':'self-check did not pass'} (${synced.savedAt?new Date(synced.savedAt).toLocaleString():'date unknown'}). Fields above were reset for this session; read again to refill them.`;
+      if(synced.path){els.view.classList.remove('hide');els.view.dataset.path=synced.path;}
+      continue;
+    }
+    if(c.dbId) continue;
     try{
-      const id=vpPhotoId(c,pos);
-      const rec=id?await loadVpPhoto(id):null;
-      const els=vpPhotoEls(pos);
-      if(rec&&els){
+      const id=vpPhotoLocalId(c,pos);
+      const rec=id?await loadVpPhotoLocal(id):null;
+      if(rec){
         els.badge.classList.remove('hide');
-        els.badge.textContent='Saved photo on file';
-        els.status.className='vp-photo-status';
-        els.status.innerHTML=`A photo was already read for this case &mdash; ${rec.meta&&rec.meta.selfCheckPassed?'self-check passed':'self-check did not pass'} (${new Date(rec.savedAt).toLocaleString()}). Fields above were reset for this session; read again to refill them.`;
+        els.badge.textContent='Saved photo on file (local only)';
+        els.status.innerHTML=`A photo was already read for this case &mdash; ${rec.meta&&rec.meta.selfCheckPassed?'self-check passed':'self-check did not pass'} (${new Date(rec.savedAt).toLocaleString()}). This case has no database record yet, so the photo is kept in this browser only.`;
       }
     }catch(_){/* IndexedDB unavailable — capture still works, just isn't restored on reopen */}
+  }
+}
+
+async function viewVpPhoto(pos){
+  const els=vpPhotoEls(pos); if(!els) return;
+  const path=els.view.dataset.path;
+  if(!path) return;
+  els.view.disabled=true;
+  try{
+    const blob=await window.BlendRepo.downloadCaseFile(path);
+    const url=URL.createObjectURL(blob);
+    els.preview.src=url;
+    els.preview.classList.remove('hide');
+  }catch(e){
+    console.error(e);
+    els.status.className='vp-photo-status bad';
+    els.status.textContent='Could not load the saved photo from the database: '+(e.message||'unknown error');
+  }finally{
+    els.view.disabled=false;
   }
 }
 
@@ -1664,20 +1697,41 @@ async function readVpPhoto(pos){
 
     refreshCertificationCalculations();
 
+    const meta={
+      fileName:file.name||'',d5191,d4953,ptot:ptotVal,
+      selfCheckPassed:!!(read.checked&&read.selfCheckPassed),
+      sampleId:read.sampleId||'',standard:read.standard||'',
+      instrumentStamp:read.instrumentStamp||'',savedAt:iso()
+    };
+    let storageNote='';
     try{
       const blob=await retainedVpJpeg(img);
-      const id=vpPhotoId(c,pos);
-      if(blob&&id){
-        await saveVpPhoto(id,blob,{
-          fileName:file.name||'',d5191,d4953,ptot:ptotVal,
-          selfCheckPassed:!!(read.checked&&read.selfCheckPassed),
-          sampleId:read.sampleId||'',standard:read.standard||'',
-          instrumentStamp:read.instrumentStamp||''
-        });
-      }
-    }catch(e){console.warn('Photo not retained locally:',e);}
+      if(blob){
+        const localId=vpPhotoLocalId(c,pos);
+        if(localId) await saveVpPhotoLocal(localId,blob,meta).catch(()=>{});
 
-    els.status.innerHTML=msgs.join('; ')+'. <b>Verify against the analyzer before release.</b>';
+        const remotePath=vpPhotoRemotePath(c,pos);
+        if(remotePath){
+          await window.BlendRepo.uploadCaseFile(remotePath,blob,'image/jpeg');
+          c.vpPhotos=c.vpPhotos&&typeof c.vpPhotos==='object'?c.vpPhotos:{};
+          c.vpPhotos[pos]={...meta,path:remotePath};
+          const updated=await window.BlendRepo.updateBlendCaseData(c.dbId,c.dbVersion,{vpPhotos:c.vpPhotos});
+          c.dbVersion=Number(updated.record_version);
+          els.view.classList.remove('hide');
+          els.view.dataset.path=remotePath;
+        }else{
+          c.vpPhotos=c.vpPhotos&&typeof c.vpPhotos==='object'?c.vpPhotos:{};
+          c.vpPhotos[pos]={...meta,path:null};
+          storageNote=' Photo kept in this browser only &mdash; this case has no database record yet.';
+        }
+        saveState();
+      }
+    }catch(e){
+      console.error('Photo not saved to the database:',e);
+      storageNote=' <b>The photo was read and the values above were filled, but saving the photo to the database failed:</b> '+esc(e.message||'unknown error')+'. It is still cached in this browser.';
+    }
+
+    els.status.innerHTML=msgs.join('; ')+'. <b>Verify against the analyzer before release.</b>'+storageNote;
   }catch(err){
     console.error(err);
     els.status.className='vp-photo-status bad';
@@ -1689,13 +1743,15 @@ async function readVpPhoto(pos){
 
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.vp-photo-btn');
-  if(btn) readVpPhoto(btn.dataset.pos);
+  if(btn){readVpPhoto(btn.dataset.pos);return}
+  const view=e.target.closest('.vp-photo-view');
+  if(view) viewVpPhoto(view.dataset.pos);
 });
 document.addEventListener('change',e=>{
   const inp=e.target.closest('.vp-photo-input');
   if(inp){
     const els=vpPhotoEls(inp.dataset.pos);
-    if(els){els.status.className='vp-photo-status';els.status.textContent='';els.badge.classList.add('hide');}
+    if(els){els.status.className='vp-photo-status';els.status.textContent='';els.badge.classList.add('hide');els.view.classList.add('hide');els.preview.classList.add('hide');}
   }
 });
 
