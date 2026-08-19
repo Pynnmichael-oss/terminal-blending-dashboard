@@ -683,13 +683,43 @@ function stageHtmlLegacy(c,z,s){
 function stageHtml(c,z,s){
   return Number(c.workflowVersion)===2?stageHtmlV5(c,z,s):stageHtmlLegacy(c,z,s);
 }
+/* v5 merge 9c-1: new-numbered STAGES text (brief's literal wording) and
+   stages 1-4's content wiring (Plan Source / Header Sample / Static
+   Gauge / Official Calc). Stages 5-11 remain an honest placeholder --
+   see stageHtmlV5() below -- not yet wired (9c-2 covers 5-9, which
+   requires making several currently-shared legacy functions
+   workflowVersion-aware; 9d resolves the two flagged risk areas,
+   Certify & Release's content swap and the Final Summary+Close merge). */
+const STAGES_V5=['Plan Source','Header Sample & Tentative Trucks','Static Gauge & U/M/L Samples','Official Blend Calculation & Truck Order','Opening Alignment & Start Circulation','Process Trucks','Complete Circulation & Closing Alignment','Settle','Close Gauge & Post-Blend Samples','Certify & Release','Final Blend Summary & Close'];
+
+// New stage 4 content: header-vs-official comparison (compareTruckPlans(),
+// batch 4, already exists) + the Draft Official Truck Order action
+// (draftOfficialTruckOrder(), batch 4 -- still using its documented
+// "no modal yet, records with a sensible default" behavior; a real
+// editable modal is a later, separate step per that batch's own note).
+function officialCalculationStage(c){
+  if(!c.officialOrder){
+    const snap=c.officialCalcSnapshot,cmp=compareTruckPlans(c);
+    if(!snap)return `<h3>Official Blend Calculation &amp; Truck Order <span class="tag warn">Required</span></h3><div class="banner amber">Record static gauge &amp; U/M/L samples first.</div>`;
+    return `<h3>Official Blend Calculation &amp; Truck Order <span class="tag warn">Required</span></h3><p class="lead">Regardless of whether the static calculation confirms or revises the tentative header estimate, draft the official truck order fresh from the static calculation.</p><div class="grid"><div class="box"><div class="k">Official butane</div><div class="v">${fmt(snap.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official trucks</div><div class="v">${snap.trucks}</div></div><div class="box"><div class="k">vs. header estimate</div><div class="v" style="font-size:13px">${cmp.action==='unavailable'?'No header sample on file':cmp.action==='confirm'?'Confirmed':`Revised (${cmp.truckDelta>=0?'+':''}${cmp.truckDelta} truck(s))`}</div></div></div><div class="actionbar"><button class="btn primary" onclick="draftOfficialTruckOrder()" ${editable(c)?'':'disabled'}>Draft Official Truck Order</button></div>`;
+  }
+  const o=c.officialOrder;
+  return `<h3>Official Blend Calculation &amp; Truck Order <span class="tag ok">Recorded</span></h3><div class="grid"><div class="box"><div class="k">Supplier</div><div class="v" style="font-size:12px">${esc(o.supplier)}</div></div><div class="box"><div class="k">Trucks</div><div class="v">${o.trucks}</div></div><div class="box"><div class="k">Volume</div><div class="v">${f1(o.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Recorded</div><div class="v" style="font-size:12px">${fmtWhen(o.eventAt)}</div></div></div>`;
+}
+
 function stageHtmlV5(c,z,s){
-  // Stub -- see 9c/9d. Passing through to the legacy renderer keeps this
-  // branch's behavior identical to the old path until the real v5
-  // content functions (headerSampleStage, staticSampleStage, etc. --
-  // batches 3/4/6/7a/8, already built and tested) are actually wired to
-  // specific new-numbered stages here.
-  return stageHtmlLegacy(c,z,s);
+  if(s===1)return stageHtmlLegacy(c,z,0); // Plan Source: identical content, old index 0.
+  if(s===2)return headerSampleStage(c);
+  if(s===3)return staticSampleStage(c);
+  if(s===4)return officialCalculationStage(c);
+  // Stages 5-11: not yet wired (9c-2/9d). Deliberately NOT a passthrough
+  // to stageHtmlLegacy() -- a given stage number means something
+  // different in each graph (e.g. legacy 5 vs v5 5), so silently reusing
+  // legacy content here would misrender rather than merely be
+  // incomplete. Currently unreachable: nothing can create a
+  // workflowVersion:2 case yet, and stages 1-4 above never advance a
+  // case past 4.
+  return `<h3>${esc(STAGES_V5[s-1]||'Stage '+s)} <span class="tag warn">Not yet available</span></h3><div class="banner amber"><b>This stage's content is not yet wired.</b> See docs/v5-merge/stage-graph-map.md for the remaining merge sequence.</div>`;
 }
 
 function openGaugeStage(c,z){if(!c.openGauge){const dv=f2(c.est.rvp),pt=f2(ptotFromDvpe(c.est.rvp));return `<h3>Open Gauge &amp; Pre-Blend Basis <span class="tag warn">Required</span></h3><p class="lead">Establish the official starting inventory and enter both measured total vapor pressure (Ptot) and reported DVPE for the upper, middle, and lower samples.</p><div class="formbox"><h4>Open gauge</h4><div class="formrow"><div class="field"><label>Gauge height</label><input id="og-height" placeholder="e.g. 31-7-5" oninput="refreshGaugeDerived('open')"></div><div class="field"><label>Average temp °F</label><input id="og-temp" type="number" step="0.1"></div><div class="field"><label>API gravity</label><input id="og-api" type="number" step="0.1"></div></div><div id="og-derived" class="gate"><b>Derived tank volume:</b> enter the gauge height above.</div></div><div class="formbox"><h4>Pre-blend Ptot / DVPE validation</h4><div class="smallnote">Current seasonal method: <b>EPA correlation</b> · DVPE = 0.956 × Ptot − 0.347 psi. Enter the instrument Ptot and the operator-reported DVPE. Recording is blocked when a pair differs by more than ±${f2(CONFIG.dvpeTolerance)} psi. The raw Ptot is retained so a future seasonal ASTM correlation can be applied without re-entering the result.</div><div class="formrow"><div class="field"><label>Upper Ptot (psi)</label><input id="og-p1" type="number" step="0.01" value="${pt}" oninput="updatePreblendValidation()"></div><div class="field"><label>Upper DVPE (psi)</label><input id="og-s1" type="number" step="0.01" value="${dv}" oninput="updatePreblendValidation()"></div><div class="field"><label>Middle Ptot (psi)</label><input id="og-p2" type="number" step="0.01" value="${pt}" oninput="updatePreblendValidation()"></div><div class="field"><label>Middle DVPE (psi)</label><input id="og-s2" type="number" step="0.01" value="${dv}" oninput="updatePreblendValidation()"></div><div class="field"><label>Lower Ptot (psi)</label><input id="og-p3" type="number" step="0.01" value="${pt}" oninput="updatePreblendValidation()"></div><div class="field"><label>Lower DVPE (psi)</label><input id="og-s3" type="number" step="0.01" value="${dv}" oninput="updatePreblendValidation()"></div></div><div id="og-validation" class="gate"><b>Validation:</b> enter or review the six values.</div><div class="actionbar"><button class="btn primary" onclick="recordOpenGauge()" ${editable(c)?'':'disabled'}>Continue</button></div></div>`}const samples=c.preBlendResults?.samples||[];return `<h3>Open Gauge &amp; Pre-Blend Basis <span class="tag ok">Recorded</span></h3><p class="lead">The open gauge is the formal starting inventory. The Ptot/DVPE pairs passed the configured EPA correlation check.</p><div class="grid"><div class="box"><div class="k">Open net volume</div><div class="v">${fmt(c.openGauge.netBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Height / temp / API</div><div class="v" style="font-size:12px">${esc(c.openGauge.height)} / ${f1(c.openGauge.temperature)} / ${f1(c.openGauge.api)}</div></div><div class="box"><div class="k">Ptot → DVPE</div><div class="v" style="font-size:11px">${samples.map(x=>`${f2(x.ptot)} → ${f2(x.dvpe)}`).join(' / ')}</div></div><div class="box"><div class="k">Average DVPE</div><div class="v">${f2(z.base)} <small>psi</small></div></div><div class="box"><div class="k">Calculated butane</div><div class="v">${fmt(z.butane)} <small>bbl</small></div></div></div>`}
@@ -1826,11 +1856,12 @@ function headerSampleStage(c){
 function refreshHeaderPairCheck(){const el=document.getElementById('hs-pair-check');if(!el)return;const ptotRaw=val('hs-ptot'),astmRaw=val('hs-astm'),check=checkPair(ptotRaw,astmRaw);if(!num(ptotRaw)||!num(astmRaw)){el.className='gate';el.textContent='Enter PTOT and RVP (ASTM).';return}el.className='gate '+(check.ok?'ok':'warn');el.innerHTML=check.ok?`✓ Pair checks out — expected ASTM ${f2(check.expected)} psi.`:`⚠ Does not correlate — PTOT ${f2(num(ptotRaw))} expects ASTM ${f2(check.expected)} psi.`}
 async function recordHeaderSample(){
   const c=currentCase();
-  if(!c||!requireEdit(c))return;
+  if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==2)return;
   try{
     const {sample,snapshot}=recordHeaderSampleData(c,val('hs-ptot'),val('hs-astm'),val('hs-op'),val('hs-at'));
     c.headerSample=sample;c.headerCalcSnapshot=snapshot;
     log(c,sample.operator,`Header sample recorded: PTOT ${f2(sample.ptot)} / ASTM ${f2(sample.astmRvp)} psi; controlling ${sample.controllingBasis} ${f2(sample.controllingRvp)} psi; preliminary calc ${f1(snapshot.butaneBbl)} bbl / ${snapshot.trucks} truck(s)`,'header-sample');
+    setStage(c,3);
     render();
   }catch(e){alert(e.message)}
 }
@@ -1910,17 +1941,24 @@ function staticSampleStage(c){
     return `<h3>Static Gauge &amp; U/M/L Samples <span class="tag warn">Required</span></h3><p class="lead">Once the tank is static, record the opening gauge and the Upper / Middle / Lower Grabner PTOT and RVP (ASTM) values.</p><div class="formbox"><h4>Static tank gauge</h4><div class="formrow"><div class="field"><label>Operator</label><select id="sg-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div><div class="field"><label>Actual static/sample time</label>${eventTimeInput('sg-at')}</div><div class="field"><label>Gauge height</label><input id="sg-height" placeholder="e.g. 31-7-5" oninput="refreshGaugeDerived('static')"></div><div class="field"><label>Average temp °F</label><input id="sg-temp" type="number" step="0.1"></div><div class="field"><label>API gravity</label><input id="sg-api" type="number" step="0.1"></div></div><div id="sg-derived" class="gate"><b>Derived tank volume:</b> enter the gauge height.</div></div><div class="formbox"><h4>Upper / Middle / Lower &middot; Grabner</h4>${['Upper','Middle','Lower'].map((name,i)=>`<div class="formrow"><div class="field"><label>${name} PTOT (psi)</label><input id="sg-p${i+1}" type="number" step="0.01" oninput="refreshStaticPairCheck(${i+1})"></div><div class="field"><label>${name} RVP (ASTM) (psi)</label><input id="sg-a${i+1}" type="number" step="0.01" oninput="refreshStaticPairCheck(${i+1})"></div></div><div id="sg-pair-check-${i+1}" class="gate">Enter PTOT and RVP (ASTM).</div>`).join('')}<div class="actionbar"><button class="btn primary" onclick="recordStaticSamples()" ${editable(c)?'':'disabled'}>Record static gauge &amp; samples</button></div></div>`;
   }
   const snap=c.officialCalcSnapshot,cmp=compareTruckPlans(c);
-  return `<h3>Static Gauge &amp; U/M/L Samples <span class="tag ok">Recorded</span></h3><div class="grid"><div class="box"><div class="k">Static volume</div><div class="v">${fmt(c.staticGauge.netBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official butane</div><div class="v">${fmt(snap?.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official trucks</div><div class="v">${snap?.trucks??'—'}</div></div><div class="box"><div class="k">vs. header estimate</div><div class="v" style="font-size:13px">${cmp.action==='unavailable'?'No header sample on file':cmp.action==='confirm'?'Confirmed':'Revised'}</div></div></div><div class="actionbar"><button class="btn primary" onclick="draftOfficialTruckOrder()" ${editable(c)?'':'disabled'}>Draft Official Truck Order</button></div>`;
+  // v5 wiring note: the "Draft Official Truck Order" action lives on
+  // stage 4's own content (officialCalculationStage()) now, not here --
+  // recordStaticSamples() auto-advances to stage 4 on success, so under
+  // v5 routing this recorded branch is reached only when browsing back
+  // to a completed stage 3 for reference. Read-only, matching every
+  // other completed stage's "recorded" view (e.g. openGaugeStage).
+  return `<h3>Static Gauge &amp; U/M/L Samples <span class="tag ok">Recorded</span></h3><div class="grid"><div class="box"><div class="k">Static volume</div><div class="v">${fmt(c.staticGauge.netBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official butane</div><div class="v">${fmt(snap?.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official trucks</div><div class="v">${snap?.trucks??'—'}</div></div><div class="box"><div class="k">vs. header estimate</div><div class="v" style="font-size:13px">${cmp.action==='unavailable'?'No header sample on file':cmp.action==='confirm'?'Confirmed':'Revised'}</div></div></div>`;
 }
 function refreshStaticPairCheck(i){const el=document.getElementById(`sg-pair-check-${i}`);if(!el)return;const ptotRaw=val(`sg-p${i}`),astmRaw=val(`sg-a${i}`),check=checkPair(ptotRaw,astmRaw);if(!num(ptotRaw)||!num(astmRaw)){el.className='gate';el.textContent='Enter PTOT and RVP (ASTM).';return}el.className='gate '+(check.ok?'ok':'warn');el.innerHTML=check.ok?`✓ Pair checks out — expected ASTM ${f2(check.expected)} psi.`:`⚠ Does not correlate — PTOT ${f2(num(ptotRaw))} expects ASTM ${f2(check.expected)} psi.`}
 async function recordStaticSamples(){
   const c=currentCase();
-  if(!c||!requireEdit(c))return;
+  if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==3)return;
   try{
     const input={height:val('sg-height'),temperature:val('sg-temp'),api:val('sg-api'),operator:val('sg-op'),eventAt:val('sg-at'),levels:[1,2,3].map(i=>({ptot:val('sg-p'+i),astm:val('sg-a'+i)}))},
           {staticGauge,staticSamples,officialCalcSnapshot}=recordStaticSamplesData(c,input);
     c.staticGauge=staticGauge;c.staticSamples=staticSamples;c.officialCalcSnapshot=officialCalcSnapshot;
     log(c,staticGauge.operator,`Static gauge & U/M/L recorded: ${fmt(staticGauge.netBbl)} bbl; official calc ${f1(officialCalcSnapshot.butaneBbl)} bbl / ${officialCalcSnapshot.trucks} truck(s)`,'static-sample');
+    setStage(c,4);
     render();
   }catch(e){alert(e.message)}
 }
@@ -1954,6 +1992,7 @@ function buildOfficialTruckOrderEmail(c,snapshot,f){
 // brief: "Only the official order locks the execution load plan/target,
 // per existing lock-point rules."
 function recordOfficialTruckOrder(c,snapshot,f,operatorRaw,eventAtRaw){
+  if(c.workflowVersion===2&&c.stage!==4)return null;
   const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
         subject=`Fort Worth Certified Butane Nomination · Global Batch ID# ${c.id}`,
         body=buildOfficialTruckOrderEmail(c,snapshot,f),
@@ -1961,6 +2000,7 @@ function recordOfficialTruckOrder(c,snapshot,f,operatorRaw,eventAtRaw){
   c.officialOrder=record;
   c.lockedTarget=snapshot.targetRvp;
   log(c,resolved.by,`Official Martin truck order recorded: ${snapshot.trucks} truck(s) / ${f1(snapshot.plannedTruckBbl)} bbl from ${f.supplier}; load plan locked`,'official-truck-confirmation');
+  if(c.workflowVersion===2)setStage(c,5);
   return record;
 }
 // No modal markup exists yet -- same deliberate scope note as batch 3's
