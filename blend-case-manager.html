@@ -568,7 +568,15 @@ function normalize(){if(!state.plans)state.plans=[];state.ftwAuthority=Object.as
   // a case already at workflowVersion 2 has wasLegacyBeforeThisPass=false,
   // so inference never re-runs on an already-migrated case.
   const wasLegacyBeforeThisPass=Number(c.workflowVersion||1)<2;
-  c.documents=Object.assign(defaultDocs(),c.documents||{});c.preBlendResults=c.preBlendResults||null;c.certification=Object.assign({route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},c.certification||{});c.marginReview=Object.assign({reviewedAt:null,reviewedBy:null},c.marginReview||{});delete c.marginReview['net'+'MarginPerGal'];delete c.marginReview.updatedAt;delete c.marginReview.updatedBy;c.iterations=c.iterations||[{seq:1,reason:'initial',outcome:'open',measurements:[]}];c.timestamps=c.timestamps||{};c.vpPhotos=c.vpPhotos&&typeof c.vpPhotos==='object'?c.vpPhotos:{};if(c.stage===5)c.stage=6;
+  c.documents=Object.assign(defaultDocs(),c.documents||{});c.preBlendResults=c.preBlendResults||null;c.certification=Object.assign({route:null,labOrder:null,coaAttachment:null,generatedCoa:null,thirdPartyReview:null,release:null},c.certification||{});c.marginReview=Object.assign({reviewedAt:null,reviewedBy:null},c.marginReview||{});delete c.marginReview['net'+'MarginPerGal'];delete c.marginReview.updatedAt;delete c.marginReview.updatedBy;c.iterations=c.iterations||[{seq:1,reason:'initial',outcome:'open',measurements:[]}];c.timestamps=c.timestamps||{};c.vpPhotos=c.vpPhotos&&typeof c.vpPhotos==='object'?c.vpPhotos:{};
+  // Legacy-only migration shim, predates the v5 merge (old 0-10 numbering's
+  // deprecated null stage-5). Was unconditional -- silently bumped every
+  // v5 case's REAL stage 5 ("Opening Alignment & Start Circulation") to 6
+  // on the very next render, making stage 5 unreachable in the running
+  // app. Scoped to wasLegacyBeforeThisPass (computed above, before this
+  // pass's migration) so it still fires for genuinely legacy data and
+  // never touches a real v5 stage.
+  if(wasLegacyBeforeThisPass&&c.stage===5)c.stage=6;
   if(wasLegacyBeforeThisPass){
     const inferred=inferV5StageFromEvidence(c);
     c.stage=inferred.stage;
@@ -692,7 +700,7 @@ function checkoutBlock(c){if(c.abandoned)return `<span class="lockbadge open">Ab
  * abandon_blend_case() in supabase/migrations for the server-side
  * guarantees -- this is not a client-side-only safeguard.
  */
-function renderDetail(){const c=currentCase();if(!c){document.getElementById('detail').innerHTML=state.cases.length?'<div class="smallnote" style="padding:20px">No blend is currently in progress. Select an active blend below, promote a planner row, or review Closed Blends.</div>':'';return}if(viewStageIndex===5)viewStageIndex=6;const z=calc(c);let steps='',visibleStep=1;if(c.workflowVersion===2){
+function renderDetail(){const c=currentCase();if(!c){document.getElementById('detail').innerHTML=state.cases.length?'<div class="smallnote" style="padding:20px">No blend is currently in progress. Select an active blend below, promote a planner row, or review Closed Blends.</div>':'';return}if(c.workflowVersion!==2&&viewStageIndex===5)viewStageIndex=6;const z=calc(c);let steps='',visibleStep=1;if(c.workflowVersion===2){
    for(let s=1;s<=STAGES_V5.length;s++){const cls=s<c.stage||c.closed?'done':s===c.stage?(c.hold?'hold':'active'):'';steps+=`<div class="step ${cls} ${s===viewStageIndex?'view':''}" onclick="viewStage(${s})"><div class="node">${s<c.stage||c.closed?'✓':s}</div><span>${STAGES_V5[s-1]}</span></div>`}
  }else{
    for(let s=0;s<STAGES.length;s++){if(!STAGES[s])continue;const cls=s<c.stage||c.closed?'done':s===c.stage?(c.hold?'hold':'active'):'';steps+=`<div class="step ${cls} ${s===viewStageIndex?'view':''}" onclick="viewStage(${s})"><div class="node">${s<c.stage||c.closed?'✓':visibleStep}</div><span>${STAGES[s]}</span></div>`;visibleStep++}
