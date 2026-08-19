@@ -2066,6 +2066,63 @@ function selfCertStage(c){
   return `<h3>Self-Certification <span class="tag warn">Required</span></h3><p class="lead">Record Upper/Middle/Lower and finished E10 vapor pressure, D86 distillation, and certificate metadata. Blank required values cannot pass.</p><div class="formbox"><h4>Certificate</h4><div class="formrow"><div class="field"><label>Certificate No.</label><input id="sc-cert-no" placeholder="auto-generated if blank"></div><div class="field"><label>Sample date</label><input id="sc-sample-date" type="date" value="${localDateIso()}"></div><div class="field"><label>Volatility grade</label><select id="sc-grade">${Object.keys(CLASS_LIMITS).map(g=>`<option ${g==='A'?'selected':''}>${g}</option>`).join('')}</select></div><div class="field"><label>Prepared by</label><select id="sc-prep-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div></div></div><div class="formbox"><h4>Upper / Middle / Lower</h4>${selfCertLevelFieldsHtml('sc-up','Upper')}${selfCertLevelFieldsHtml('sc-mid','Middle')}${selfCertLevelFieldsHtml('sc-low','Lower')}</div><div class="formbox"><h4>Finished E10</h4>${selfCertLevelFieldsHtml('sc-e','E10')}</div><div class="formbox"><h4>D86 Distillation</h4><div class="formrow">${['baro','ibp','t10','t50','t90','t95','fbp','recovery','residue','loss'].map(k=>`<div class="field"><label>${k.toUpperCase()}</label><input id="sc-${k}" type="number" step="0.1"></div>`).join('')}</div></div><div class="actionbar"><button class="btn primary" onclick="recordSelfCertification(val('sc-prep-op'),null)" ${editable(c)?'':'disabled'}>Record self-certification</button></div>`;
 }
 
+/* =====================================================================
+   v5 merge batch 8: Third-Party Certification simplified to CoA file +
+   operator + editable receipt time -- no retyping the lab's U/M/L/E10
+   numbers (brief, explicit). Purely additive under a new
+   c.thirdPartyCert field.
+
+   Brief: "Store the file via a real production-safe attachment
+   mechanism. If the repo doesn't have one yet, that's a blocker to name
+   explicitly, not a reason to fall back to browser-only storage." This
+   repo already has one (uploadCaseFile()/downloadCaseFile(), patch
+   0004, Supabase Storage 'blend-case-files' bucket) -- used here
+   instead of the OLD third-party flow's FileReader/dataURL approach
+   (handleCertificationCoa(), still live, untouched), which never left
+   the browser that recorded it. If a case has no dbId yet (not synced
+   to Supabase), this deliberately blocks with a clear message rather
+   than silently falling back to that browser-only path.
+   ===================================================================== */
+async function recordThirdPartyCertification(file,operatorRaw,eventAtRaw){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return null;
+  if(!file){alert('Attach the returned third-party CoA file.');return null}
+  if(file.size>8*1024*1024){alert('Use a CoA file smaller than 8 MB.');return null}
+  let resolved;
+  try{resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw)}catch(e){alert(e.message);return null}
+  if(!c.dbId){alert('This case has no database record yet; the CoA cannot be stored until the case is saved.');return null}
+  const path=`${c.dbId}/third-party-coa/${Date.now()}-${file.name}`;
+  try{
+    await window.BlendRepo.uploadCaseFile(path,file,file.type);
+  }catch(e){
+    console.error(e);
+    alert('Could not upload the third-party CoA: '+e.message);
+    return null;
+  }
+  const record={fileName:file.name,fileType:file.type||'application/octet-stream',fileSize:file.size,path,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by};
+  c.thirdPartyCert=record;
+  log(c,resolved.by,`Third-party CoA received: ${file.name} (${(file.size/1024).toFixed(0)} KB)`,'third-party-coa-attached');
+  render();
+  return record;
+}
+async function viewThirdPartyCoa(){
+  const c=currentCase();
+  if(!c?.thirdPartyCert?.path)return;
+  try{
+    const blob=await window.BlendRepo.downloadCaseFile(c.thirdPartyCert.path);
+    const url=URL.createObjectURL(blob);
+    window.open(url,'_blank');
+  }catch(e){alert('Could not load the CoA: '+e.message)}
+}
+function thirdPartyCertStage(c){
+  if(c.thirdPartyCert){
+    const t=c.thirdPartyCert;
+    return `<h3>Third-Party Certification <span class="tag ok">CoA received</span></h3><div class="grid"><div class="box"><div class="k">File</div><div class="v" style="font-size:12px">${esc(t.fileName)} &middot; ${(t.fileSize/1024).toFixed(0)} KB</div></div><div class="box"><div class="k">Operator</div><div class="v" style="font-size:12px">${esc(t.operator)}</div></div><div class="box"><div class="k">Received</div><div class="v" style="font-size:12px">${fmtWhen(t.eventAt)}</div></div></div><div class="actionbar"><button class="btn" onclick="viewThirdPartyCoa()">View CoA</button></div>`;
+  }
+  const op=lastKnownOperator(c);
+  return `<h3>Third-Party Certification <span class="tag warn">Required</span></h3><p class="lead">Upload the returned third-party CoA. No lab result retyping is required &mdash; the file itself is the certification evidence.</p><div class="formbox"><div class="formrow"><div class="field"><label>CoA file</label><input id="tpc-file" type="file" accept="application/pdf,image/*"></div><div class="field"><label>Operator</label><select id="tpc-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div><div class="field"><label>Actual receipt time</label>${eventTimeInput('tpc-at')}</div></div><div class="actionbar"><button class="btn primary" onclick="recordThirdPartyCertification(document.getElementById('tpc-file').files[0],val('tpc-op'),val('tpc-at'))" ${editable(c)?'':'disabled'}>Record third-party CoA</button></div></div>`;
+}
+
 
 
 function vaporBoxes(){
