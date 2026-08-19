@@ -1706,7 +1706,7 @@ function tankVolumeFromGauge(tankNo,gaugeText){const chart=STRAPPING_CHARTS[Stri
 // volume: X gal / Y bbl" or explicit chart-error text the v5 prototype
 // uses (function ported verbatim, just generalized off the prototype's
 // hardcoded 'close'/other check to match this file's prefix convention).
-function refreshGaugeDerived(kind){const c=currentCase(),prefix=kind==='close'?'cg':'og',height=document.getElementById(prefix+'-height')?.value||'',el=document.getElementById(prefix+'-derived');if(!el||!c)return;const v=tankVolumeFromGauge(c.tankNo,height);el.className='gate'+(v.ok?'':' warn');el.innerHTML=v.ok?`<b>Derived tank volume:</b> ${fmt(v.gallons)} gal &middot; ${f1(v.bbl)} bbl`:`<b>Derived tank volume:</b> ${esc(v.error)}`}
+function refreshGaugeDerived(kind){const c=currentCase(),prefix=kind==='close'?'cg':kind==='static'?'sg':'og',height=document.getElementById(prefix+'-height')?.value||'',el=document.getElementById(prefix+'-derived');if(!el||!c)return;const v=tankVolumeFromGauge(c.tankNo,height);el.className='gate'+(v.ok?'':' warn');el.innerHTML=v.ok?`<b>Derived tank volume:</b> ${fmt(v.gallons)} gal &middot; ${f1(v.bbl)} bbl`:`<b>Derived tank volume:</b> ${esc(v.error)}`}
 
 /* =====================================================================
    v5 merge batch 3: Header Sample + Tentative Preorder (purely additive
@@ -1804,6 +1804,113 @@ function openTentativeOrderModal(){
         message=recordTentativeTruckPlan(c,email,c.operator,iso());
   render();
   return message;
+}
+
+/* =====================================================================
+   v5 merge batch 4: Static U/M/L + Official Calculation Snapshot +
+   Official Truck Order (purely additive -- same status as batch 3: new
+   functions/fields only, not reachable from live stage routing yet).
+
+   Deliberately uses NEW field names (c.staticGauge, c.staticSamples,
+   c.officialCalcSnapshot, c.officialOrder) rather than reusing
+   c.openGauge/c.act/c.preBlendResults/c.order -- those remain owned by
+   the existing, still-live stage-1/stage-4 flows this batch does not
+   touch. Reconciling "old open gauge" with "new static gauge" is a
+   stage-graph decision, not something to pre-decide silently here.
+   ===================================================================== */
+
+// Static U/M/L: same chart-derived gauge as batch 2, plus three
+// PTOT/ASTM pairs -> official calculation snapshot. Pure function.
+function recordStaticSamplesData(c,input){
+  const gauge=tankVolumeFromGauge(c.tankNo,input.height);
+  if(!gauge.ok)throw new Error(gauge.error);
+  const grade=volatilityGradeForDate(String(c.sourcePlan?.start||c.window?.truckStart||localDateIso()).slice(0,10),c.volatilityGrade),
+        resolved=resolveOperatorEvent(c,input.operator,input.eventAt),
+        levels=['Upper','Middle','Lower'].map((position,i)=>{
+          const ptot=input.levels?.[i]?.ptot,astm=input.levels?.[i]?.astm,check=checkPair(ptot,astm);
+          if(!check.complete||!check.ok)throw new Error(`${position} PTOT / RVP (ASTM) pair does not match the Grabner relationship. Expected ASTM RVP ${check.expected==null?'—':f2(check.expected)} psi.`);
+          const control=controllingRvp(grade,ptot,astm);
+          if(!control.valid)throw new Error(`${position}: controlling RVP could not be determined.`);
+          return{position,ptot:Number(ptot),astmRvp:Number(astm),expectedAstmRvp:check.expected,volatilityGrade:grade,controllingBasis:control.basis,controllingRvp:control.value,epaRvp:control.epa,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by};
+        }),
+        avgControlling=levels.reduce((s,x)=>s+x.controllingRvp,0)/levels.length,
+        staticGauge={height:input.height,temperature:Number(input.temperature),api:Number(input.api),netBbl:gauge.bbl,gallons:gauge.gallons,strappingIndex:gauge.index,chartVersion:gauge.chartVersion,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by},
+        snapshot=makeCalculationSnapshot('static',avgControlling,gauge.bbl,caseTarget(c));
+  return{staticGauge,staticSamples:levels,officialCalcSnapshot:snapshot};
+}
+
+function staticSampleStage(c){
+  const op=lastKnownOperator(c);
+  if(!c.staticGauge){
+    return `<h3>Static Gauge &amp; U/M/L Samples <span class="tag warn">Required</span></h3><p class="lead">Once the tank is static, record the opening gauge and the Upper / Middle / Lower Grabner PTOT and RVP (ASTM) values.</p><div class="formbox"><h4>Static tank gauge</h4><div class="formrow"><div class="field"><label>Operator</label><select id="sg-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div><div class="field"><label>Actual static/sample time</label>${eventTimeInput('sg-at')}</div><div class="field"><label>Gauge height</label><input id="sg-height" placeholder="e.g. 31-7-5" oninput="refreshGaugeDerived('static')"></div><div class="field"><label>Average temp °F</label><input id="sg-temp" type="number" step="0.1"></div><div class="field"><label>API gravity</label><input id="sg-api" type="number" step="0.1"></div></div><div id="sg-derived" class="gate"><b>Derived tank volume:</b> enter the gauge height.</div></div><div class="formbox"><h4>Upper / Middle / Lower &middot; Grabner</h4>${['Upper','Middle','Lower'].map((name,i)=>`<div class="formrow"><div class="field"><label>${name} PTOT (psi)</label><input id="sg-p${i+1}" type="number" step="0.01" oninput="refreshStaticPairCheck(${i+1})"></div><div class="field"><label>${name} RVP (ASTM) (psi)</label><input id="sg-a${i+1}" type="number" step="0.01" oninput="refreshStaticPairCheck(${i+1})"></div></div><div id="sg-pair-check-${i+1}" class="gate">Enter PTOT and RVP (ASTM).</div>`).join('')}<div class="actionbar"><button class="btn primary" onclick="recordStaticSamples()" ${editable(c)?'':'disabled'}>Record static gauge &amp; samples</button></div></div>`;
+  }
+  const snap=c.officialCalcSnapshot,cmp=compareTruckPlans(c);
+  return `<h3>Static Gauge &amp; U/M/L Samples <span class="tag ok">Recorded</span></h3><div class="grid"><div class="box"><div class="k">Static volume</div><div class="v">${fmt(c.staticGauge.netBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official butane</div><div class="v">${fmt(snap?.butaneBbl)} <small>bbl</small></div></div><div class="box"><div class="k">Official trucks</div><div class="v">${snap?.trucks??'—'}</div></div><div class="box"><div class="k">vs. header estimate</div><div class="v" style="font-size:13px">${cmp.action==='unavailable'?'No header sample on file':cmp.action==='confirm'?'Confirmed':'Revised'}</div></div></div><div class="actionbar"><button class="btn primary" onclick="draftOfficialTruckOrder()" ${editable(c)?'':'disabled'}>Draft Official Truck Order</button></div>`;
+}
+function refreshStaticPairCheck(i){const el=document.getElementById(`sg-pair-check-${i}`);if(!el)return;const ptotRaw=val(`sg-p${i}`),astmRaw=val(`sg-a${i}`),check=checkPair(ptotRaw,astmRaw);if(!num(ptotRaw)||!num(astmRaw)){el.className='gate';el.textContent='Enter PTOT and RVP (ASTM).';return}el.className='gate '+(check.ok?'ok':'warn');el.innerHTML=check.ok?`✓ Pair checks out — expected ASTM ${f2(check.expected)} psi.`:`⚠ Does not correlate — PTOT ${f2(num(ptotRaw))} expects ASTM ${f2(check.expected)} psi.`}
+async function recordStaticSamples(){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return;
+  try{
+    const input={height:val('sg-height'),temperature:val('sg-temp'),api:val('sg-api'),operator:val('sg-op'),eventAt:val('sg-at'),levels:[1,2,3].map(i=>({ptot:val('sg-p'+i),astm:val('sg-a'+i)}))},
+          {staticGauge,staticSamples,officialCalcSnapshot}=recordStaticSamplesData(c,input);
+    c.staticGauge=staticGauge;c.staticSamples=staticSamples;c.officialCalcSnapshot=officialCalcSnapshot;
+    log(c,staticGauge.operator,`Static gauge & U/M/L recorded: ${fmt(staticGauge.netBbl)} bbl; official calc ${f1(officialCalcSnapshot.butaneBbl)} bbl / ${officialCalcSnapshot.trucks} truck(s)`,'static-sample');
+    render();
+  }catch(e){alert(e.message)}
+}
+
+// Header-vs-official comparison -- brief: "Tentative 3 trucks -> Official
+// 3 trucks = confirmation; Tentative 3 -> Official 4 = revision."
+function compareTruckPlans(c){
+  const header=c.headerCalcSnapshot,official=c.officialCalcSnapshot;
+  if(!header||!official)return{action:'unavailable',header,official};
+  const volumeDelta=Math.abs(Number(official.butaneBbl||0)-Number(header.butaneBbl||0)),
+        same=Number(header.trucks||0)===Number(official.trucks||0)&&volumeDelta<=0.5;
+  return{action:same?'confirm':'revise',header,official,truckDelta:Number(official.trucks||0)-Number(header.trucks||0),volumeDelta};
+}
+
+// Official Truck Order. buildOrderEmail() itself (the existing,
+// authoritative nomination template) is preserved byte-for-byte
+// untouched -- this is a new function carrying the SAME wording,
+// parameterized by the official snapshot's truck plan instead of
+// selectedTruckPlan()/c.decision, since the new workflow has no
+// exact-load/round-up/truncate decision step (truckPlanForVolume()
+// already determines trucks/loads directly, same as the header
+// snapshot). Regardless of confirm-vs-revise (compareTruckPlans above),
+// the operator always goes through this -- never an auto-conversion of
+// the tentative email.
+function buildOfficialTruckOrderEmail(c,snapshot,f){
+  const loads=(snapshot.loads||[]).map((x,i)=>`Truck ${i+1}: ${f1(x)} bbl`).join('\n');
+  return `All,\n\nPlease see below nomination for delivered certified butane trucks to offload into the Fort Worth Facility.\n\nSupplier: ${f.supplier}\nHauler: ${f.hauler}, ${f.contact} please confirm and forward ETAs.\nProduct: Certified Butane\nVolume: ${f1(snapshot.plannedTruckBbl)} bbl\nTruck load plan:\n${loads}\n\n${f.supplier}, per EPA regulations, please add the following language to the CoA or BOL: “Certified butane for use by certified butane blenders.”\nDate: ${f.window}\nOrigin: ${f.origin}\nGlobal Batch ID#: ${c.id}\nDestination tank: ${c.tank} / ${c.tankNo}\n\nAfter butane enters ${c.tank}, no product is to move in or out until further notification.\n\nEach load requires an acceptable CoA, BOL reference, proper PPE, terminal check-in, and the Fort Worth pre-transfer worksheet.\n`;
+}
+// Persists the official order as its own case-history record, distinct
+// from the tentative one, and locks the execution load plan/target --
+// brief: "Only the official order locks the execution load plan/target,
+// per existing lock-point rules."
+function recordOfficialTruckOrder(c,snapshot,f,operatorRaw,eventAtRaw){
+  const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
+        subject=`Fort Worth Certified Butane Nomination · Global Batch ID# ${c.id}`,
+        body=buildOfficialTruckOrderEmail(c,snapshot,f),
+        record={id:`official-${Date.now()}-${idSuffix()}`,type:'official',subject,body,snapshotId:snapshot.id,trucks:snapshot.trucks,butaneBbl:snapshot.butaneBbl,loads:snapshot.loads.slice(),supplier:f.supplier,hauler:f.hauler,contact:f.contact,origin:f.origin,window:f.window,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,operator:resolved.by};
+  c.officialOrder=record;
+  c.lockedTarget=snapshot.targetRvp;
+  log(c,resolved.by,`Official Martin truck order recorded: ${snapshot.trucks} truck(s) / ${f1(snapshot.plannedTruckBbl)} bbl from ${f.supplier}; load plan locked`,'official-truck-confirmation');
+  return record;
+}
+// No modal markup exists yet -- same deliberate scope note as batch 3's
+// openTentativeOrderModal(): records immediately with defaults so the
+// full header->static->official pipeline is testable end-to-end. Batch
+// 9 puts a real editable modal (supplier/hauler/contact/origin/window,
+// per the brief) in front of these same two functions.
+function draftOfficialTruckOrder(){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return null;
+  if(!c.officialCalcSnapshot){alert('Record static gauge & U/M/L samples first.');return null}
+  const f={supplier:'Martin',hauler:'TBD',contact:'Devon',origin:'To be confirmed by Martin',window:orderWindowDefault(c)},
+        record=recordOfficialTruckOrder(c,c.officialCalcSnapshot,f,c.operator,iso());
+  render();
+  return record;
 }
 
 
