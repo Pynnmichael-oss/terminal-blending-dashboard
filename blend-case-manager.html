@@ -773,6 +773,42 @@ function certificationStageV5(c){
   return thirdPartyCertStage(c)+releaseSection;
 }
 
+/* =====================================================================
+   v5 merge batch 10: evidence-based legacy stage inference.
+
+   Per docs/v5-merge/batch10-migration-design.md -- computes which v5
+   stage number a legacy case's REAL evidence corresponds to, for the
+   scenario of moving a case onto the new workflow mid-flight. Never
+   reinterprets the old numeric c.stage by index. Purely a proposal:
+   returns {stage, reason, evidence} and mutates nothing. Applying it
+   (actually flipping a real case's workflowVersion/stage) is a
+   separate, explicit action -- not part of this function.
+   ===================================================================== */
+function inferV5StageFromEvidence(c){
+  const evidence={
+    hasOpenGauge:!!c.openGauge,
+    hasOrder:!!c.order,
+    circulationStarted:!!c.circulation?.startedAt,
+    trucksComplete:completedTrucks(c),
+    trucksOrdered:orderedTrucks(c),
+    circulationStopped:!!c.circulation?.stoppedAt,
+    settleComplete:!!(c.timestamps?.settleCompleteAt||c.settleOverride),
+    hasCloseGauge:!!c.closeGauge,
+    hasRelease:!!c.certification?.release
+  };
+  let stage,reason;
+  if(evidence.hasRelease){stage=11;reason='certification.release is set (closing already requires this)'}
+  else if(evidence.hasCloseGauge){stage=10;reason='closeGauge recorded, no release yet'}
+  else if(evidence.settleComplete){stage=9;reason='settle complete, no closeGauge yet'}
+  else if(evidence.circulationStopped){stage=8;reason='circulation stopped, settle not complete'}
+  else if(evidence.trucksOrdered>0&&evidence.trucksComplete>=evidence.trucksOrdered){stage=7;reason='all ordered trucks complete, circulation not yet stopped'}
+  else if(evidence.circulationStarted){stage=6;reason='circulation started, trucks not all complete'}
+  else if(evidence.hasOrder){stage=5;reason='official order recorded, circulation not yet started'}
+  else if(evidence.hasOpenGauge){stage=4;reason='open gauge/pre-blend results recorded, no order yet'}
+  else{stage=2;reason='no open gauge recorded yet -- earliest meaningful v5 stage'}
+  return{stage,reason,evidence,stageLabel:STAGES_V5[stage-1]};
+}
+
 function stageHtmlV5(c,z,s){
   if(s===1)return stageHtmlLegacy(c,z,0); // Plan Source: identical content, old index 0.
   if(s===2)return headerSampleStage(c);
