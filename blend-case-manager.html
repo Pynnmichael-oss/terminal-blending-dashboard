@@ -435,6 +435,18 @@ function saveTargetOverride(){const c=currentCase();if(!c)return;if(c.closed){al
   closeModal('targetOverrideModal');render();}
 function clearTargetOverride(){const c=currentCase();if(!c||!c.targetOverride)return;const approver=val('to-pq')||c.pq||'PQ manager';delete c.targetOverride;log(c,approver,`PQ target override removed; reverted to compliance target ${f2(currentTarget())} psi`);closeModal('targetOverrideModal');render();}
 const STAGES=['Plan Source','Open Gauge & Sample','Validate & Order Trucks','Open Circulation / Blend Start','Process Trucks',null,'Final Circulation & Settle','Close Gauge','Certify & Release','Final Blend Summary','Close Blend'];
+// v5 merge: STAGES_V5 must be declared here, alongside legacy STAGES -- NOT
+// further down near stageHtmlV5()/inferV5StageFromEvidence() where it was
+// originally added. The top-level `let state=loadState();normalize();...`
+// statement below runs normalize() synchronously at script-parse time, and
+// normalize() (via inferV5StageFromEvidence()) reads STAGES_V5. A `const`
+// declared later in the file is in the temporal dead zone at that point --
+// any legacy case in the initial state throws an uncaught ReferenceError
+// here, which aborts the rest of the script's top-level execution entirely
+// (initApp() at the bottom of the file never runs, the board never
+// renders). Confirmed live in the browser: console showed exactly this
+// exception on every fresh load with a workflowVersion:1 case present.
+const STAGES_V5=['Plan Source','Header Sample & Tentative Trucks','Static Gauge & U/M/L Samples','Official Blend Calculation & Truck Order','Opening Alignment & Start Circulation','Process Trucks','Complete Circulation & Closing Alignment','Settle','Close Gauge & Post-Blend Samples','Certify & Release','Final Blend Summary & Close'];
 const STORAGE_KEY='ftw_bcm_v8_9_0_amspec_coa_upload';
 const DEVICE='fort-worth-control-room';
 const TERMINAL_OPERATORS=['S. Anderson','D. Bass','G. Sanchez','M. Ibana','J. Gibson','N. Harris'];
@@ -713,7 +725,9 @@ function stageHtml(c,z,s){
    requires making several currently-shared legacy functions
    workflowVersion-aware; 9d resolves the two flagged risk areas,
    Certify & Release's content swap and the Final Summary+Close merge). */
-const STAGES_V5=['Plan Source','Header Sample & Tentative Trucks','Static Gauge & U/M/L Samples','Official Blend Calculation & Truck Order','Opening Alignment & Start Circulation','Process Trucks','Complete Circulation & Closing Alignment','Settle','Close Gauge & Post-Blend Samples','Certify & Release','Final Blend Summary & Close'];
+// (STAGES_V5 itself is declared up near legacy STAGES, not here -- see the
+// comment at its declaration for why: normalize() runs at top-level script
+// scope, before this point in the file, and needs it already initialized.)
 // Single source of truth for "what is this case's current stage called" --
 // every place that previously read the legacy STAGES array unconditionally
 // (found via a full grep sweep, not just the stepper) now goes through this.
