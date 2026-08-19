@@ -796,12 +796,14 @@ function authorizeSelfCertRelease(operatorRaw){
   const c=currentCase();
   if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==10||c.certPath!=='self')return;
   if(!c.selfCert){alert('Record self-certification results first.');return}
-  if(c.selfCert.outcome!=='PASS'){alert('Release is blocked: self-certification result is HOLD.');return}
+  const assessment=selfCertAssessment(c);
+  if(!assessment.releaseAllowed){alert(assessment.complete?'Release is blocked: self-certification result is HOLD.':'Complete all required self-certification fields first.');return}
+  if(!c.certification.generatedCoa){alert('Generate the terminal CoA before authorizing release.');return}
   const by=canonicalTerminalOperator(operatorRaw||c.operator);
-  c.certification.release={at:iso(),by,route:'self-cert',basis:`Fort Worth self-certification · certificate ${c.selfCert.metadata.certNo} · Class ${c.selfCert.metadata.grade}`};
+  c.certification.release={at:iso(),by,route:'self-cert',basis:`Fort Worth self-certification · certificate ${c.certification.generatedCoa.certificateId} · Class ${assessment.spec.grade}`};
   ['blend','results','coa','release'].forEach(k=>markDoc(c,k));
   setStage(c,11);
-  log(c,by,`Tank released using self-certification results; certificate ${c.selfCert.metadata.certNo}`,'tank-release');
+  log(c,by,`Tank released using self-certification results; certificate ${c.certification.generatedCoa.certificateId}`,'tank-release');
   render();
 }
 function authorizeThirdPartyRelease(operatorRaw){
@@ -824,7 +826,19 @@ function certificationStageV5(c){
     return `<h3>Certify &amp; Release <span class="tag warn">Choose path</span></h3><div class="route-cards"><div class="route-card"><h4>Qualified terminal self-certification</h4><p>Record Upper/Middle/Lower, finished E10, and D86 distillation. Blank required values cannot pass; a T50 failure forces HOLD.</p><button class="btn primary" onclick="chooseCertPath('self')" ${editable(c)?'':'disabled'}>Use self-certification</button></div><div class="route-card"><h4>Third-party laboratory</h4><p>Upload the returned CoA. No lab result retyping is required.</p><button class="btn" onclick="chooseCertPath('third-party')" ${editable(c)?'':'disabled'}>Use third-party CoA</button></div></div>`;
   }
   if(c.certPath==='self'){
-    const releaseSection=c.selfCert?`<div class="formbox"><h4>Authorize release</h4>${c.selfCert.outcome==='PASS'?`<div class="banner green"><b>Release eligible:</b> self-certification passed.</div><div class="actionbar"><button class="btn primary" onclick="authorizeSelfCertRelease(c.operator)" ${editable(c)?'':'disabled'}>Authorize release</button></div>`:`<div class="banner red"><b>Release blocked:</b> self-certification result is HOLD.</div>`}</div>`:'';
+    const assessment=c.selfCert?selfCertAssessment(c):null;
+    let releaseSection='';
+    if(assessment){
+      if(!assessment.complete){
+        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner amber"><b>Incomplete:</b> finish self-certification above before release.</div></div>`;
+      }else if(assessment.anyFail){
+        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner red"><b>Release blocked:</b> self-certification result is HOLD.</div></div>`;
+      }else if(!c.certification.generatedCoa){
+        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner amber"><b>Generate the terminal CoA above before authorizing release.</b></div></div>`;
+      }else{
+        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>Release eligible:</b> self-certification passed and the terminal CoA is generated.</div><div class="actionbar"><button class="btn primary" onclick="authorizeSelfCertRelease(c.operator)" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`;
+      }
+    }
     return selfCertStage(c)+releaseSection;
   }
   const releaseSection=c.thirdPartyCert?`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>CoA received.</b> Global Partners review of the attached third-party CoA controls release.</div><div class="actionbar"><button class="btn primary" onclick="authorizeThirdPartyRelease(c.operator)" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`:'';
@@ -2254,91 +2268,139 @@ function draftOfficialTruckOrder(){
    class-dependent.
    ===================================================================== */
 
-function specLimitsForGrade(grade){
-  const g=CLASS_LIMITS[String(grade||'').toUpperCase()]||CLASS_LIMITS.A;
-  return{rvpNeatMax:CONFIG.ftwBlendstockLimit,rvpE10Max:CONFIG.ftwE10Limit,t10Max:g.t10,t50Min:g.t50Finished,t50Max:g.t50Max,t90Max:g.t90,fbpMax:g.fbp};
-}
-
-// Pure PASS/HOLD assessment. A T50 outside [t50Min,t50Max] forces HOLD
-// (brief: "Failing T50 forces HOLD"), same as every other spec fail --
-// no field is treated as advisory-only.
-function selfCertAssessment(entry,limits){
-  const rvpFail=entry.levels.some(l=>l.controllingRvp!=null&&l.controllingRvp>limits.rvpNeatMax),
-        e10Fail=entry.e10.controllingRvp!=null&&entry.e10.controllingRvp>limits.rvpE10Max,
-        d=entry.distillation,
-        t10=num(d.t10),t50=num(d.t50),t90=num(d.t90),fbp=num(d.fbp),
-        fails={
-          rvp:rvpFail||e10Fail,
-          t10:t10!=null&&t10>limits.t10Max,
-          t50:t50!=null&&(t50<limits.t50Min||t50>limits.t50Max),
-          t90:t90!=null&&t90>limits.t90Max,
-          fbp:fbp!=null&&fbp>limits.fbpMax
-        },
-        anyFail=Object.values(fails).some(Boolean);
-  return{fails,anyFail,outcome:anyFail?'HOLD':'PASS'};
-}
-
-// Completeness gate. Blank required values never pass, regardless of
-// what selfCertAssessment() would otherwise conclude from what IS
-// present -- brief: "Blank required values must never pass."
-function selfCertRequiredState(entry){
-  const missing=[],invalid=[];
-  const need=(v,label)=>{if(!String(v??'').trim())missing.push(label)};
-  need(entry.metadata.certNo,'Certificate No.');need(entry.metadata.sampleDate,'Sample Date');
-  need(entry.metadata.tank,'Tank');need(entry.metadata.batch,'Blend #');
-  need(entry.metadata.grade,'Volatility Grade');need(entry.metadata.preparedBy,'Prepared By');
-  entry.levels.forEach(l=>{
-    need(l.api,`${l.position} API`);need(l.hazy,`${l.position} Hazy`);
-    const check=checkPair(l.ptot,l.astmRvp);
-    if(!check.complete)invalid.push(`${l.position} (incomplete)`);else if(!check.ok)invalid.push(l.position);
-  });
-  const eCheck=checkPair(entry.e10.ptot,entry.e10.astmRvp);
-  if(!eCheck.complete)invalid.push('E10 (incomplete)');else if(!eCheck.ok)invalid.push('E10');
-  [['baro','Barometric Pressure'],['ibp','IBP'],['t10','T10'],['t50','T50'],['t90','T90'],['t95','T95'],['fbp','FBP'],['recovery','Recovery'],['residue','Residue'],['loss','Loss']]
-    .forEach(([key,label])=>need(entry.distillation[key],label));
-  return{complete:missing.length===0&&invalid.length===0,missing,invalid};
-}
-
-function selfCertLevelData(prefix){
-  const grade=val('sc-grade'),ptot=val(`${prefix}-ptot`),astm=val(`${prefix}-astm`),check=checkPair(ptot,astm),control=controllingRvp(grade,ptot,astm);
-  return{ptot,astmRvp:astm,expectedAstmRvp:check.expected,controllingBasis:control.basis,controllingRvp:control.value,epaRvp:control.epa};
-}
-function recordSelfCertification(operatorRaw,eventAtRaw){
+function selfCertSpecLimits(c){const sc=c?.selfCert||{},sampleDate=String(sc.sampleDate||localDateIso()).slice(0,10),grade=volatilityGradeForDate(sampleDate,sc.volatilityGrade||c?.volatilityGrade),cls=CLASS_LIMITS[grade]||CLASS_LIMITS.A,waiver=waiverFor(sampleDate),classA=grade==='A',txTol=texasEthanolTolerancePsi(sampleDate),rvpNeatMax=waiver?9:(classA?7.4:cls.rvp),rvpE10Max=waiver?10:(classA?7.4:cls.rvp+txTol);return{sampleDate,grade,waiver,rvpNeatMax,rvpE10Max,t10Max:cls.t10,t50Min:cls.t50Finished,t50Max:cls.t50Max,t90Max:cls.t90,fbpMax:cls.fbp,residueMax:2,texasEthanolTolerancePsi:waiver?0:txTol}}
+// Completeness gate, ported from the reference prototype (selfCertRequiredState) --
+// blank required values are never allowed to pass, regardless of what
+// selfCertAssessment() would otherwise conclude from what IS present.
+function selfCertRequiredState(c){const sc=c?.selfCert||{},missing=[],invalidVaporPairs=[],grade=String(sc.volatilityGrade||c?.volatilityGrade||volatilityGradeForDate(sc.sampleDate||localDateIso())).toUpperCase(),required=(v,label)=>{if(String(v??'').trim()==='')missing.push(label)};required(sc.sampleDate,'Sample Date');required(sc.preparedBy,'Prepared By');required(grade,'Volatility Grade');const byName=Object.fromEntries((sc.levels||[]).map(x=>[String(x.name||x.position||''),x]));['Upper','Middle','Lower'].forEach(name=>{const x=byName[name]||{};required(x.api,`${name} API`);required(x.hazy,`${name} Hazy`);required(x.ptot,`${name} PTOT`);required(x.astmRvp,`${name} RVP (ASTM)`);const check=checkPair(x.ptot,x.astmRvp);if(String(x.ptot??'').trim()&&String(x.astmRvp??'').trim()&&!check.ok)invalidVaporPairs.push(name)});const r=sc.running||{};required(r.ptot,'Running PTOT');required(r.astmRvp,'Running RVP (ASTM)');const rc=checkPair(r.ptot,r.astmRvp);if(String(r.ptot??'').trim()&&String(r.astmRvp??'').trim()&&!rc.ok)invalidVaporPairs.push('Running');const d=sc.distillation||{};[['baro','Barometric Pressure'],['ibp','IBP'],['t10','T10'],['t50','T50'],['t90','T90'],['t95','T95'],['fbp','FBP'],['recovery','Recovery'],['residue','Residue'],['loss','Loss']].forEach(([k,label])=>required(d[k],label));return{complete:missing.length===0&&invalidVaporPairs.length===0,missing,invalidVaporPairs,grade}}
+function selfCertVaporResult(grade,ptot,astmRvp){const p=Number(ptot),a=Number(astmRvp),check=checkPair(p,a),control=controllingRvp(grade,p,a);return{ptot:Number.isFinite(p)?p:null,astmRvp:Number.isFinite(a)?a:null,expectedAstmRvp:check.expected,pairValid:check.complete&&check.ok,epaRvp:String(grade||'').toUpperCase()==='A'&&check.complete?check.epa:null,reportedRvp:control.valid?control.value:null,basis:control.valid?control.basis:(String(grade||'').toUpperCase()==='A'?'EPA':'ASTM')}}
+function grabnerEntryFeedback(ptotValue,astmValue){const rawP=String(ptotValue??'').trim(),rawA=String(astmValue??'').trim(),p=Number(ptotValue);if(!rawP||!Number.isFinite(p))return{tone:'neutral',text:'Enter PTOT to calculate the expected ASTM RVP.',expected:null};const expected=astmRvpFromPtot(p);if(!rawA)return{tone:'neutral',text:`Expected ASTM RVP ${f2(expected)} psi — enter the Grabner RVP (ASTM).`,expected};const check=checkPair(ptotValue,astmValue);return check.ok?{tone:'green',text:`✓ Entry check passed — expected ASTM RVP ${f2(expected)} psi`,expected}:{tone:'red',text:`⚠ Re-enter values — PTOT corresponds to ASTM RVP ${f2(expected)} psi`,expected}}
+function pairCheckHtml(id,ptot,astm){const feedback=grabnerEntryFeedback(ptot,astm);return `<div id="${esc(id)}" class="pair-check ${feedback.tone}">${esc(feedback.text)}</div>`}
+function refreshPairCheck(id,ptotId,astmId){const el=document.getElementById(id);if(!el)return;const feedback=grabnerEntryFeedback(val(ptotId),val(astmId));el.className=`pair-check ${feedback.tone}`;el.textContent=feedback.text}
+function refreshSelfCertPairCheck(key){refreshPairCheck(`sc-${key}-pair-check`,`sc-${key}-ptot`,`sc-${key}-astm`)}
+// Pure PASS/HOLD assessment, ported from the reference prototype. A T50
+// outside [t50Min,t50Max] forces HOLD, same as every other spec fail -- no
+// field is treated as advisory-only. Operates on the case directly (not a
+// detached entry) so it can be recomputed fresh on every render.
+function selfCertAssessment(c){const required=selfCertRequiredState(c),sc=c?.selfCert||{},spec=selfCertSpecLimits(c),grade=spec.grade,levels=(sc.levels||[]).map(x=>Object.assign({},x,selfCertVaporResult(grade,x.ptot,x.astmRvp))),running=selfCertVaporResult(grade,sc.running?.ptot,sc.running?.astmRvp),d=sc.distillation||{},n=v=>{const x=Number(v);return Number.isFinite(x)?x:null},t10=n(d.t10),t50=n(d.t50),t90=n(d.t90),fbp=n(d.fbp),residue=n(d.residue),fails={rvp:required.complete&&(levels.some(x=>x.reportedRvp!=null&&x.reportedRvp>spec.rvpNeatMax+1e-9)||(running.reportedRvp!=null&&running.reportedRvp>spec.rvpE10Max+1e-9)),t10:required.complete&&t10>spec.t10Max+1e-9,t50:required.complete&&(t50<spec.t50Min-1e-9||t50>spec.t50Max+1e-9),t90:required.complete&&t90>spec.t90Max+1e-9,fbp:required.complete&&fbp>spec.fbpMax+1e-9,residue:required.complete&&residue>spec.residueMax+1e-9};const anyFail=Object.values(fails).some(Boolean),releaseAllowed=required.complete&&!anyFail;return{complete:required.complete,missing:required.missing,invalidVaporPairs:required.invalidVaporPairs,spec,levels,running,fails,anyFail,releaseAllowed,status:required.complete?(anyFail?'HOLD':(spec.waiver?'WAIVER RELEASE CRITERIA MET':'RELEASE CRITERIA MET')):'INCOMPLETE'}}
+// Save + evaluate: always saves whatever is currently in the form (even if
+// incomplete) so the operator can see exactly what selfCertAssessment()
+// concludes and keep editing -- unlike the old recordSelfCertification(),
+// this does not block an incomplete save with an alert; selfCertStage()'s
+// own Incomplete/HOLD banners communicate status instead.
+function saveSelfCertRecord(){
   const c=currentCase();
   if(!c||!requireEdit(c))return null;
-  const resolved=resolveOperatorEvent(c,operatorRaw,eventAtRaw),
-        grade=val('sc-grade')||volatilityGradeForDate(val('sc-sample-date')||localDateIso()),
-        entry={
-          levels:['up','mid','low'].map((prefix,i)=>({position:['Upper','Middle','Lower'][i],api:val(`sc-${prefix}-api`),hazy:val(`sc-${prefix}-hazy`),...selfCertLevelData(`sc-${prefix}`)})),
-          e10:selfCertLevelData('sc-e'),
-          distillation:{baro:val('sc-baro'),ibp:val('sc-ibp'),t10:val('sc-t10'),t50:val('sc-t50'),t90:val('sc-t90'),t95:val('sc-t95'),fbp:val('sc-fbp'),recovery:val('sc-recovery'),residue:val('sc-residue'),loss:val('sc-loss')},
-          metadata:{certNo:val('sc-cert-no')||generateSelfCertNo(),sampleDate:val('sc-sample-date'),tank:c.tank,batch:c.id,grade,preparedBy:resolved.by}
-        },
-        state=selfCertRequiredState(entry);
-  if(!state.complete){
-    alert(state.missing.length?`Required release data is incomplete: ${state.missing.join(', ')}.`:`PTOT / RVP (ASTM) verification is incomplete or invalid for: ${state.invalid.join(', ')}.`);
-    return null;
-  }
-  const limits=specLimitsForGrade(grade),assessment=selfCertAssessment(entry,limits),
-        record={...entry,limits,assessment,outcome:assessment.outcome,eventAt:resolved.eventAt,recordedAt:resolved.recordedAt,generatedAt:iso(),generatedBy:resolved.by};
+  const existingOcr=c.selfCert?.distillationOcr||null;
+  const record={
+    sampleDate:val('sc-date'),
+    volatilityGrade:val('sc-grade'),
+    preparedBy:val('sc-prepared-by'),
+    levels:['Upper','Middle','Lower'].map(name=>{const key=name.toLowerCase();return{name,api:val(`sc-${key}-api`),hazy:val(`sc-${key}-hazy`),ptot:val(`sc-${key}-ptot`),astmRvp:val(`sc-${key}-astm`)}}),
+    running:{ptot:val('sc-running-ptot'),astmRvp:val('sc-running-astm')},
+    distillation:{baro:val('sc-baro'),ibp:val('sc-ibp'),t10:val('sc-t10'),t50:val('sc-t50'),t90:val('sc-t90'),t95:val('sc-t95'),fbp:val('sc-fbp'),recovery:val('sc-recovery'),residue:val('sc-residue'),loss:val('sc-loss')},
+    distillationOcr:existingOcr
+  };
   c.selfCert=record;
-  log(c,resolved.by,`Self-certification recorded: ${record.outcome}${assessment.anyFail?' -- '+Object.entries(assessment.fails).filter(([,v])=>v).map(([k])=>k).join(', ')+' out of spec':''}`,assessment.anyFail?'error':'self-cert-results');
+  const assessment=selfCertAssessment(c);
+  c.selfCert.outcome=assessment.complete?(assessment.anyFail?'HOLD':'PASS'):null;
+  const by=record.preparedBy||lastKnownOperator(c);
+  log(c,by,`Self-certification results saved: ${assessment.status}${assessment.anyFail?' -- '+Object.entries(assessment.fails).filter(([,v])=>v).map(([k])=>k).join(', ')+' out of spec':''}`,assessment.anyFail?'error':'self-cert-results');
   render();
   return record;
 }
-function generateSelfCertNo(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `FTW-COA-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0')}`}
-
-function selfCertLevelFieldsHtml(prefix,label){
-  return `<div class="formrow"><div class="field"><label>${label} PTOT (psi)</label><input id="${prefix}-ptot" type="number" step="0.001"></div><div class="field"><label>${label} RVP (ASTM) (psi)</label><input id="${prefix}-astm" type="number" step="0.01"></div>${label!=='E10'?`<div class="field"><label>${label} API</label><input id="sc-${prefix.replace('sc-','')}-api" type="number" step="0.1"></div><div class="field"><label>${label} Hazy</label><select id="sc-${prefix.replace('sc-','')}-hazy"><option value="">—</option><option>Clear</option><option>Hazy</option></select></div>`:''}</div>`;
+function makeSelfCertCoa(c,assessment=selfCertAssessment(c)){const sc=c.selfCert||{},grade=assessment.spec.grade,product=['23155','23156'].includes(String(c.tankNo))?'Regular Gasoline':['27404','27405'].includes(String(c.tankNo))?'Premium Gasoline':c.grade||'Gasoline',generatedAt=iso();return{documentType:'Global Partners Terminal Certificate of Analysis',certificateId:`FTW-COA-${c.globalBatchId||c.id.replace(/[^A-Za-z0-9]/g,'')}-${Date.now().toString().slice(-6)}`,terminal:'Fort Worth J117',address:'3200 North Sylvania Ave, Fort Worth, TX 76111',blendCase:c.id,globalBatchId:c.globalBatchId||'',tank:c.tank,tankNo:c.tankNo,product,sampleDate:sc.sampleDate,volatilityGrade:grade,rvpBasis:grade==='A'?'EPA':'ASTM',waiver:assessment.spec.waiver?deepClone(assessment.spec.waiver):null,levels:assessment.levels.map(x=>deepClone(x)),running:deepClone(assessment.running),distillation:deepClone(sc.distillation||{}),spec:deepClone(assessment.spec),preparedBy:sc.preparedBy,status:assessment.status,releaseAllowed:assessment.releaseAllowed,generatedAt,ocr:deepClone(sc.distillationOcr||null)}}
+function selfCertCoaHtml(c,coa){const d=coa.distillation||{},sp=coa.spec||{},rvpLabel=coa.rvpBasis==='EPA'?'RVP, EPA equation':'RVP, ASTM';return `<div class="coa-paper"><div class="coa-head"><div class="coa-brand">GLOBAL<small>PARTNERS</small></div><h4>Certificate of Analysis<br>Fort Worth Terminal J117</h4></div><div class="coa-meta"><div><span>Certificate</span><b>${esc(coa.certificateId)}</b></div><div><span>Tank</span><b>${esc(coa.tankNo)}</b></div><div><span>Sample date</span><b>${esc(coa.sampleDate)}</b></div><div><span>Product</span><b>${esc(coa.product)}</b></div><div><span>Volatility grade</span><b>Class ${esc(coa.volatilityGrade)}</b></div><div><span>Prepared by</span><b>${esc(coa.preparedBy)}</b></div></div><table class="coa-review-table"><thead><tr><th>Sample / Test</th><th>Result</th><th>Units</th><th>Method</th><th>Spec</th></tr></thead><tbody>${coa.levels.map(x=>`<tr><td>${esc(x.name)} PTOT</td><td>${f2(x.ptot)}</td><td>psi</td><td>ASTM D5191</td><td></td></tr><tr><td>${esc(x.name)} RVP (ASTM source)</td><td>${f2(x.astmRvp)}</td><td>psi</td><td>Grabner</td><td></td></tr><tr><td>${esc(x.name)} ${rvpLabel}</td><td>${f2(x.reportedRvp)}</td><td>psi</td><td>${coa.rvpBasis==='EPA'?'40 CFR 1090.1355':'ASTM D5191'}</td><td>≤ ${f1(sp.rvpNeatMax)}</td></tr>`).join('')}<tr><td>Running PTOT</td><td>${f2(coa.running.ptot)}</td><td>psi</td><td>ASTM D5191</td><td></td></tr><tr><td>Running ${rvpLabel}</td><td>${f2(coa.running.reportedRvp)}</td><td>psi</td><td>${coa.rvpBasis==='EPA'?'40 CFR 1090.1355':'ASTM D5191'}</td><td>≤ ${f1(sp.rvpE10Max)}</td></tr><tr><td>T10</td><td>${esc(d.t10)}</td><td>°F</td><td>ASTM D86</td><td>≤ ${sp.t10Max}</td></tr><tr><td>T50</td><td>${esc(d.t50)}</td><td>°F</td><td>ASTM D86</td><td>${sp.t50Min}–${sp.t50Max}</td></tr><tr><td>T90</td><td>${esc(d.t90)}</td><td>°F</td><td>ASTM D86</td><td>≤ ${sp.t90Max}</td></tr><tr><td>FBP</td><td>${esc(d.fbp)}</td><td>°F</td><td>ASTM D86</td><td>≤ ${sp.fbpMax}</td></tr><tr><td>Residue</td><td>${esc(d.residue)}</td><td>vol %</td><td>ASTM D86</td><td>≤ ${sp.residueMax} vol %</td></tr></tbody></table><p class="summary-foot">RVP reporting basis: ${esc(coa.rvpBasis)}. The Grabner ASTM result is retained as source data for every sample. ${coa.waiver?`2026 waiver applied through ${esc(coa.waiver.end)}.`:''} Status: <b>${esc(coa.status)}</b>.</p></div>`}
+function generateSelfCertCoa(){
+  const c=currentCase();
+  if(!c||!requireEdit(c)||!c.selfCert)return null;
+  const assessment=selfCertAssessment(c);
+  if(!assessment.releaseAllowed){alert(assessment.complete?'A terminal CoA cannot be generated while the result is HOLD.':'Complete all required self-certification fields before generating the terminal CoA.');return null}
+  const coa=makeSelfCertCoa(c,assessment);
+  c.certification.generatedCoa=coa;
+  markDoc(c,'coa');
+  const by=c.selfCert.preparedBy||lastKnownOperator(c);
+  log(c,by,`Terminal CoA generated: ${coa.certificateId} (${coa.status})`);
+  render();
+  return coa;
 }
-function selfCertStage(c){
-  if(c.selfCert){
-    const s=c.selfCert;
-    return `<h3>Self-Certification <span class="tag ${s.outcome==='PASS'?'ok':'warn'}">${s.outcome}</span></h3><div class="grid"><div class="box"><div class="k">Certificate</div><div class="v" style="font-size:12px">${esc(s.metadata.certNo)}</div></div><div class="box"><div class="k">Grade</div><div class="v">${esc(s.metadata.grade)}</div></div><div class="box"><div class="k">Prepared by</div><div class="v" style="font-size:12px">${esc(s.metadata.preparedBy)}</div></div><div class="box"><div class="k">Outcome</div><div class="v ${s.outcome==='PASS'?'recon-good':'recon-bad'}">${s.outcome}</div></div></div>${s.assessment.anyFail?`<div class="gate warn"><b>Out of spec:</b> ${Object.entries(s.assessment.fails).filter(([,v])=>v).map(([k])=>k.toUpperCase()).join(', ')}</div>`:''}`;
+/* =====================================================================
+   Distillation photo reader -- fixed-layout OCR pipeline ported verbatim
+   from the reference prototype (docs/v5-merge/...-v5.html). These are pure
+   canvas/OCR functions with no dependency on case shape until
+   readSelfCertDistillationPhoto() (production-specific glue, below,
+   written for this merge -- the prototype references it from
+   selfCertStage()'s "Read distillation photo" button but never actually
+   defines it) merges the result into c.selfCert.distillation. Reuses
+   production's existing loadTesseract() library-loading pattern's sibling
+   (a dedicated worker with a numeric-only whitelist, matching the
+   prototype) rather than the general-purpose screen-OCR worker already
+   used for Grabner PTOT/RVP photos elsewhere in this file -- different
+   recognition settings for a different, fixed-layout source document.
+   ===================================================================== */
+let selfCertTesseractLoadPromise=null,selfCertOcrWorkerPromise=null;
+function loadSelfCertTesseract(){if(window.Tesseract)return Promise.resolve(window.Tesseract);if(selfCertTesseractLoadPromise)return selfCertTesseractLoadPromise;selfCertTesseractLoadPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.async=true;script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize.'));script.onerror=()=>reject(new Error('Could not load the OCR library. Check the device internet connection and try again.'));document.head.appendChild(script)});return selfCertTesseractLoadPromise}
+async function getSelfCertOcrWorker(Tesseract){if(!selfCertOcrWorkerPromise){selfCertOcrWorkerPromise=(async()=>{const oem=(Tesseract.OEM&&Tesseract.OEM.LSTM_ONLY!==undefined)?Tesseract.OEM.LSTM_ONLY:1;const worker=await Tesseract.createWorker('eng',oem);const psm=(Tesseract.PSM&&Tesseract.PSM.SINGLE_LINE!==undefined)?Tesseract.PSM.SINGLE_LINE:7;await worker.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:'0123456789.'});return worker})().catch(err=>{selfCertOcrWorkerPromise=null;throw err});}return selfCertOcrWorkerPromise}
+function loadSelfCertPhotoImage(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('The selected photo could not be opened.'))};img.src=url})}
+// longestTrueRun/paperLike/detectReceiptBounds already exist above (production's
+// existing Grabner PTOT/RVP photo reader, patch 0002-0006) -- confirmed byte-for-byte
+// identical to the prototype's own copies before reusing rather than duplicating.
+async function makeSelfCertReceiptCanvas(file){const img=await loadSelfCertPhotoImage(file),maxDim=2400,scale=Math.min(1,maxDim/Math.max(img.naturalWidth,img.naturalHeight)),base=document.createElement('canvas');base.width=Math.max(1,Math.round(img.naturalWidth*scale));base.height=Math.max(1,Math.round(img.naturalHeight*scale));base.getContext('2d').drawImage(img,0,0,base.width,base.height);const b=detectReceiptBounds(base),receipt=document.createElement('canvas');receipt.width=Math.max(1,Math.round(b.w));receipt.height=Math.max(1,Math.round(b.h));receipt.getContext('2d').drawImage(base,b.x,b.y,b.w,b.h,0,0,receipt.width,receipt.height);return receipt}
+function otsuThreshold(hist,total){let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];let sumB=0,wB=0,maxVar=-1,threshold=160;for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=total-wB;if(!wF)break;sumB+=t*hist[t];const mB=sumB/wB,mF=(sum-sumB)/wF,between=wB*wF*(mB-mF)*(mB-mF);if(between>maxVar){maxVar=between;threshold=t}}return threshold}
+function preprocessValueCrop(receipt,box,profile){const padX=profile.padX??2,padY=profile.padY??0,sx=Math.max(0,box.x-padX),sy=Math.max(0,box.y-padY),ex=Math.min(receipt.width,box.x+box.w+padX),ey=Math.min(receipt.height,box.y+box.h+padY),sw=Math.max(1,ex-sx),sh=Math.max(1,ey-sy),targetH=130,scale=targetH/sh,content=document.createElement('canvas');content.width=Math.max(1,Math.round(sw*scale));content.height=targetH;const cctx=content.getContext('2d',{willReadFrequently:true});cctx.imageSmoothingEnabled=true;cctx.imageSmoothingQuality='high';cctx.drawImage(receipt,sx,sy,sw,sh,0,0,content.width,content.height);const im=cctx.getImageData(0,0,content.width,content.height),d=im.data,n=content.width*content.height,hist=new Uint32Array(256),vals=new Uint8Array(n);for(let j=0,p=0;j<d.length;j+=4,p++){const v=profile.channel==='gray'?Math.round(.299*d[j]+.587*d[j+1]+.114*d[j+2]):Math.max(d[j],d[j+1],d[j+2]);vals[p]=v;hist[v]++}if(profile.binary!==false){const threshold=Math.max(55,Math.min(245,otsuThreshold(hist,n)+(profile.offset||0)));for(let j=0,p=0;j<d.length;j+=4,p++){const v=vals[p]<threshold?0:255;d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}}else{for(let j=0,p=0;j<d.length;j+=4,p++){const v=vals[p];d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}}cctx.putImageData(im,0,0);const borderX=50,borderY=25,out=document.createElement('canvas'),octx=out.getContext('2d');out.width=content.width+borderX*2;out.height=content.height+borderY*2;octx.fillStyle='#fff';octx.fillRect(0,0,out.width,out.height);octx.drawImage(content,borderX,borderY);return out}
+const FIXED_LAYOUT_FIELDS=[
+  {key:'residue',label:'Residue',min:0,max:5,oneDecimal:true,region:{x1:.481,y1:.512,x2:.574,y2:.532},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'recovery',label:'Corrected Total Recovery',min:85,max:100,oneDecimal:true,region:{x1:.684,y1:.527,x2:.774,y2:.548},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'loss',label:'Corrected Loss',min:0,max:15,oneDecimal:true,region:{x1:.692,y1:.544,x2:.780,y2:.565},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'baroHpa',label:'Barometric Pressure',min:850,max:1100,integer:true,region:{x1:.493,y1:.574,x2:.595,y2:.598},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'ibp',label:'IBP',min:50,max:180,oneDecimal:true,region:{x1:.557,y1:.655,x2:.684,y2:.676},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t10',label:'T10',min:70,max:220,oneDecimal:true,region:{x1:.552,y1:.688,x2:.689,y2:.707},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t50',label:'T50',min:120,max:320,oneDecimal:true,region:{x1:.557,y1:.778,x2:.701,y2:.799},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t90',label:'T90',min:180,max:430,oneDecimal:true,region:{x1:.568,y1:.880,x2:.693,y2:.899},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'t95',label:'T95',min:220,max:460,oneDecimal:true,region:{x1:.571,y1:.899,x2:.696,y2:.918},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]},
+  {key:'fbp',label:'Final Boiling Point',min:250,max:500,oneDecimal:true,region:{x1:.571,y1:.931,x2:.696,y2:.950},profiles:[{channel:'gray',binary:false,psm:7},{channel:'gray',offset:8,psm:7}]}
+];
+function fixedRegionBox(receipt,region){const x=Math.max(0,Math.round(receipt.width*region.x1)),y=Math.max(0,Math.round(receipt.height*region.y1)),ex=Math.min(receipt.width,Math.round(receipt.width*region.x2)),ey=Math.min(receipt.height,Math.round(receipt.height*region.y2));return{x,y,w:Math.max(1,ex-x),h:Math.max(1,ey-y)}}
+function parseFixedNumericOcr(text,rule){const s=String(text||'').replace(/,/g,'.').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1'),matches=s.match(/\d{1,5}(?:\.\d{1,3})?/g)||[];for(const token of matches){let n=parseFloat(token);if(!Number.isFinite(n))continue;if(rule.integer){if(n>=rule.min&&n<=rule.max)return Math.round(n);continue}if(rule.oneDecimal&&!token.includes('.')&&token.length>=2){const d=n/10;if(d>=rule.min&&d<=rule.max)return Math.round(d*10)/10}if(n>=rule.min&&n<=rule.max)return Math.round(n*10)/10}return null}
+function parseFixedNumericCandidates(text,rule){const s=String(text||'').replace(/,/g,'.').replace(/[Oo]/g,'0').replace(/[Il|]/g,'1'),matches=s.match(/\d{1,5}(?:\.\d{1,3})?/g)||[],vals=[];for(const token of matches){let n=parseFloat(token);if(!Number.isFinite(n))continue;if(rule.integer){n=Math.round(n);if(n>=rule.min&&n<=rule.max)vals.push(n);continue}if(rule.oneDecimal&&!token.includes('.')&&token.length>=2){const d=n/10;if(d>=rule.min&&d<=rule.max){vals.push(Math.round(d*10)/10);continue}}if(n>=rule.min&&n<=rule.max)vals.push(Math.round(n*10)/10)}return vals}
+function chooseEndpointFbp(currentFbp,observed,corrected,pairCandidates=[]){const votes=[];if(Number.isFinite(currentFbp))votes.push({value:currentFbp,source:'evap'});if(Number.isFinite(corrected))votes.push({value:corrected,source:'corrected'});(pairCandidates||[]).filter(Number.isFinite).forEach(v=>votes.push({value:v,source:'pair'}));if(!votes.length)return currentFbp;const groups=new Map();for(const vote of votes){const key=vote.value.toFixed(1);if(!groups.has(key))groups.set(key,{value:vote.value,count:0,sources:new Set()});const g=groups.get(key);g.count++;g.sources.add(vote.source)}let best=null,bestScore=-Infinity;for(const g of groups.values()){let score=g.count*10;if(g.sources.has('corrected'))score+=4;if(g.sources.has('evap'))score+=2;if(Number.isFinite(observed)){const delta=Math.abs(g.value-observed);if(delta<=8)score+=Math.max(0,8-delta);else score-=Math.min(12,delta-8)}if(score>bestScore){bestScore=score;best=g}}return best?Math.round(best.value*10)/10:currentFbp}
+async function reconcileEndpointFbp(receipt,worker,currentFbp,result){const tempRule={min:250,max:500,oneDecimal:true},regions={observed:{x1:.19,y1:.928,x2:.38,y2:.953},corrected:{x1:.39,y1:.928,x2:.55,y2:.953},pair:{x1:.36,y1:.928,x2:.73,y2:.953}};async function readOne(region,psm=7){await worker.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:'0123456789.'});const box=fixedRegionBox(receipt,region),canvas=preprocessValueCrop(receipt,box,{channel:'gray',binary:false,psm,padX:2,padY:1}),out=await worker.recognize(canvas);return{text:(out?.data?.text||'').trim(),confidence:out?.data?.confidence,candidates:parseFixedNumericCandidates(out?.data?.text||'',tempRule)}}const obs=await readOne(regions.observed,7),corr=await readOne(regions.corrected,7),pair=await readOne(regions.pair,6);result._raw.fbpEndpointObserved=obs.text;result._raw.fbpEndpointCorrected=corr.text;result._raw.fbpEndpointPair=pair.text;[obs.confidence,corr.confidence,pair.confidence].forEach(c=>{if(Number.isFinite(c))result._confidence.push(c)});return chooseEndpointFbp(currentFbp,obs.candidates[0]??null,corr.candidates[0]??null,pair.candidates)}
+async function readFixedLayoutValues(file,status){const Tesseract=await loadSelfCertTesseract();status.textContent='Locating the standard ad-7 receipt…';const receipt=await makeSelfCertReceiptCanvas(file),aspect=receipt.height/Math.max(1,receipt.width);if(aspect<2.35||aspect>3.65)throw new Error('The receipt could not be isolated reliably. Retake the photo with the full ad-7 printout visible and approximately upright.');const worker=await getSelfCertOcrWorker(Tesseract),result={baroMmHg:null,baroSource:'',_confidence:[],_raw:{},_warnings:[],_templateVersion:'ad7-ftw-v2'};for(let i=0;i<FIXED_LAYOUT_FIELDS.length;i++){const rule=FIXED_LAYOUT_FIELDS[i];status.textContent=`Reading ${rule.label}… ${i+1} of ${FIXED_LAYOUT_FIELDS.length}`;const box=fixedRegionBox(receipt,rule.region);let value=null,bestText='',bestConfidence=null;for(const profile of rule.profiles){await worker.setParameters({tessedit_pageseg_mode:profile.psm,tessedit_char_whitelist:'0123456789.'});const valueCanvas=preprocessValueCrop(receipt,box,profile),out=await worker.recognize(valueCanvas),txt=out?.data?.text||'',parsed=parseFixedNumericOcr(txt,rule),conf=out?.data?.confidence;if(bestText===''){bestText=txt;bestConfidence=conf}if(Number.isFinite(parsed)){value=parsed;bestText=txt;bestConfidence=conf;break}}result._raw[rule.key]=bestText.trim();if(Number.isFinite(bestConfidence))result._confidence.push(bestConfidence);if(Number.isFinite(value))result[rule.key]=value}result.fbp=await reconcileEndpointFbp(receipt,worker,result.fbp,result);const seq=['ibp','t10','t50','t90','t95','fbp'];for(let i=1;i<seq.length;i++){const prev=result[seq[i-1]],cur=result[seq[i]];if(Number.isFinite(prev)&&Number.isFinite(cur)&&cur<prev)result._warnings.push(`${seq[i].toUpperCase()} is lower than the preceding distillation point`)}if(Number.isFinite(result.recovery)&&Number.isFinite(result.loss)&&Math.abs(result.recovery+result.loss-100)>.6)result._warnings.push('Corrected Total Recovery plus corrected Loss does not equal approximately 100%');if(Number.isFinite(result.baroHpa)){result.baroMmHg=Math.round(result.baroHpa*0.750061683*100)/100;result.baroSource=`${result.baroHpa} hPa converted to mm Hg`}result._avgConfidence=result._confidence.length?result._confidence.reduce((a,b)=>a+b,0)/result._confidence.length:null;return result}
+// Production-specific glue (the prototype's selfCertStage() references this
+// button handler but never defines it -- everything above this point is a
+// verbatim port; this orchestrator is new). Merges OCR results into
+// c.selfCert.distillation, never overwriting a value the operator already
+// typed, matching coa-generator.html's same rule for its own photo capture.
+async function readSelfCertDistillationPhoto(){
+  const c=currentCase();
+  if(!c||!requireEdit(c))return;
+  const input=document.getElementById('sc-dist-photo'),status=document.getElementById('sc-ocr-status');
+  const file=input?.files?.[0];
+  if(!file){alert('Choose or take a photo of the distillation printout first.');return}
+  if(status)status.textContent='Reading distillation photo…';
+  try{
+    const result=await readFixedLayoutValues(file,status||{textContent:''});
+    c.selfCert=c.selfCert||{};
+    const d=c.selfCert.distillation=c.selfCert.distillation||{};
+    const setIfBlank=(key,value)=>{if(!String(d[key]??'').trim()&&Number.isFinite(value))d[key]=value};
+    setIfBlank('baro',result.baroMmHg);setIfBlank('ibp',result.ibp);setIfBlank('t10',result.t10);setIfBlank('t50',result.t50);setIfBlank('t90',result.t90);setIfBlank('t95',result.t95);setIfBlank('fbp',result.fbp);setIfBlank('recovery',result.recovery);setIfBlank('residue',result.residue);setIfBlank('loss',result.loss);
+    c.selfCert.distillationOcr={used:true,fileName:file.name,at:iso(),avgConfidence:result._avgConfidence,warnings:result._warnings,raw:result._raw,templateVersion:result._templateVersion};
+    log(c,lastKnownOperator(c),`Distillation photo read (${file.name})${result._warnings.length?'; warnings: '+result._warnings.join('; '):''}`);
+    render();
+  }catch(e){
+    console.error('[readSelfCertDistillationPhoto]',e);
+    if(status)status.textContent='Could not read this photo: '+e.message;
+    alert('Could not read the distillation photo: '+e.message);
   }
-  const op=lastKnownOperator(c);
-  return `<h3>Self-Certification <span class="tag warn">Required</span></h3><p class="lead">Record Upper/Middle/Lower and finished E10 vapor pressure, D86 distillation, and certificate metadata. Blank required values cannot pass.</p><div class="formbox"><h4>Certificate</h4><div class="formrow"><div class="field"><label>Certificate No.</label><input id="sc-cert-no" placeholder="auto-generated if blank"></div><div class="field"><label>Sample date</label><input id="sc-sample-date" type="date" value="${localDateIso()}"></div><div class="field"><label>Volatility grade</label><select id="sc-grade">${Object.keys(CLASS_LIMITS).map(g=>`<option ${g==='A'?'selected':''}>${g}</option>`).join('')}</select></div><div class="field"><label>Prepared by</label><select id="sc-prep-op" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'operator')">${operatorOptions(op)}</select></div></div></div><div class="formbox"><h4>Upper / Middle / Lower</h4>${selfCertLevelFieldsHtml('sc-up','Upper')}${selfCertLevelFieldsHtml('sc-mid','Middle')}${selfCertLevelFieldsHtml('sc-low','Lower')}</div><div class="formbox"><h4>Finished E10</h4>${selfCertLevelFieldsHtml('sc-e','E10')}</div><div class="formbox"><h4>D86 Distillation</h4><div class="formrow">${['baro','ibp','t10','t50','t90','t95','fbp','recovery','residue','loss'].map(k=>`<div class="field"><label>${k.toUpperCase()}</label><input id="sc-${k}" type="number" step="0.1"></div>`).join('')}</div></div><div class="actionbar"><button class="btn primary" onclick="recordSelfCertification(val('sc-prep-op'),null)" ${editable(c)?'':'disabled'}>Record self-certification</button></div>`;
 }
+// Full self-certification stage, ported from the reference prototype's
+// selfCertStage() (Upper/Middle/Lower, Running E10, D86 distillation with
+// the fixed-layout photo reader). Adapted from the prototype's
+// c.certification.selfCert nesting to production's existing c.selfCert
+// field, and the release-authorization controls are left to
+// certificationStageV5()'s own wrapper (already existed, already correct)
+// rather than duplicated here.
+function selfCertStage(c){const existing=c.selfCert||{},sampleDate=String(existing.sampleDate||localDateIso()).slice(0,10),grade=volatilityGradeForDate(sampleDate,existing.volatilityGrade||c.volatilityGrade),byName=Object.fromEntries((existing.levels||[]).map(x=>[x.name,x])),running=existing.running||{},d=existing.distillation||{},assessment=existing.sampleDate?selfCertAssessment(c):null,status=assessment?assessment.status:'Not evaluated',statusClass=assessment?(assessment.releaseAllowed?'green':assessment.complete?'red':'amber'):'amber',levelsHtml=['Upper','Middle','Lower'].map(name=>{const key=name.toLowerCase(),x=byName[name]||{};return `<div class="formbox"><h4>${name} sample</h4><div class="formrow"><div class="field"><label>API @ 60°F</label><input id="sc-${key}-api" value="${esc(x.api||'')}"></div><div class="field"><label>Hazy</label><select id="sc-${key}-hazy"><option value=""></option><option ${x.hazy==='No'?'selected':''}>No</option><option ${x.hazy==='Yes'?'selected':''}>Yes</option></select></div><div class="field"><label>PTOT (psi)</label><input id="sc-${key}-ptot" type="number" step="0.01" value="${esc(x.ptot??'')}" oninput="refreshSelfCertPairCheck('${key}')"></div><div class="field"><label>RVP (ASTM) (psi)</label><input id="sc-${key}-astm" type="number" step="0.01" value="${esc(x.astmRvp??'')}" oninput="refreshSelfCertPairCheck('${key}')"></div></div>${pairCheckHtml(`sc-${key}-pair-check`,x.ptot,x.astmRvp)}</div>`}).join(''),spec=assessment?.spec||selfCertSpecLimits({selfCert:{sampleDate,volatilityGrade:grade}}),generated=c.certification?.generatedCoa;return `<div class="banner ${statusClass}"><b>Terminal self-certification:</b> ${esc(status)} · Class ${esc(grade)}.</div><div class="formbox"><h4>Certificate basis</h4><div class="formrow"><div class="field"><label>Sample / test date</label><input id="sc-date" type="date" value="${esc(sampleDate)}"></div><div class="field"><label>Volatility grade</label><select id="sc-grade">${Object.keys(CLASS_LIMITS).map(g=>`<option value="${g}" ${g===grade?'selected':''}>Class ${g}</option>`).join('')}</select></div><div class="field"><label>Prepared by</label><select id="sc-prepared-by" onfocus="rememberPersonSelection(this)" onchange="handleOtherPerson(this,'terminal operator')">${operatorOptions(existing.preparedBy||lastKnownOperator(c))}</select></div></div></div>${levelsHtml}<div class="formbox"><h4>Running sample · 10% EtOH</h4><div class="formrow"><div class="field"><label>PTOT (psi)</label><input id="sc-running-ptot" type="number" step="0.01" value="${esc(running.ptot??'')}" oninput="refreshSelfCertPairCheck('running')"></div><div class="field"><label>RVP (ASTM) (psi)</label><input id="sc-running-astm" type="number" step="0.01" value="${esc(running.astmRvp??'')}" oninput="refreshSelfCertPairCheck('running')"></div></div>${pairCheckHtml('sc-running-pair-check',running.ptot,running.astmRvp)}<div class="smallnote">No API or haze entry is required for the E10 Running sample. RVP max for this date/class: ${f1(spec.rvpE10Max)} psi.</div></div><div class="formbox"><h4>Distillation · ASTM D86 on E10 Running</h4><div class="coa-upload"><b>ad-7 distillation printout</b><div class="authority-mini">Upload/take the standard printout to populate the fixed-layout fields. Verify every populated result before release.</div><input id="sc-dist-photo" type="file" accept="image/*" capture="environment"><div id="sc-ocr-status" class="coa-file-status">${existing.distillationOcr?.used?`Last read ${esc(existing.distillationOcr.fileName||'photo')} · verify values below.`:'No distillation photo read yet.'}</div><button class="btn" type="button" onclick="readSelfCertDistillationPhoto()" ${editable(c)?'':'disabled'}>Read distillation photo</button></div><div class="formrow" style="margin-top:10px"><div class="field"><label>Barometric pressure (mm Hg)</label><input id="sc-baro" value="${esc(d.baro??'')}"></div><div class="field"><label>IBP (°F)</label><input id="sc-ibp" value="${esc(d.ibp??'')}"></div><div class="field"><label>T10 (°F)</label><input id="sc-t10" value="${esc(d.t10??'')}"></div><div class="field"><label>T50 (°F)</label><input id="sc-t50" value="${esc(d.t50??'')}"></div><div class="field"><label>T90 (°F)</label><input id="sc-t90" value="${esc(d.t90??'')}"></div><div class="field"><label>T95 (°F)</label><input id="sc-t95" value="${esc(d.t95??'')}"></div><div class="field"><label>FBP (°F)</label><input id="sc-fbp" value="${esc(d.fbp??'')}"></div><div class="field"><label>Recovery (vol %)</label><input id="sc-recovery" value="${esc(d.recovery??'')}"></div><div class="field"><label>Residue (vol %)</label><input id="sc-residue" value="${esc(d.residue??'')}"></div><div class="field"><label>Loss (vol %)</label><input id="sc-loss" value="${esc(d.loss??'')}"></div></div><div class="smallnote">Limits: T10 ≤ ${spec.t10Max}°F · T50 ${spec.t50Min}–${spec.t50Max}°F · T90 ≤ ${spec.t90Max}°F · FBP ≤ ${spec.fbpMax}°F · Residue ≤ ${spec.residueMax} vol %. A blank value is INCOMPLETE; an out-of-spec T50 is a HOLD.</div></div>${assessment&&!assessment.complete?`<div class="banner amber"><b>Incomplete:</b> ${esc([...assessment.missing,...assessment.invalidVaporPairs.map(x=>x+' PTOT/ASTM mismatch')].join('; '))}</div>`:''}${assessment?.anyFail?`<div class="banner red"><b>HOLD:</b> ${esc(Object.entries(assessment.fails).filter(([,v])=>v).map(([k])=>k.toUpperCase()).join(', '))} outside the selected specification.</div>`:''}${generated?`<div class="banner green"><b>CoA generated:</b> ${esc(generated.certificateId)} · ${esc(generated.status)}.</div>`:''}<div class="actionbar"><button class="btn primary" onclick="saveSelfCertRecord()" ${editable(c)?'':'disabled'}>Save / evaluate results</button><button class="btn" onclick="generateSelfCertCoa()" ${editable(c)&&assessment?.releaseAllowed?'':'disabled'}>Generate terminal CoA</button><button class="btn" onclick="chooseCertPath('third-party')" ${editable(c)?'':'disabled'}>Use third-party testing instead</button></div>${generated?selfCertCoaHtml(c,generated):''}`}
 
 /* =====================================================================
    v5 merge batch 8: Third-Party Certification simplified to CoA file +
