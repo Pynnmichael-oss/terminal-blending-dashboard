@@ -144,544 +144,7 @@ body.archive-view .archive-only{display:block}
 .final-performance{display:flex;flex-direction:column;gap:12px}.performance-hero{border:1px solid var(--line);border-left:7px solid var(--teal);border-radius:15px;padding:17px 19px;background:linear-gradient(115deg,rgba(0,179,152,.09),#fff)}.performance-hero.unrealized{border-left-color:var(--amber);background:linear-gradient(115deg,rgba(224,162,60,.10),#fff)}.performance-hero.extra{border-left-color:var(--slate);background:linear-gradient(115deg,rgba(0,79,113,.08),#fff)}.performance-hero .eyebrow{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:1.15px;color:var(--faint);font-weight:900}.performance-hero .performance-volume{font-size:52px;line-height:.95;color:var(--slate);font-weight:950;letter-spacing:-1.6px;margin-top:7px}.performance-hero h4{font-size:15px;color:var(--slate);margin:8px 0 0}.performance-hero p{font-size:10px;color:var(--muted);font-weight:700;line-height:1.45;margin-top:4px}.performance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.performance-card{border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px 13px}.performance-card span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.7px;color:var(--faint);font-weight:900}.performance-card b{display:block;font-size:17px;color:var(--slate);margin-top:4px}.performance-card small{display:block;font-size:9.5px;color:var(--muted);font-weight:700;line-height:1.4;margin-top:3px}.performance-packet{break-inside:avoid}.performance-packet .performance-status{font-weight:900}.performance-packet .unrealized{color:#8a5e12}.performance-packet .extra{color:var(--slate)}@media(max-width:820px){.performance-grid{grid-template-columns:1fr}}
 
 </style>
-<script src="assets/js/supabase-config.js">/* =====================================================================
-   Grabner analyzer-screen reader — ported from coa-generator.html.
-   `esc` and `f2` are reused from this page's own helpers above; everything
-   else here is namespaced/self-contained and safe alongside the rest of
-   this file's globals.
-   ===================================================================== */
-const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null;};
-const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
-const RVP_READ_MIN=2.0, RVP_READ_MAX=20.0;
-const VP_PHOTO_PROFILE='Grabner result-details screen v1';
-
-let tesseractLoadPromise=null;
-
-function loadTesseract(){
-  if(window.Tesseract) return Promise.resolve(window.Tesseract);
-  if(tesseractLoadPromise) return tesseractLoadPromise;
-  tesseractLoadPromise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    script.async=true;
-    script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize.'));
-    script.onerror=()=>reject(new Error('Could not load the OCR library. Check the device internet connection and try again.'));
-    document.head.appendChild(script);
-  });
-  return tesseractLoadPromise;
-}
-
-function loadPhotoImage(file){
-  return new Promise((resolve,reject)=>{
-    const url=URL.createObjectURL(file);
-    const img=new Image();
-    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
-    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('The selected photo could not be opened.'));};
-    img.src=url;
-  });
-}
-
-function longestTrueRun(flags){
-  let bestStart=-1,bestEnd=-1,start=-1;
-  for(let i=0;i<=flags.length;i++){
-    const on=i<flags.length&&flags[i];
-    if(on&&start<0) start=i;
-    if(!on&&start>=0){
-      if(bestStart<0 || i-start>bestEnd-bestStart){bestStart=start;bestEnd=i;}
-      start=-1;
-    }
-  }
-  return bestStart<0?null:{start:bestStart,end:bestEnd};
-}
-
-function paperLike(r,g,b){
-  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
-  return r>105&&g>110&&b>95&&(mx-mn)<80;
-}
-
-function detectReceiptBounds(canvas){
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});
-  const w=canvas.width,h=canvas.height;
-  const data=ctx.getImageData(0,0,w,h).data;
-  const step=Math.max(3,Math.round(Math.min(w,h)/500));
-  const xs=[];
-  for(let x=0;x<w;x+=step){
-    let good=0,total=0;
-    for(let y=0;y<h;y+=step){
-      const i=(y*w+x)*4;
-      if(paperLike(data[i],data[i+1],data[i+2])) good++;
-      total++;
-    }
-    xs.push(good/Math.max(1,total)>.45);
-  }
-  const xr=longestTrueRun(xs);
-  if(!xr || (xr.end-xr.start)*step<w*.15) return {x:0,y:0,w,h};
-  let x0=xr.start*step,x1=Math.min(w,xr.end*step);
-  const xPad=Math.round((x1-x0)*.03);
-  x0=Math.max(0,x0-xPad);x1=Math.min(w,x1+xPad);
-
-  const ys=[];
-  for(let y=0;y<h;y+=step){
-    let good=0,total=0;
-    for(let x=x0;x<x1;x+=step){
-      const i=(y*w+x)*4;
-      if(paperLike(data[i],data[i+1],data[i+2])) good++;
-      total++;
-    }
-    ys.push(good/Math.max(1,total)>.55);
-  }
-  const yr=longestTrueRun(ys);
-  if(!yr || (yr.end-yr.start)*step<h*.35) return {x:x0,y:0,w:x1-x0,h};
-  let y0=yr.start*step,y1=Math.min(h,yr.end*step);
-  const yPad=Math.round((y1-y0)*.01);
-  y0=Math.max(0,y0-yPad);y1=Math.min(h,y1+yPad);
-  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
-}
-
-function proxyCanvas(img,maxEdge){
-  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
-  const scale=Math.min(1,maxEdge/Math.max(iw,ih));
-  const c=document.createElement('canvas');
-  c.width=Math.max(1,Math.round(iw*scale));
-  c.height=Math.max(1,Math.round(ih*scale));
-  const pctx=c.getContext('2d',{willReadFrequently:true});
-  pctx.imageSmoothingEnabled=true;pctx.imageSmoothingQuality='high';
-  pctx.drawImage(img,0,0,c.width,c.height);
-  return c;
-}
-
-function detectPanelBox(img){
-  // Bounds are found on a small proxy and scaled back up, so a 12 MP photo
-  // never has to be materialised as a full-size canvas.
-  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
-  const proxy=proxyCanvas(img,900);
-  const b=detectReceiptBounds(proxy);
-  const k=iw/proxy.width;
-  const box={x:Math.round(b.x*k),y:Math.round(b.y*k),w:Math.round(b.w*k),h:Math.round(b.h*k)};
-  if(box.w<iw*0.2||box.h<ih*0.2) return {x:0,y:0,w:iw,h:ih,detected:false};
-  // Trim the edge of the detected panel. Bezel left in the crop costs the Ptot
-  // line; 3% clears it without touching the value column.
-  const inset=0.03;
-  const dx=Math.round(box.w*inset), dy=Math.round(box.h*inset);
-  box.x+=dx;box.y+=dy;box.w-=dx*2;box.h-=dy*2;
-  box.detected=true;
-  return box;
-}
-
-function toneMap(canvas,invert){
-  const ctx=canvas.getContext('2d',{willReadFrequently:true});
-  const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
-  for(let i=0;i<d.length;i+=4){
-    const g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0;
-    d[i]=d[i+1]=d[i+2]=g;
-  }
-  // The histogram is built from the middle of the frame only. Any surviving
-  // sliver of dark tablet bezel pins the low percentile near zero, the stretch
-  // then does almost nothing, and the washed-out result loses most of its
-  // lines in OCR — measured as 250 characters recovered instead of 534.
-  const cx0=Math.floor(canvas.width*0.2),cx1=Math.max(cx0+1,Math.ceil(canvas.width*0.8));
-  const cy0=Math.floor(canvas.height*0.2),cy1=Math.max(cy0+1,Math.ceil(canvas.height*0.8));
-  const hist=new Uint32Array(256);let cSum=0,cN=0;
-  for(let y=cy0;y<cy1;y++){
-    for(let x=cx0;x<cx1;x++){
-      const g=d[(y*canvas.width+x)*4];
-      hist[g]++;cSum+=g;cN++;
-    }
-  }
-  const total=Math.max(1,cN);
-  let lo=0,hi=255,acc=0;
-  for(let v=0;v<256;v++){acc+=hist[v];if(acc>total*0.02){lo=v;break;}}
-  acc=0;
-  for(let v=255;v>=0;v--){acc+=hist[v];if(acc>total*0.02){hi=v;break;}}
-  if(hi-lo<25){lo=0;hi=255;}
-  const span=Math.max(1,hi-lo);
-  const mean=cSum/total;
-  const doInvert=(invert===undefined)?(mean<95):invert;
-  canvas.__mean=round2(mean);canvas.__lo=lo;canvas.__hi=hi;
-  for(let i=0;i<d.length;i+=4){
-    let g=Math.round((d[i]-lo)*255/span);
-    g=g<0?0:(g>255?255:g);
-    if(doInvert) g=255-g;
-    d[i]=d[i+1]=d[i+2]=g;
-  }
-  ctx.putImageData(id,0,0);
-  return canvas;
-}
-
-function preparePass(img,box,targetWidth){
-  // Intermediate resolution: cap for memory, but allow a modest upscale so a
-  // re-encoded/downscaled upload still presents readable glyph heights.
-  let interW=Math.min(Math.round(box.w),2400);
-  if(interW<900) interW=Math.min(1400,Math.round(box.w*1.6));
-  interW=Math.max(1,interW);
-  const interH=Math.max(1,Math.round(box.h*interW/box.w));
-  const inter=document.createElement('canvas');
-  inter.width=interW;inter.height=interH;
-  const ictx=inter.getContext('2d');
-  ictx.imageSmoothingEnabled=true;ictx.imageSmoothingQuality='high';
-  ictx.drawImage(img,box.x,box.y,box.w,box.h,0,0,interW,interH);
-
-  // Blur only when a real downscale follows. Blurring without one just
-  // destroys small text on an already-downscaled photo.
-  const ratio=interW/Math.max(1,targetWidth);
-  let radius=0;
-  let source=inter;
-  if(ratio>=1.25){
-    radius=Math.max(0.9,2.0*interW/2500);
-    const blurred=document.createElement('canvas');
-    blurred.width=interW;blurred.height=interH;
-    const bctx=blurred.getContext('2d');
-    try{bctx.filter=`blur(${radius.toFixed(2)}px)`;}catch(_){radius=0;}
-    bctx.drawImage(inter,0,0);
-    source=blurred;
-  }
-
-  const out=document.createElement('canvas');
-  const sc=Math.min(1,targetWidth/interW);
-  out.width=Math.max(1,Math.round(interW*sc));
-  out.height=Math.max(1,Math.round(interH*sc));
-  const octx=out.getContext('2d',{willReadFrequently:true});
-  octx.imageSmoothingEnabled=true;octx.imageSmoothingQuality='high';
-  octx.drawImage(source,0,0,out.width,out.height);
-  const mapped=toneMap(out);
-  mapped.__prep={interW,targetWidth:out.width,blur:round2(radius),ratio:round2(ratio)};
-  return mapped;
-}
-
-/* ---------- Grabner "Result details" parser ----------
-   Field detection is anchored on tokens that survive OCR reliably. The model
-   number itself does not: D5191 comes back as "5191"/"SI91"/"15191" and
-   D323 as "D823", so CARB/EPA/5191 are matched rather than exact model text. */
-const G_EQUATION_RE=/P\s*[rtn]ot/i;
-const G_FIELD_SPECS=[
-  {key:'ambient', re:/ambient/i,                 label:'Ambient pressure',  min:8,  max:20},
-  {key:'pgas',    re:/\bP\s*gas\b/i,             label:'Pgas',              min:0,  max:8},
-  {key:'pabs',    re:/\bP\s*a\s*bs\b/i,          label:'Pabs',              min:1,  max:40},
-  {key:'ptot',    re:/\bP\s*[rtn]\s*o\s*t\b/i,   label:'Ptot',              min:1,  max:40},
-  {key:'d323',    re:/CARB|RVPE/i,               label:'D323 (CARB) RVPE',  min:1,  max:30},
-  {key:'d4953',   re:/EPA|4953/i,                label:'D4953 (EPA) DVPE',  min:1,  max:30},
-  {key:'d5191',   re:/5191|SI91|S191/i,          label:'D5191 DVPE',        min:1,  max:30}
-];
-// The instrument prints its own conversion equations; the app uses the same
-// coefficients, so these double as an OCR self-check.
-const G_EQUATIONS=[
-  {key:'d5191', m:0.965, b:0.5482, label:'D5191 DVPE'},
-  {key:'d4953', m:0.956, b:0.3466, label:'D4953 (EPA) DVPE'},
-  {key:'d323',  m:0.972, b:0.7150, label:'D323 (CARB) RVPE'}
-];
-
-function isEquationLine(line){
-  // "0.965 Ptot - 0.000 Pgas - 0.5482 psi" — coefficients, not readings.
-  return G_EQUATION_RE.test(line)&&/P\s*gas/i.test(line);
-}
-
-function valueTokensOnLine(line){
-  // Numbers followed by "psi" are the strongest signal, but requiring "psi"
-  // makes the whole read fail whenever OCR mangles that one word. Any number
-  // on a label-matched line is accepted; the psi flag is kept because decimal
-  // recovery is only safe when the unit confirms it is a reading.
-  const cleaned=String(line||'').replace(/[OoQ]/g,'0').replace(/[lI|]/g,'1').replace(/(\d)\s*,\s*(\d)/g,'$1.$2');
-  const re=/(\d[\d.]*)\s*(ps[il1]|psl)?/gi;
-  const out=[];let m;
-  while((m=re.exec(cleaned))!==null){
-    const raw=(m[1]||'').replace(/\.+$/,'');
-    if(raw) out.push({raw,psi:!!m[2]});
-  }
-  return out;
-}
-function psiValuesOnLine(line){return valueTokensOnLine(line).filter(t=>t.psi).map(t=>t.raw);}
-
-function interpretPsiToken(raw,min,max,unitConfirmed){
-  const hasDot=raw.indexOf('.')>=0;
-  const v=parseFloat(raw);
-  if(!Number.isFinite(v)) return null;
-  if(v>=min&&v<=max) return {value:v,warn:null};
-  if(!hasDot&&unitConfirmed){
-    // The instrument prints three decimals; a dropped point gives "14440".
-    const digits=raw.replace(/\D/g,'');
-    for(const div of [1000,100,10]){
-      const c=Number(digits)/div;
-      if(c>=min&&c<=max) return {value:c,warn:`decimal point not resolved in "${raw}" — read as ${c.toFixed(3)}`};
-    }
-  }
-  return null;
-}
-
-function parseGrabnerScreen(texts){
-  const votes={},warnings=[];
-  let sampleId='',standard='',instrumentStamp='';
-  (texts||[]).forEach(text=>{
-    String(text||'').split(/\r?\n/).forEach(rawLine=>{
-      const line=rawLine.trim();
-      if(!line) return;
-      const stamp=line.match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-      if(stamp&&!instrumentStamp) instrumentStamp=`${stamp[3]}-${stamp[2]}-${stamp[1]} ${stamp[4].padStart(2,'0')}:${stamp[5]}:${stamp[6]||'00'}`;
-      const sid=line.match(/Sample\s*[I1l]D\s*[:\-]?\s*(\S.*)$/i);
-      if(sid&&!sampleId) sampleId=sid[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
-      const std=line.match(/Standard\s*[:\-]?\s*(\S.*)$/i);
-      if(std&&!standard) standard=std[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
-      if(isEquationLine(line)) return;
-      // Settings rows carry model numbers and IDs, never readings.
-      if(/standard|sample\s*[I1l]D/i.test(line)) return;
-      const spec=G_FIELD_SPECS.find(f=>f.re.test(line));
-      if(!spec) return;
-      const tokens=valueTokensOnLine(line);
-      if(!tokens.length) return;
-      const withUnit=tokens.filter(t=>t.psi);
-      const tok=(withUnit.length?withUnit:tokens)[(withUnit.length?withUnit:tokens).length-1];
-      const hit=interpretPsiToken(tok.raw,spec.min,spec.max,tok.psi);
-      if(!hit) return;
-      if(hit.warn&&warnings.indexOf(hit.warn)<0) warnings.push(hit.warn);
-      const bucket=votes[spec.key]||(votes[spec.key]=[]);
-      bucket.push(round2(hit.value*1000)/1000);
-    });
-  });
-
-  const fields={};
-  Object.keys(votes).forEach(k=>{
-    const counts={};
-    votes[k].forEach(v=>{counts[v]=(counts[v]||0)+1;});
-    let bestVal=null,bestN=0;
-    Object.keys(counts).forEach(v=>{if(counts[v]>bestN){bestN=counts[v];bestVal=Number(v);}});
-    fields[k]={value:bestVal,agreement:bestN,reads:votes[k].length};
-  });
-
-  // Self-check the read against the instrument's own equations.
-  const checks=[];
-  if(fields.ptot){
-    G_EQUATIONS.forEach(eq=>{
-      if(!fields[eq.key]) return;
-      const expected=eq.m*fields.ptot.value-eq.b;
-      const delta=Math.abs(fields[eq.key].value-expected);
-      checks.push({label:eq.label,expected,actual:fields[eq.key].value,delta,ok:delta<=0.06});
-    });
-  }
-  const checked=checks.length>0;
-  const selfCheckPassed=checked&&checks.every(c=>c.ok);
-  return {fields,checks,checked,selfCheckPassed,sampleId,standard,instrumentStamp,warnings,
-    isGrabner:!!(fields.d5191||fields.ptot||fields.d4953||fields.d323)};
-}
-
-/* ---------- generic fallback for other analyzers ---------- */
-const RVP_LABEL_RE=/(R\s*\.?\s*V\s*\.?\s*P|DVPE|RVPE|VAPOU?R\s*PRESS|\bVP\b)/i;
-const PTOT_LABEL_RE=/(P\s*[rtn]ot|P\s*abs|TOTAL\s*PRESS)/i;
-function parseGenericRvp(text){
-  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const candidates=[];
-  lines.forEach((line,i)=>{
-    const labeled=RVP_LABEL_RE.test(line);
-    if(PTOT_LABEL_RE.test(line)&&!labeled) return;
-    const src=[line];
-    if(labeled&&!psiValuesOnLine(line).length&&lines[i+1]) src.push(lines[i+1]);
-    src.forEach(l=>{
-      const kpa=/\bKPA\b/i.test(l);
-      psiValuesOnLine(l).concat(kpa?(l.match(/\d+(?:\.\d+)?/g)||[]):[]).forEach(tok=>{
-        let v=parseFloat(tok);
-        if(!Number.isFinite(v)) return;
-        let warn=null;
-        if(kpa&&v>=13&&v<=140){warn=`${tok} kPa converted to psi`;v=v/6.89476;}
-        if(v>=RVP_READ_MIN&&v<=RVP_READ_MAX) candidates.push({value:v,labeled,warn,score:(labeled?100:50)+(tok.indexOf('.')>=0?10:0)});
-      });
-    });
-  });
-  candidates.sort((a,b)=>b.score-a.score);
-  const best=candidates[0]||null;
-  const ambiguous=!!best&&candidates.some(c=>c!==best&&c.score>=best.score-6&&Math.abs(c.value-best.value)>0.05);
-  return {best,ambiguous,candidates:candidates.slice(0,5)};
-}
-
-function findInstrumentStamp(text){
-  const m=String(text||'').match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  return m?`${m[3]}-${m[2]}-${m[1]} ${m[4].padStart(2,'0')}:${m[5]}:${m[6]||'00'}`:'';
-}
-
-/* ---------- photo retention ---------- */
-async function sha256Hex(buffer){
-  try{
-    if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
-      const h=await crypto.subtle.digest('SHA-256',buffer);
-      return {hash:[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join(''),algo:'SHA-256'};
-    }
-  }catch(_){}
-  const bytes=new Uint8Array(buffer);let h1=0x811c9dc5;
-  for(let i=0;i<bytes.length;i++){h1^=bytes[i];h1=Math.imul(h1,0x01000193)>>>0;}
-  return {hash:h1.toString(16).padStart(8,'0'),algo:'FNV-1a (32-bit fallback — SHA-256 unavailable in this browser context)'};
-}
-function retainedJpeg(img){
-  const c=proxyCanvas(img,1400);
-  try{return c.toDataURL('image/jpeg',0.72);}catch(_){return '';}
-}
-
-
-
-/* =====================================================================
-   Case-manager wiring: fills the existing Ptot / Reported-DVPE inputs for
-   Upper/Middle/Lower from a Grabner analyzer-screen photo. The Internal EPA
-   DVPE column and the release decision are untouched — refreshCertificationCalculations()
-   still does that recalculation independently from whatever Ptot ends up
-   in the field, exactly as it did before this was added.
-   Photos are retained in IndexedDB (this browser only) keyed by case id +
-   position; database-backed storage is planned but not wired yet.
-   ===================================================================== */
-const VP_DB='ftw_bcm_vp_photos',VP_STORE='photos';
-function openVpPhotoDb(){return new Promise((resolve,reject)=>{if(!window.indexedDB){reject(new Error('Photo storage is unavailable in this browser.'));return}const req=indexedDB.open(VP_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(VP_STORE))db.createObjectStore(VP_STORE,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Could not open photo storage.'))})}
-async function saveVpPhoto(id,blob,meta){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readwrite');tx.objectStore(VP_STORE).put({id,blob,meta,savedAt:iso()});tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{const e=tx.error||new Error('Could not save the photo.');db.close();reject(e)}})}
-async function loadVpPhoto(id){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readonly'),req=tx.objectStore(VP_STORE).get(id);req.onsuccess=()=>{db.close();resolve(req.result||null)};req.onerror=()=>{const e=req.error||new Error('Could not load the photo.');db.close();reject(e)}})}
-function vpPhotoId(c,pos){return c?`${c.id}::${pos}`:null}
-function retainedVpJpeg(img){const c=proxyCanvas(img,1400);return new Promise(resolve=>{try{c.toBlob(b=>resolve(b),'image/jpeg',0.72)}catch(_){resolve(null)}})}
-
-function vpPhotoEls(pos){
-  const row=document.querySelector(`.vp-photo-row[data-pos="${pos}"]`); if(!row) return null;
-  return {row,input:row.querySelector('.vp-photo-input'),btn:row.querySelector('.vp-photo-btn'),
-    badge:row.querySelector('.vp-photo-badge'),status:row.querySelector('.vp-photo-status')};
-}
-
-async function resetVpPhotoUi(c){
-  ['up','mid','low'].forEach(pos=>{
-    const els=vpPhotoEls(pos); if(!els) return;
-    if(els.input) els.input.value='';
-    els.badge.classList.add('hide');els.badge.textContent='';
-    els.status.className='vp-photo-status';els.status.textContent='';
-  });
-  if(!c) return;
-  for(const pos of ['up','mid','low']){
-    try{
-      const id=vpPhotoId(c,pos);
-      const rec=id?await loadVpPhoto(id):null;
-      const els=vpPhotoEls(pos);
-      if(rec&&els){
-        els.badge.classList.remove('hide');
-        els.badge.textContent='Saved photo on file';
-        els.status.className='vp-photo-status';
-        els.status.innerHTML=`A photo was already read for this case &mdash; ${rec.meta&&rec.meta.selfCheckPassed?'self-check passed':'self-check did not pass'} (${new Date(rec.savedAt).toLocaleString()}). Fields above were reset for this session; read again to refill them.`;
-      }
-    }catch(_){/* IndexedDB unavailable — capture still works, just isn't restored on reopen */}
-  }
-}
-
-async function readVpPhoto(pos){
-  const els=vpPhotoEls(pos); if(!els) return;
-  const c=currentCase();
-  if(!c){els.status.className='vp-photo-status bad';els.status.textContent='No active case.';return}
-  const file=els.input.files&&els.input.files[0];
-  if(!file){els.status.className='vp-photo-status bad';els.status.textContent='Choose or take a photo of the analyzer screen first.';return}
-  els.btn.disabled=true;
-  els.status.className='vp-photo-status working';
-  els.status.textContent='Reading the analyzer screen…';
-  try{
-    const img=await loadPhotoImage(file);
-    const Tesseract=await loadTesseract();
-    const oem=(Tesseract.OEM&&Tesseract.OEM.LSTM_ONLY!==undefined)?Tesseract.OEM.LSTM_ONLY:1;
-    const worker=await Tesseract.createWorker('eng',oem);
-    const psm=(Tesseract.PSM&&Tesseract.PSM.SINGLE_BLOCK!==undefined)?Tesseract.PSM.SINGLE_BLOCK:6;
-    await worker.setParameters({tessedit_pageseg_mode:psm});
-
-    const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
-    const box=detectPanelBox(img);
-    const texts=[];
-    const runPass=async(region,width)=>{
-      const canvas=preparePass(img,region,width);
-      const res=await worker.recognize(canvas);
-      texts.push((res&&res.data&&res.data.text)||'');
-    };
-
-    await runPass(box,1300);
-    let read=parseGrabnerScreen(texts);
-    if(!read.fields.d5191||!read.selfCheckPassed){
-      const topBox={x:box.x,y:box.y,w:box.w,h:Math.max(1,Math.round(box.h*0.42))};
-      await runPass(topBox,950);
-      await runPass(topBox,1250);
-      read=parseGrabnerScreen(texts);
-    }
-    if(!read.fields.d5191&&!read.fields.ptot){
-      await runPass({x:0,y:0,w:iw,h:ih},1500);
-      read=parseGrabnerScreen(texts);
-    }
-    try{await worker.terminate();}catch(_){}
-
-    const d5191=read.fields.d5191?read.fields.d5191.value:null;
-    const d4953=read.fields.d4953?read.fields.d4953.value:null;
-    const ptotVal=read.fields.ptot?read.fields.ptot.value:null;
-    const okD5191=d5191!==null&&(!read.checked||read.selfCheckPassed);
-
-    const ptotField=document.getElementById(`s-${pos}-ptot`);
-    const labField=document.getElementById(`s-${pos}-lab`);
-    const msgs=[];
-
-    if(okD5191&&ptotVal!==null){
-      const typedPtot=num(ptotField.value);
-      if(typedPtot===null){
-        ptotField.value=String(ptotVal);
-        msgs.push(`Ptot filled <b>${ptotVal.toFixed(3)} psi</b>`);
-      } else if(Math.abs(typedPtot-ptotVal)<=0.005){
-        msgs.push(`Ptot already entered matches the screen (${ptotVal.toFixed(3)} psi)`);
-      } else {
-        msgs.push(`<b>The Ptot already entered (${typedPtot}) does not match this screen (${ptotVal.toFixed(3)}); left as typed &mdash; resolve before evaluating</b>`);
-      }
-      if(d4953!==null){
-        const typedLab=num(labField.value);
-        if(typedLab===null){
-          labField.value=String(round2(d4953));
-          msgs.push(`Reported DVPE filled ${d4953.toFixed(3)} psi (instrument D4953, informational check only)`);
-        } else if(Math.abs(typedLab-d4953)<=0.02){
-          msgs.push('Reported DVPE already entered matches the screen');
-        } else {
-          msgs.push(`Reported DVPE already entered differs from this screen's D4953 (${d4953.toFixed(3)}) &mdash; left as typed`);
-        }
-      }
-      els.badge.classList.remove('hide');
-      els.badge.textContent='Photo read';
-      els.status.className='vp-photo-status ok';
-    } else if(read.fields.ptot){
-      msgs.push(`Ptot on screen reads ${read.fields.ptot.value.toFixed(3)} psi, but the D5191/D4953/D323 self-check did not pass, so <b>nothing was filled in.</b> Enter both values manually and verify against the instrument.`);
-      els.badge.classList.remove('hide');
-      els.badge.textContent='Photo attached';
-      els.status.className='vp-photo-status bad';
-    } else {
-      msgs.push('No vapor-pressure values could be read from this photo. Retake it square to the screen with the whole result list in frame, then enter values manually.');
-      els.badge.classList.remove('hide');
-      els.badge.textContent='Photo attached';
-      els.status.className='vp-photo-status bad';
-    }
-
-    refreshCertificationCalculations();
-
-    try{
-      const blob=await retainedVpJpeg(img);
-      const id=vpPhotoId(c,pos);
-      if(blob&&id){
-        await saveVpPhoto(id,blob,{
-          fileName:file.name||'',d5191,d4953,ptot:ptotVal,
-          selfCheckPassed:!!(read.checked&&read.selfCheckPassed),
-          sampleId:read.sampleId||'',standard:read.standard||'',
-          instrumentStamp:read.instrumentStamp||''
-        });
-      }
-    }catch(e){console.warn('Photo not retained locally:',e);}
-
-    els.status.innerHTML=msgs.join('; ')+'. <b>Verify against the analyzer before release.</b>';
-  }catch(err){
-    console.error(err);
-    els.status.className='vp-photo-status bad';
-    els.status.textContent=(err&&err.message)?err.message:'The photo could not be read. Enter values manually.';
-  }finally{
-    els.btn.disabled=false;
-  }
-}
-
-document.addEventListener('click',e=>{
-  const btn=e.target.closest('.vp-photo-btn');
-  if(btn) readVpPhoto(btn.dataset.pos);
-});
-document.addEventListener('change',e=>{
-  const inp=e.target.closest('.vp-photo-input');
-  if(inp){
-    const els=vpPhotoEls(inp.dataset.pos);
-    if(els){els.status.className='vp-photo-status';els.status.textContent='';els.badge.classList.add('hide');}
-  }
-});
-
-</script>
+<script src="assets/js/supabase-config.js"></script>
 <script type="module" src="assets/js/supabase-client.js"></script>
 <script type="module" src="assets/js/blend-repository.js"></script>
 </head>
@@ -1699,6 +1162,543 @@ async function initApp(){
   render();
 }
 initApp();
+/* =====================================================================
+   Grabner analyzer-screen reader — ported from coa-generator.html.
+   `esc` and `f2` are reused from this page's own helpers above; everything
+   else here is namespaced/self-contained and safe alongside the rest of
+   this file's globals.
+   ===================================================================== */
+const num=v=>{const n=parseFloat(v);return Number.isFinite(n)?n:null;};
+const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
+const RVP_READ_MIN=2.0, RVP_READ_MAX=20.0;
+const VP_PHOTO_PROFILE='Grabner result-details screen v1';
+
+let tesseractLoadPromise=null;
+
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(tesseractLoadPromise) return tesseractLoadPromise;
+  tesseractLoadPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.async=true;
+    script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize.'));
+    script.onerror=()=>reject(new Error('Could not load the OCR library. Check the device internet connection and try again.'));
+    document.head.appendChild(script);
+  });
+  return tesseractLoadPromise;
+}
+
+function loadPhotoImage(file){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('The selected photo could not be opened.'));};
+    img.src=url;
+  });
+}
+
+function longestTrueRun(flags){
+  let bestStart=-1,bestEnd=-1,start=-1;
+  for(let i=0;i<=flags.length;i++){
+    const on=i<flags.length&&flags[i];
+    if(on&&start<0) start=i;
+    if(!on&&start>=0){
+      if(bestStart<0 || i-start>bestEnd-bestStart){bestStart=start;bestEnd=i;}
+      start=-1;
+    }
+  }
+  return bestStart<0?null:{start:bestStart,end:bestEnd};
+}
+
+function paperLike(r,g,b){
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  return r>105&&g>110&&b>95&&(mx-mn)<80;
+}
+
+function detectReceiptBounds(canvas){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const w=canvas.width,h=canvas.height;
+  const data=ctx.getImageData(0,0,w,h).data;
+  const step=Math.max(3,Math.round(Math.min(w,h)/500));
+  const xs=[];
+  for(let x=0;x<w;x+=step){
+    let good=0,total=0;
+    for(let y=0;y<h;y+=step){
+      const i=(y*w+x)*4;
+      if(paperLike(data[i],data[i+1],data[i+2])) good++;
+      total++;
+    }
+    xs.push(good/Math.max(1,total)>.45);
+  }
+  const xr=longestTrueRun(xs);
+  if(!xr || (xr.end-xr.start)*step<w*.15) return {x:0,y:0,w,h};
+  let x0=xr.start*step,x1=Math.min(w,xr.end*step);
+  const xPad=Math.round((x1-x0)*.03);
+  x0=Math.max(0,x0-xPad);x1=Math.min(w,x1+xPad);
+
+  const ys=[];
+  for(let y=0;y<h;y+=step){
+    let good=0,total=0;
+    for(let x=x0;x<x1;x+=step){
+      const i=(y*w+x)*4;
+      if(paperLike(data[i],data[i+1],data[i+2])) good++;
+      total++;
+    }
+    ys.push(good/Math.max(1,total)>.55);
+  }
+  const yr=longestTrueRun(ys);
+  if(!yr || (yr.end-yr.start)*step<h*.35) return {x:x0,y:0,w:x1-x0,h};
+  let y0=yr.start*step,y1=Math.min(h,yr.end*step);
+  const yPad=Math.round((y1-y0)*.01);
+  y0=Math.max(0,y0-yPad);y1=Math.min(h,y1+yPad);
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+
+function proxyCanvas(img,maxEdge){
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const scale=Math.min(1,maxEdge/Math.max(iw,ih));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(iw*scale));
+  c.height=Math.max(1,Math.round(ih*scale));
+  const pctx=c.getContext('2d',{willReadFrequently:true});
+  pctx.imageSmoothingEnabled=true;pctx.imageSmoothingQuality='high';
+  pctx.drawImage(img,0,0,c.width,c.height);
+  return c;
+}
+
+function detectPanelBox(img){
+  // Bounds are found on a small proxy and scaled back up, so a 12 MP photo
+  // never has to be materialised as a full-size canvas.
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const proxy=proxyCanvas(img,900);
+  const b=detectReceiptBounds(proxy);
+  const k=iw/proxy.width;
+  const box={x:Math.round(b.x*k),y:Math.round(b.y*k),w:Math.round(b.w*k),h:Math.round(b.h*k)};
+  if(box.w<iw*0.2||box.h<ih*0.2) return {x:0,y:0,w:iw,h:ih,detected:false};
+  // Trim the edge of the detected panel. Bezel left in the crop costs the Ptot
+  // line; 3% clears it without touching the value column.
+  const inset=0.03;
+  const dx=Math.round(box.w*inset), dy=Math.round(box.h*inset);
+  box.x+=dx;box.y+=dy;box.w-=dx*2;box.h-=dy*2;
+  box.detected=true;
+  return box;
+}
+
+function toneMap(canvas,invert){
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
+  for(let i=0;i<d.length;i+=4){
+    const g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0;
+    d[i]=d[i+1]=d[i+2]=g;
+  }
+  // The histogram is built from the middle of the frame only. Any surviving
+  // sliver of dark tablet bezel pins the low percentile near zero, the stretch
+  // then does almost nothing, and the washed-out result loses most of its
+  // lines in OCR — measured as 250 characters recovered instead of 534.
+  const cx0=Math.floor(canvas.width*0.2),cx1=Math.max(cx0+1,Math.ceil(canvas.width*0.8));
+  const cy0=Math.floor(canvas.height*0.2),cy1=Math.max(cy0+1,Math.ceil(canvas.height*0.8));
+  const hist=new Uint32Array(256);let cSum=0,cN=0;
+  for(let y=cy0;y<cy1;y++){
+    for(let x=cx0;x<cx1;x++){
+      const g=d[(y*canvas.width+x)*4];
+      hist[g]++;cSum+=g;cN++;
+    }
+  }
+  const total=Math.max(1,cN);
+  let lo=0,hi=255,acc=0;
+  for(let v=0;v<256;v++){acc+=hist[v];if(acc>total*0.02){lo=v;break;}}
+  acc=0;
+  for(let v=255;v>=0;v--){acc+=hist[v];if(acc>total*0.02){hi=v;break;}}
+  if(hi-lo<25){lo=0;hi=255;}
+  const span=Math.max(1,hi-lo);
+  const mean=cSum/total;
+  const doInvert=(invert===undefined)?(mean<95):invert;
+  canvas.__mean=round2(mean);canvas.__lo=lo;canvas.__hi=hi;
+  for(let i=0;i<d.length;i+=4){
+    let g=Math.round((d[i]-lo)*255/span);
+    g=g<0?0:(g>255?255:g);
+    if(doInvert) g=255-g;
+    d[i]=d[i+1]=d[i+2]=g;
+  }
+  ctx.putImageData(id,0,0);
+  return canvas;
+}
+
+function preparePass(img,box,targetWidth){
+  // Intermediate resolution: cap for memory, but allow a modest upscale so a
+  // re-encoded/downscaled upload still presents readable glyph heights.
+  let interW=Math.min(Math.round(box.w),2400);
+  if(interW<900) interW=Math.min(1400,Math.round(box.w*1.6));
+  interW=Math.max(1,interW);
+  const interH=Math.max(1,Math.round(box.h*interW/box.w));
+  const inter=document.createElement('canvas');
+  inter.width=interW;inter.height=interH;
+  const ictx=inter.getContext('2d');
+  ictx.imageSmoothingEnabled=true;ictx.imageSmoothingQuality='high';
+  ictx.drawImage(img,box.x,box.y,box.w,box.h,0,0,interW,interH);
+
+  // Blur only when a real downscale follows. Blurring without one just
+  // destroys small text on an already-downscaled photo.
+  const ratio=interW/Math.max(1,targetWidth);
+  let radius=0;
+  let source=inter;
+  if(ratio>=1.25){
+    radius=Math.max(0.9,2.0*interW/2500);
+    const blurred=document.createElement('canvas');
+    blurred.width=interW;blurred.height=interH;
+    const bctx=blurred.getContext('2d');
+    try{bctx.filter=`blur(${radius.toFixed(2)}px)`;}catch(_){radius=0;}
+    bctx.drawImage(inter,0,0);
+    source=blurred;
+  }
+
+  const out=document.createElement('canvas');
+  const sc=Math.min(1,targetWidth/interW);
+  out.width=Math.max(1,Math.round(interW*sc));
+  out.height=Math.max(1,Math.round(interH*sc));
+  const octx=out.getContext('2d',{willReadFrequently:true});
+  octx.imageSmoothingEnabled=true;octx.imageSmoothingQuality='high';
+  octx.drawImage(source,0,0,out.width,out.height);
+  const mapped=toneMap(out);
+  mapped.__prep={interW,targetWidth:out.width,blur:round2(radius),ratio:round2(ratio)};
+  return mapped;
+}
+
+/* ---------- Grabner "Result details" parser ----------
+   Field detection is anchored on tokens that survive OCR reliably. The model
+   number itself does not: D5191 comes back as "5191"/"SI91"/"15191" and
+   D323 as "D823", so CARB/EPA/5191 are matched rather than exact model text. */
+const G_EQUATION_RE=/P\s*[rtn]ot/i;
+const G_FIELD_SPECS=[
+  {key:'ambient', re:/ambient/i,                 label:'Ambient pressure',  min:8,  max:20},
+  {key:'pgas',    re:/\bP\s*gas\b/i,             label:'Pgas',              min:0,  max:8},
+  {key:'pabs',    re:/\bP\s*a\s*bs\b/i,          label:'Pabs',              min:1,  max:40},
+  {key:'ptot',    re:/\bP\s*[rtn]\s*o\s*t\b/i,   label:'Ptot',              min:1,  max:40},
+  {key:'d323',    re:/CARB|RVPE/i,               label:'D323 (CARB) RVPE',  min:1,  max:30},
+  {key:'d4953',   re:/EPA|4953/i,                label:'D4953 (EPA) DVPE',  min:1,  max:30},
+  {key:'d5191',   re:/5191|SI91|S191/i,          label:'D5191 DVPE',        min:1,  max:30}
+];
+// The instrument prints its own conversion equations; the app uses the same
+// coefficients, so these double as an OCR self-check.
+const G_EQUATIONS=[
+  {key:'d5191', m:0.965, b:0.5482, label:'D5191 DVPE'},
+  {key:'d4953', m:0.956, b:0.3466, label:'D4953 (EPA) DVPE'},
+  {key:'d323',  m:0.972, b:0.7150, label:'D323 (CARB) RVPE'}
+];
+
+function isEquationLine(line){
+  // "0.965 Ptot - 0.000 Pgas - 0.5482 psi" — coefficients, not readings.
+  return G_EQUATION_RE.test(line)&&/P\s*gas/i.test(line);
+}
+
+function valueTokensOnLine(line){
+  // Numbers followed by "psi" are the strongest signal, but requiring "psi"
+  // makes the whole read fail whenever OCR mangles that one word. Any number
+  // on a label-matched line is accepted; the psi flag is kept because decimal
+  // recovery is only safe when the unit confirms it is a reading.
+  const cleaned=String(line||'').replace(/[OoQ]/g,'0').replace(/[lI|]/g,'1').replace(/(\d)\s*,\s*(\d)/g,'$1.$2');
+  const re=/(\d[\d.]*)\s*(ps[il1]|psl)?/gi;
+  const out=[];let m;
+  while((m=re.exec(cleaned))!==null){
+    const raw=(m[1]||'').replace(/\.+$/,'');
+    if(raw) out.push({raw,psi:!!m[2]});
+  }
+  return out;
+}
+function psiValuesOnLine(line){return valueTokensOnLine(line).filter(t=>t.psi).map(t=>t.raw);}
+
+function interpretPsiToken(raw,min,max,unitConfirmed){
+  const hasDot=raw.indexOf('.')>=0;
+  const v=parseFloat(raw);
+  if(!Number.isFinite(v)) return null;
+  if(v>=min&&v<=max) return {value:v,warn:null};
+  if(!hasDot&&unitConfirmed){
+    // The instrument prints three decimals; a dropped point gives "14440".
+    const digits=raw.replace(/\D/g,'');
+    for(const div of [1000,100,10]){
+      const c=Number(digits)/div;
+      if(c>=min&&c<=max) return {value:c,warn:`decimal point not resolved in "${raw}" — read as ${c.toFixed(3)}`};
+    }
+  }
+  return null;
+}
+
+function parseGrabnerScreen(texts){
+  const votes={},warnings=[];
+  let sampleId='',standard='',instrumentStamp='';
+  (texts||[]).forEach(text=>{
+    String(text||'').split(/\r?\n/).forEach(rawLine=>{
+      const line=rawLine.trim();
+      if(!line) return;
+      const stamp=line.match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+      if(stamp&&!instrumentStamp) instrumentStamp=`${stamp[3]}-${stamp[2]}-${stamp[1]} ${stamp[4].padStart(2,'0')}:${stamp[5]}:${stamp[6]||'00'}`;
+      const sid=line.match(/Sample\s*[I1l]D\s*[:\-]?\s*(\S.*)$/i);
+      if(sid&&!sampleId) sampleId=sid[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
+      const std=line.match(/Standard\s*[:\-]?\s*(\S.*)$/i);
+      if(std&&!standard) standard=std[1].trim().replace(/[^\w().\-/ ]+$/,'').slice(0,40);
+      if(isEquationLine(line)) return;
+      // Settings rows carry model numbers and IDs, never readings.
+      if(/standard|sample\s*[I1l]D/i.test(line)) return;
+      const spec=G_FIELD_SPECS.find(f=>f.re.test(line));
+      if(!spec) return;
+      const tokens=valueTokensOnLine(line);
+      if(!tokens.length) return;
+      const withUnit=tokens.filter(t=>t.psi);
+      const tok=(withUnit.length?withUnit:tokens)[(withUnit.length?withUnit:tokens).length-1];
+      const hit=interpretPsiToken(tok.raw,spec.min,spec.max,tok.psi);
+      if(!hit) return;
+      if(hit.warn&&warnings.indexOf(hit.warn)<0) warnings.push(hit.warn);
+      const bucket=votes[spec.key]||(votes[spec.key]=[]);
+      bucket.push(round2(hit.value*1000)/1000);
+    });
+  });
+
+  const fields={};
+  Object.keys(votes).forEach(k=>{
+    const counts={};
+    votes[k].forEach(v=>{counts[v]=(counts[v]||0)+1;});
+    let bestVal=null,bestN=0;
+    Object.keys(counts).forEach(v=>{if(counts[v]>bestN){bestN=counts[v];bestVal=Number(v);}});
+    fields[k]={value:bestVal,agreement:bestN,reads:votes[k].length};
+  });
+
+  // Self-check the read against the instrument's own equations.
+  const checks=[];
+  if(fields.ptot){
+    G_EQUATIONS.forEach(eq=>{
+      if(!fields[eq.key]) return;
+      const expected=eq.m*fields.ptot.value-eq.b;
+      const delta=Math.abs(fields[eq.key].value-expected);
+      checks.push({label:eq.label,expected,actual:fields[eq.key].value,delta,ok:delta<=0.06});
+    });
+  }
+  const checked=checks.length>0;
+  const selfCheckPassed=checked&&checks.every(c=>c.ok);
+  return {fields,checks,checked,selfCheckPassed,sampleId,standard,instrumentStamp,warnings,
+    isGrabner:!!(fields.d5191||fields.ptot||fields.d4953||fields.d323)};
+}
+
+/* ---------- generic fallback for other analyzers ---------- */
+const RVP_LABEL_RE=/(R\s*\.?\s*V\s*\.?\s*P|DVPE|RVPE|VAPOU?R\s*PRESS|\bVP\b)/i;
+const PTOT_LABEL_RE=/(P\s*[rtn]ot|P\s*abs|TOTAL\s*PRESS)/i;
+function parseGenericRvp(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const candidates=[];
+  lines.forEach((line,i)=>{
+    const labeled=RVP_LABEL_RE.test(line);
+    if(PTOT_LABEL_RE.test(line)&&!labeled) return;
+    const src=[line];
+    if(labeled&&!psiValuesOnLine(line).length&&lines[i+1]) src.push(lines[i+1]);
+    src.forEach(l=>{
+      const kpa=/\bKPA\b/i.test(l);
+      psiValuesOnLine(l).concat(kpa?(l.match(/\d+(?:\.\d+)?/g)||[]):[]).forEach(tok=>{
+        let v=parseFloat(tok);
+        if(!Number.isFinite(v)) return;
+        let warn=null;
+        if(kpa&&v>=13&&v<=140){warn=`${tok} kPa converted to psi`;v=v/6.89476;}
+        if(v>=RVP_READ_MIN&&v<=RVP_READ_MAX) candidates.push({value:v,labeled,warn,score:(labeled?100:50)+(tok.indexOf('.')>=0?10:0)});
+      });
+    });
+  });
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0]||null;
+  const ambiguous=!!best&&candidates.some(c=>c!==best&&c.score>=best.score-6&&Math.abs(c.value-best.value)>0.05);
+  return {best,ambiguous,candidates:candidates.slice(0,5)};
+}
+
+function findInstrumentStamp(text){
+  const m=String(text||'').match(/(\d{2})[.\-/](\d{2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  return m?`${m[3]}-${m[2]}-${m[1]} ${m[4].padStart(2,'0')}:${m[5]}:${m[6]||'00'}`:'';
+}
+
+/* ---------- photo retention ---------- */
+async function sha256Hex(buffer){
+  try{
+    if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+      const h=await crypto.subtle.digest('SHA-256',buffer);
+      return {hash:[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join(''),algo:'SHA-256'};
+    }
+  }catch(_){}
+  const bytes=new Uint8Array(buffer);let h1=0x811c9dc5;
+  for(let i=0;i<bytes.length;i++){h1^=bytes[i];h1=Math.imul(h1,0x01000193)>>>0;}
+  return {hash:h1.toString(16).padStart(8,'0'),algo:'FNV-1a (32-bit fallback — SHA-256 unavailable in this browser context)'};
+}
+function retainedJpeg(img){
+  const c=proxyCanvas(img,1400);
+  try{return c.toDataURL('image/jpeg',0.72);}catch(_){return '';}
+}
+
+
+
+/* =====================================================================
+   Case-manager wiring: fills the existing Ptot / Reported-DVPE inputs for
+   Upper/Middle/Lower from a Grabner analyzer-screen photo. The Internal EPA
+   DVPE column and the release decision are untouched — refreshCertificationCalculations()
+   still does that recalculation independently from whatever Ptot ends up
+   in the field, exactly as it did before this was added.
+   Photos are retained in IndexedDB (this browser only) keyed by case id +
+   position; database-backed storage is planned but not wired yet.
+   ===================================================================== */
+const VP_DB='ftw_bcm_vp_photos',VP_STORE='photos';
+function openVpPhotoDb(){return new Promise((resolve,reject)=>{if(!window.indexedDB){reject(new Error('Photo storage is unavailable in this browser.'));return}const req=indexedDB.open(VP_DB,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(VP_STORE))db.createObjectStore(VP_STORE,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Could not open photo storage.'))})}
+async function saveVpPhoto(id,blob,meta){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readwrite');tx.objectStore(VP_STORE).put({id,blob,meta,savedAt:iso()});tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{const e=tx.error||new Error('Could not save the photo.');db.close();reject(e)}})}
+async function loadVpPhoto(id){const db=await openVpPhotoDb();return new Promise((resolve,reject)=>{const tx=db.transaction(VP_STORE,'readonly'),req=tx.objectStore(VP_STORE).get(id);req.onsuccess=()=>{db.close();resolve(req.result||null)};req.onerror=()=>{const e=req.error||new Error('Could not load the photo.');db.close();reject(e)}})}
+function vpPhotoId(c,pos){return c?`${c.id}::${pos}`:null}
+function retainedVpJpeg(img){const c=proxyCanvas(img,1400);return new Promise(resolve=>{try{c.toBlob(b=>resolve(b),'image/jpeg',0.72)}catch(_){resolve(null)}})}
+
+function vpPhotoEls(pos){
+  const row=document.querySelector(`.vp-photo-row[data-pos="${pos}"]`); if(!row) return null;
+  return {row,input:row.querySelector('.vp-photo-input'),btn:row.querySelector('.vp-photo-btn'),
+    badge:row.querySelector('.vp-photo-badge'),status:row.querySelector('.vp-photo-status')};
+}
+
+async function resetVpPhotoUi(c){
+  ['up','mid','low'].forEach(pos=>{
+    const els=vpPhotoEls(pos); if(!els) return;
+    if(els.input) els.input.value='';
+    els.badge.classList.add('hide');els.badge.textContent='';
+    els.status.className='vp-photo-status';els.status.textContent='';
+  });
+  if(!c) return;
+  for(const pos of ['up','mid','low']){
+    try{
+      const id=vpPhotoId(c,pos);
+      const rec=id?await loadVpPhoto(id):null;
+      const els=vpPhotoEls(pos);
+      if(rec&&els){
+        els.badge.classList.remove('hide');
+        els.badge.textContent='Saved photo on file';
+        els.status.className='vp-photo-status';
+        els.status.innerHTML=`A photo was already read for this case &mdash; ${rec.meta&&rec.meta.selfCheckPassed?'self-check passed':'self-check did not pass'} (${new Date(rec.savedAt).toLocaleString()}). Fields above were reset for this session; read again to refill them.`;
+      }
+    }catch(_){/* IndexedDB unavailable — capture still works, just isn't restored on reopen */}
+  }
+}
+
+async function readVpPhoto(pos){
+  const els=vpPhotoEls(pos); if(!els) return;
+  const c=currentCase();
+  if(!c){els.status.className='vp-photo-status bad';els.status.textContent='No active case.';return}
+  const file=els.input.files&&els.input.files[0];
+  if(!file){els.status.className='vp-photo-status bad';els.status.textContent='Choose or take a photo of the analyzer screen first.';return}
+  els.btn.disabled=true;
+  els.status.className='vp-photo-status working';
+  els.status.textContent='Reading the analyzer screen…';
+  try{
+    const img=await loadPhotoImage(file);
+    const Tesseract=await loadTesseract();
+    const oem=(Tesseract.OEM&&Tesseract.OEM.LSTM_ONLY!==undefined)?Tesseract.OEM.LSTM_ONLY:1;
+    const worker=await Tesseract.createWorker('eng',oem);
+    const psm=(Tesseract.PSM&&Tesseract.PSM.SINGLE_BLOCK!==undefined)?Tesseract.PSM.SINGLE_BLOCK:6;
+    await worker.setParameters({tessedit_pageseg_mode:psm});
+
+    const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+    const box=detectPanelBox(img);
+    const texts=[];
+    const runPass=async(region,width)=>{
+      const canvas=preparePass(img,region,width);
+      const res=await worker.recognize(canvas);
+      texts.push((res&&res.data&&res.data.text)||'');
+    };
+
+    await runPass(box,1300);
+    let read=parseGrabnerScreen(texts);
+    if(!read.fields.d5191||!read.selfCheckPassed){
+      const topBox={x:box.x,y:box.y,w:box.w,h:Math.max(1,Math.round(box.h*0.42))};
+      await runPass(topBox,950);
+      await runPass(topBox,1250);
+      read=parseGrabnerScreen(texts);
+    }
+    if(!read.fields.d5191&&!read.fields.ptot){
+      await runPass({x:0,y:0,w:iw,h:ih},1500);
+      read=parseGrabnerScreen(texts);
+    }
+    try{await worker.terminate();}catch(_){}
+
+    const d5191=read.fields.d5191?read.fields.d5191.value:null;
+    const d4953=read.fields.d4953?read.fields.d4953.value:null;
+    const ptotVal=read.fields.ptot?read.fields.ptot.value:null;
+    const okD5191=d5191!==null&&(!read.checked||read.selfCheckPassed);
+
+    const ptotField=document.getElementById(`s-${pos}-ptot`);
+    const labField=document.getElementById(`s-${pos}-lab`);
+    const msgs=[];
+
+    if(okD5191&&ptotVal!==null){
+      const typedPtot=num(ptotField.value);
+      if(typedPtot===null){
+        ptotField.value=String(ptotVal);
+        msgs.push(`Ptot filled <b>${ptotVal.toFixed(3)} psi</b>`);
+      } else if(Math.abs(typedPtot-ptotVal)<=0.005){
+        msgs.push(`Ptot already entered matches the screen (${ptotVal.toFixed(3)} psi)`);
+      } else {
+        msgs.push(`<b>The Ptot already entered (${typedPtot}) does not match this screen (${ptotVal.toFixed(3)}); left as typed &mdash; resolve before evaluating</b>`);
+      }
+      if(d4953!==null){
+        const typedLab=num(labField.value);
+        if(typedLab===null){
+          labField.value=String(round2(d4953));
+          msgs.push(`Reported DVPE filled ${d4953.toFixed(3)} psi (instrument D4953, informational check only)`);
+        } else if(Math.abs(typedLab-d4953)<=0.02){
+          msgs.push('Reported DVPE already entered matches the screen');
+        } else {
+          msgs.push(`Reported DVPE already entered differs from this screen's D4953 (${d4953.toFixed(3)}) &mdash; left as typed`);
+        }
+      }
+      els.badge.classList.remove('hide');
+      els.badge.textContent='Photo read';
+      els.status.className='vp-photo-status ok';
+    } else if(read.fields.ptot){
+      msgs.push(`Ptot on screen reads ${read.fields.ptot.value.toFixed(3)} psi, but the D5191/D4953/D323 self-check did not pass, so <b>nothing was filled in.</b> Enter both values manually and verify against the instrument.`);
+      els.badge.classList.remove('hide');
+      els.badge.textContent='Photo attached';
+      els.status.className='vp-photo-status bad';
+    } else {
+      msgs.push('No vapor-pressure values could be read from this photo. Retake it square to the screen with the whole result list in frame, then enter values manually.');
+      els.badge.classList.remove('hide');
+      els.badge.textContent='Photo attached';
+      els.status.className='vp-photo-status bad';
+    }
+
+    refreshCertificationCalculations();
+
+    try{
+      const blob=await retainedVpJpeg(img);
+      const id=vpPhotoId(c,pos);
+      if(blob&&id){
+        await saveVpPhoto(id,blob,{
+          fileName:file.name||'',d5191,d4953,ptot:ptotVal,
+          selfCheckPassed:!!(read.checked&&read.selfCheckPassed),
+          sampleId:read.sampleId||'',standard:read.standard||'',
+          instrumentStamp:read.instrumentStamp||''
+        });
+      }
+    }catch(e){console.warn('Photo not retained locally:',e);}
+
+    els.status.innerHTML=msgs.join('; ')+'. <b>Verify against the analyzer before release.</b>';
+  }catch(err){
+    console.error(err);
+    els.status.className='vp-photo-status bad';
+    els.status.textContent=(err&&err.message)?err.message:'The photo could not be read. Enter values manually.';
+  }finally{
+    els.btn.disabled=false;
+  }
+}
+
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.vp-photo-btn');
+  if(btn) readVpPhoto(btn.dataset.pos);
+});
+document.addEventListener('change',e=>{
+  const inp=e.target.closest('.vp-photo-input');
+  if(inp){
+    const els=vpPhotoEls(inp.dataset.pos);
+    if(els){els.status.className='vp-photo-status';els.status.textContent='';els.badge.classList.add('hide');}
+  }
+});
+
 </script>
 </body>
 </html>
