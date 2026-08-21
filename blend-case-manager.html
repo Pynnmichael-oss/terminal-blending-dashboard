@@ -825,13 +825,24 @@ function officialCalculationStage(c){
    deliberate human checkpoint in every existing release path, not
    something to silently collapse for v5.
    ===================================================================== */
-function chooseCertPath(path){
+async function chooseCertPath(path){
   const c=currentCase();
   if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==10)return;
   c.certPath=path;
+  // Explicit awaited sync, not just render()'s implicit fire-and-forget
+  // persistCurrentCase() safety net -- that safety net is skipped outright
+  // while staleRetryBlocked(c.dbId) holds the circuit open (see the stale-
+  // retry breaker below), which would otherwise leave certPath (and
+  // whatever normalize() just set workflowVersion to) sitting in memory
+  // only, un-persisted, for up to STALE_RETRY_COOLDOWN_MS with no operator-
+  // visible sign anything is wrong -- render() still paints the chosen
+  // path immediately either way. Every other v5 stage action that gates a
+  // later step on a field it just set already syncs explicitly for the
+  // same reason; this one and the two release functions below didn't.
+  if(c.dbId){try{await syncCaseData(c,c.operator)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error');return}}
   render();
 }
-function authorizeSelfCertRelease(operatorRaw){
+async function authorizeSelfCertRelease(operatorRaw){
   const c=currentCase();
   if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==10||c.certPath!=='self')return;
   if(!c.selfCert){alert('Record self-certification results first.');return}
@@ -841,17 +852,22 @@ function authorizeSelfCertRelease(operatorRaw){
   const by=canonicalTerminalOperator(operatorRaw||c.operator);
   c.certification.release={at:iso(),by,route:'self-cert',basis:`Fort Worth self-certification · certificate ${c.certification.generatedCoa.certificateId} · Class ${assessment.spec.grade}`};
   ['blend','results','coa','release'].forEach(k=>markDoc(c,k));
+  // Persist certification.release before advancing the stage -- see the
+  // chooseCertPath comment above for why this can't be left to render()'s
+  // implicit safety net alone.
+  if(c.dbId){try{await syncCaseData(c,c.operator)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error');return}}
   setStage(c,11);
   log(c,by,`Tank released using self-certification results; certificate ${c.certification.generatedCoa.certificateId}`,'tank-release');
   render();
 }
-function authorizeThirdPartyRelease(operatorRaw){
+async function authorizeThirdPartyRelease(operatorRaw){
   const c=currentCase();
   if(!c||!requireEdit(c)||c.workflowVersion!==2||c.stage!==10||c.certPath!=='third-party')return;
   if(!c.thirdPartyCert){alert('Attach the returned third-party CoA first.');return}
   const by=canonicalTerminalOperator(operatorRaw||c.operator);
   c.certification.release={at:iso(),by,route:'third-party',basis:`Global Partners review of third-party CoA · ${c.thirdPartyCert.fileName}`};
   ['blend','results','coa','release'].forEach(k=>markDoc(c,k));
+  if(c.dbId){try{await syncCaseData(c,c.operator)}catch(e){console.error(e);if(e.isStaleVersion){await handleStaleVersion(c,e);return}showSyncBanner('Supabase save failed: '+e.message,'error');return}}
   setStage(c,11);
   log(c,by,`Tank released using third-party CoA: ${c.thirdPartyCert.fileName}`,'tank-release');
   render();
@@ -875,12 +891,12 @@ function certificationStageV5(c){
       }else if(!c.certification.generatedCoa){
         releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner amber"><b>Generate the terminal CoA above before authorizing release.</b></div></div>`;
       }else{
-        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>Release eligible:</b> self-certification passed and the terminal CoA is generated.</div><div class="actionbar"><button class="btn primary" onclick="authorizeSelfCertRelease(c.operator)" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`;
+        releaseSection=`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>Release eligible:</b> self-certification passed and the terminal CoA is generated.</div><div class="actionbar"><button class="btn primary" onclick="authorizeSelfCertRelease()" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`;
       }
     }
     return selfCertStage(c)+releaseSection;
   }
-  const releaseSection=c.thirdPartyCert?`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>CoA received.</b> Global Partners review of the attached third-party CoA controls release.</div><div class="actionbar"><button class="btn primary" onclick="authorizeThirdPartyRelease(c.operator)" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`:'';
+  const releaseSection=c.thirdPartyCert?`<div class="formbox"><h4>Authorize release</h4><div class="banner green"><b>CoA received.</b> Global Partners review of the attached third-party CoA controls release.</div><div class="actionbar"><button class="btn primary" onclick="authorizeThirdPartyRelease()" ${editable(c)?'':'disabled'}>Authorize release</button></div></div>`:'';
   return thirdPartyCertStage(c)+releaseSection;
 }
 
