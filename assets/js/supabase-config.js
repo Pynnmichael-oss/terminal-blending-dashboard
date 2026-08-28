@@ -1,14 +1,9 @@
-// supabase-config.js
-// This file IS committed to the repo (unlike a typical .env file) because
-// this is a plain static site served by GitHub Pages with no build step --
-// there is nothing to inject environment variables at deploy time, so the
-// config has to be a real, checked-in file for the deployed site to work.
-// This is safe: it contains only the project URL and the anon/publishable
-// key, which Supabase is explicitly designed to expose in browser code --
-// access is enforced by Row Level Security policies, not by keeping this
-// key secret. The service-role key must NEVER go in this file or anywhere
-// else in this static site.
+// Fort Worth Blend Case Manager -- Supabase connection config.
+// This key is the anon/public key: safe to ship in a browser bundle.
+// All privileged mutation logic lives server-side in Postgres RPC
+// functions (see supabase/migrations); this key can only SELECT the
+// underlying tables directly and EXECUTE the whitelisted RPCs.
 window.__SUPABASE_CONFIG__ = {
   url: 'https://iefjhifomettmfkxidsq.supabase.co',
-  anonKey: 'sb_publishable_cSSRdJIb_72crwXcy5wscg_lDQWJn-4',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZmpoaWZvbWV0dG1ma3hpZHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3Nzk5MjIsImV4cCI6MjEwMTM1NTkyMn0.z9xjUi_jCnKFprjBFvefcnaUY4RIFfGhd-3WVEbrcE0'
 };
