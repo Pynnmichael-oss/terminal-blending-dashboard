@@ -18,7 +18,7 @@ if (!cfg || !cfg.url || !cfg.anonKey) {
   console.error('[supabase-client] window.__SUPABASE_CONFIG__ is missing url/anonKey.');
 }
 
-const supabase = cfg ? createClient(cfg.url, cfg.anonKey) : null;
+export const supabase = cfg ? createClient(cfg.url, cfg.anonKey) : null;
 
 function wrapError(error) {
   const e = new Error(error?.message || 'Supabase request failed');
@@ -46,7 +46,10 @@ function extractStageNumber(message) {
 window.BlendRepo = {
   // ---- reads ----
   async listBlendPlans() {
-    return await rpc('list_blend_plans', {});
+    const rows = await rpc('list_blend_plans', {});
+    return (rows || []).map(r =>
+      r.status === 'planned' ? { ...r, status: 'proposed' } : r
+    );
   },
   async listBlendCases() {
     return await rpc('list_blend_cases', {});
