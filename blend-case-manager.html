@@ -1281,13 +1281,31 @@ function caseDataSnapshot(c){
  * a snapshot-deduped safety net for any case_data field not yet covered
  * by an explicit call site.
  */
+// Retries an update-RPC once against a freshly re-fetched record_version
+// on a stale-version conflict, instead of throwing straight out to
+// persistCurrentCase()'s handleStaleVersion() reconciliation (which
+// discards whatever this call was trying to save). Mirrors setStage()'s
+// fix -- this table's version counter is shared with the RPCs that back
+// setStage() (advance_blend_case_stage) and checkoutCase(), so a write
+// here landing right after one of those routinely finds c.dbVersion
+// already one behind, with no real conflicting editor involved.
+async function withStaleVersionRetry(c,fn){
+  try{
+    return await fn();
+  }catch(e){
+    if(!e.isStaleVersion)throw e;
+    const fresh=await window.BlendRepo.getBlendCase(c.dbId);
+    c.dbVersion=Number(fresh.record_version);
+    return await fn();
+  }
+}
 async function syncCaseData(c,actor){
   const payload=buildCaseDataPayload(c);
   const snapshot=caseDataSnapshot(c);
-  const updated=await window.BlendRepo.updateBlendCaseData(c.dbId,c.dbVersion,payload,actor);
+  const updated=await withStaleVersionRetry(c,()=>window.BlendRepo.updateBlendCaseData(c.dbId,c.dbVersion,payload,actor));
   c.dbVersion=Number(updated.record_version);
   if(c.openGauge||c.closeGauge||c.reconciliation||c.certification?.release||c.closed){
-    await window.BlendRepo.saveBlendCaseResults(c.dbId,c.dbVersion,{
+    const resultsPayload={
       final_quantity_bbl:c.closeGauge?.netBbl??null,
       open_gauge:c.openGauge||null,close_gauge:c.closeGauge||null,
       expected_close_bbl:c.reconciliation?.expectedBbl??null,actual_close_bbl:c.reconciliation?.actualBbl??null,
@@ -1296,7 +1314,8 @@ async function syncCaseData(c,actor){
       quality_data:{preBlendResults:c.preBlendResults,iterations:c.iterations,certification:c.certification},
       operational_notes:c.reconciliation?.reason||c.hold?.reason||null,
       completed_by:c.closed?.by||null,completed_at:c.closed?.at||null
-    },actor);
+    };
+    await withStaleVersionRetry(c,()=>window.BlendRepo.saveBlendCaseResults(c.dbId,c.dbVersion,resultsPayload,actor));
     // save_blend_case_results also bumps blend_cases.record_version
     // server-side but returns the results row, not the case row -- pull
     // the authoritative version rather than guess it.
