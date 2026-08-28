@@ -636,7 +636,19 @@ function latestMeasurement(c){const it=currentIteration(c);return it&&it.measure
 function hasActuals(c){return Number(c.act?.tov)>0&&Array.isArray(c.act?.s)&&c.act.s.length===3&&c.act.s.every(v=>Number(v)>0)}
 function log(c,who,text,type){c.log.push(event(who,text,type));saveState();if(c.dbId){window.BlendRepo.addNote(c.dbId,who,text).catch(e=>{console.error(e);showSyncBanner('Supabase save failed: '+e.message,'error')})}}
 function markDoc(c,key,status='generated'){if(c.documents[key])c.documents[key].status=status}
-function setStage(c,n){const next=Math.max(c.stage,n);const changed=next!==c.stage;c.stage=next;viewStageIndex=n;if(changed&&c.dbId&&!staleRetryBlocked(c.dbId)){window.BlendRepo.advanceBlendCaseStage(c.dbId,c.dbVersion,c.operator,`Advanced to stage ${next} (${STAGES[next]})`).then(updated=>{c.dbVersion=Number(updated.record_version)}).catch(e=>{console.error(e);if(e.isStaleVersion){handleStaleVersion(c,e)}else{showSyncBanner('Supabase save failed: '+e.message,'error')}})}}
+// setStage() mutates c.stage/viewStageIndex synchronously (optimistic UI --
+// unchanged from before) then persists via advance_blend_case_stage. That
+// RPC's p_expected_version is the same record_version counter that
+// persistCurrentCase()'s independent update_blend_case_data call also
+// bumps, so a stage advance fired right after another case_data-mutating
+// action routinely finds c.dbVersion already stale -- not a real conflict,
+// just our own prior write landing first. Retry once with a freshly
+// re-fetched record_version before falling back to the older
+// handleStaleVersion() reconciliation (which used to run immediately and
+// silently discard the stage advance, leaving the case stuck one stage
+// behind what its case_data already showed -- see the FTW56082826 /
+// FTW04082826 repros).
+async function setStage(c,n){const next=Math.max(c.stage,n);const changed=next!==c.stage;c.stage=next;viewStageIndex=n;if(!(changed&&c.dbId&&!staleRetryBlocked(c.dbId)))return;const label=`Advanced to stage ${next} (${STAGES[next]})`;for(let attempt=1;attempt<=2;attempt++){try{const updated=await window.BlendRepo.advanceBlendCaseStage(c.dbId,c.dbVersion,c.operator,label);c.dbVersion=Number(updated.record_version);return}catch(e){if(e.isStaleVersion&&attempt===1){try{const fresh=await window.BlendRepo.getBlendCase(c.dbId);c.dbVersion=Number(fresh.record_version);continue}catch(refetchErr){console.error('setStage: re-fetch after stale version failed',refetchErr)}}console.error(e);if(e.isStaleVersion){handleStaleVersion(c,e)}else{showSyncBanner('Supabase save failed: '+e.message,'error')}return}}}
 /**
  * Shared handler for a stale-record_version rejection from any RPC. Never
  * retries with the same (now-wrong) version and never silently overwrites
